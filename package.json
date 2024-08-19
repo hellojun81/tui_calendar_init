@@ -9,7 +9,7 @@
     "react": "16.8.4",
     "react-dom": "16.8.4",
     "react-scripts": "^5.0.1",
-    "tui-calendar": "1.12.14",
+    "tui-calendar": "^1.12.14",
     "tui-date-picker": "4.0.3",
     "tui-time-picker": "2.0.3"
   },

@@ -25,3 +25,91 @@
 .tui-full-calendar-weekday-schedule-title {
   text-align: left;
 }
+
+/* ////////////// */
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 300px;
+  z-index: 1000;
+}
+
+.modal-content {
+  display: flex;
+  flex-direction: column;
+  font-size: 9px;
+}
+
+.modal-content h2 {
+  margin-bottom: 15px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+input, textarea {
+  margin-bottom: 15px;
+  padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+textarea {
+  resize: vertical;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+}
+
+button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+button.save-button {
+  background-color: #007bff;
+  color: white;
+}
+
+button.delete-button {
+  background-color: #dc3545;
+  color: white;
+}
+
+button.cancel-button {
+  background-color: #6c757d;
+  color: white;
+}
+.date-time-container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.date-time-item {
+  flex: 0 0 48%; /* Each div takes up 48% of the width, with 4% margin in total for spacing */
+}
+
+.date-time-item label {
+  display: block;
+  margin-bottom: 8px; /* Space between label and input */
+}
+
+.date-time-item input {
+  width: 100%;
+  padding: 3px;
+  font-size: 9px;
+  letter-spacing: 0px; 
+  box-sizing: border-box; /* Include padding in the width */
+}
