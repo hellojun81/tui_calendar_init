@@ -6,8 +6,10 @@
   "main": "src/index.tsx",
   "dependencies": {
     "@toast-ui/react-calendar": "1.0.5",
+    "antd": "^5.20.1",
     "react": "16.8.4",
     "react-dom": "16.8.4",
+    "react-router-dom": "^6.26.1",
     "react-scripts": "^5.0.1",
     "tui-calendar": "^1.12.14",
     "tui-date-picker": "4.0.3",
