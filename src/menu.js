@@ -7,7 +7,7 @@ import Schedules from './schedules';
 import Cs from './cs';
 import Estimate from './estimate';
 import Setup from './setup_field';
-// import Setup_bussiness_info from './setup_bussiness_info';
+import Setup_bussiness_info from './setup_bussiness_info';
 
 
 
@@ -48,10 +48,10 @@ function App() {
             </Menu.Item>
             <Menu.Item key="5">
               <Link to="/setup_field" onClick={onClose}>환경설정</Link>
-            </Menu.Item> 
-            {/*<Menu.Item key="6">
+            </Menu.Item>
+            <Menu.Item key="6">
               <Link to="/setup_bussiness_info" onClick={onClose}>환경설정일반</Link>
-            </Menu.Item>  */}
+            </Menu.Item>
           </Menu>
         </Drawer>
 
@@ -59,9 +59,9 @@ function App() {
           <Route path="/provider" element={<Provier />} />
           <Route path="/schedules" element={<Schedules />} />
           <Route path="/cs" element={<Cs />} />
-         <Route path="/estimate" element={<Estimate />} />
-         <Route path="/setup_field" element={<Setup />} />
-          {/* <Route path="/setup_bussiness_info" element={<Setup_bussiness_info />} />  */} */}
+          <Route path="/estimate" element={<Estimate />} />
+          <Route path="/setup_field" element={<Setup />} />
+          <Route path="/setup_bussiness_info" element={<Setup_bussiness_info />} />
         </Routes>
       </div>
     </Router>

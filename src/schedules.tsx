@@ -1,34 +1,16 @@
-import React, { useCallback, useRef, useState,useEffect } from "react";
+import React, { useCallback, useRef, useState, useEffect } from "react";
 import { render } from "react-dom";
-
 import TUICalendar from "@toast-ui/react-calendar";
 import { ISchedule, ICalendarInfo } from "tui-calendar";
+import JexcelModal from "./JexcelModal"; // 새로 만든 JexcelModal 컴포넌트를 불러옵니다.
+
+
 
 import "tui-calendar/dist/tui-calendar.css";
 import "tui-date-picker/dist/tui-date-picker.css";
 import "tui-time-picker/dist/tui-time-picker.css";
-
 import "./styles.css";
 
-// 커스텀 모달 컴포넌트
-function CustomModal({ isOpen, onClose, event }) {
-  if (!isOpen || !event) return null;
-
-  return (
-    <div className="modal-overlay">
-      <div className="modal">
-        <h2>{event.title}</h2>
-        <p><strong>시작:</strong> {event.start.toLocaleString()}</p>
-        <p><strong>종료:</strong> {event.end.toLocaleString()}</p>
-        <p><strong>내용:</strong> {event.body}</p>
-        <button onClick={onClose}>닫기</button>
-      </div>
-    </div>
-  );
-}
-
-const start = new Date("2024-08-01");
-const end = new Date(new Date().setMinutes(start.getMinutes() + 15));
 
 const schedules: ISchedule[] = [
   {
@@ -44,6 +26,7 @@ const schedules: ISchedule[] = [
   },
   // 더 많은 스케줄...
 ];
+
 const calendars: ICalendarInfo[] = [
   {
     id: "1",
@@ -268,6 +251,8 @@ const Schedule = () => {
     setNewState(value);  // 선택된 거래처명 설정
     setIsJexcelModalOpen(false);  // 모달 닫기
   };
+
+
   function formatToKoreanTimeString(date: Date): string {
     let now = new Date(date);
     console.log('chgDate', now)
@@ -282,6 +267,7 @@ const Schedule = () => {
     let minutes = ('0' + date.getMinutes()).slice(-2);
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   }
+
   return (
     <div className="App">
 
@@ -385,11 +371,11 @@ const Schedule = () => {
           </div>
         </div>
       )}
-      {/* <JexcelModal
-  isOpen={isJexcelModalOpen}
-  onClose={() => setIsJexcelModalOpen(false)}
-  onSelect={handleSelectCompany}  // jExcel에서 선택된 값을 처리할 함수
-/> */}
+      <JexcelModal
+        isOpen={isJexcelModalOpen}
+        onClose={() => setIsJexcelModalOpen(false)}
+        onSelect={handleSelectCompany}  // jExcel에서 선택된 값을 처리할 함수
+      />
     </div>
   );
 }

@@ -113,3 +113,10 @@ button.cancel-button {
   letter-spacing: 0px; 
   box-sizing: border-box; /* Include padding in the width */
 }
+
+.ant-tabs-content-holder {
+  min-height: 100px; /* 적절한 최소 높이를 설정 */
+}
+.ant-table {
+  min-width: 300px; /* 적절한 최소 너비를 설정 */
+}
