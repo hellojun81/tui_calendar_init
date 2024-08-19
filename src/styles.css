@@ -1,0 +1,27 @@
+.App {
+  font-family: sans-serif;
+}
+
+.tui-full-calendar-holiday-sat {
+  text-align: center;
+}
+
+.tui-full-calendar-weekday {
+  text-align: center;
+}
+
+.tui-full-calendar-month-dayname-item {
+  text-align: center;
+}
+
+.tui-full-calendar-weekday-grid-date {
+  color: #000000;
+}
+
+.tui-full-calendar-holiday-sun {
+  color: #000000;
+}
+
+.tui-full-calendar-weekday-schedule-title {
+  text-align: left;
+}

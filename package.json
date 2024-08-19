@@ -1,0 +1,33 @@
+{
+  "name": "toast-ui-react-calendar",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [],
+  "main": "src/index.tsx",
+  "dependencies": {
+    "@toast-ui/react-calendar": "1.0.5",
+    "react": "16.8.4",
+    "react-dom": "16.8.4",
+    "react-scripts": "^5.0.1",
+    "tui-calendar": "1.12.14",
+    "tui-date-picker": "4.0.3",
+    "tui-time-picker": "2.0.3"
+  },
+  "devDependencies": {
+    "@types/react": "16.8.8",
+    "@types/react-dom": "16.8.2",
+    "typescript": "3.3.3"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
+}
