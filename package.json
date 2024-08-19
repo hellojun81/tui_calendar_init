@@ -5,9 +5,14 @@
   "keywords": [],
   "main": "src/index.tsx",
   "dependencies": {
+    "@emotion/react": "^11.13.0",
+    "@emotion/styled": "^11.13.0",
+    "@mui/material": "^5.16.7",
     "@toast-ui/react-calendar": "1.0.5",
     "antd": "^5.20.1",
-    "react": "16.8.4",
+    "cors": "^2.8.5",
+    "jspreadsheet-ce": "^4.2.1",
+    "react": "^17.0.2",
     "react-dom": "16.8.4",
     "react-router-dom": "^6.26.1",
     "react-scripts": "^5.0.1",
@@ -22,7 +27,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "GENERATE_SOURCEMAP=false react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   },

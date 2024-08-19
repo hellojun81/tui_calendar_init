@@ -1,12 +1,20 @@
 {
-    "include": [
-        "./src/*"
-    ],
-    "compilerOptions": {
-        "lib": [
-            "dom",
-            "es2015"
-        ],
-        "jsx": "react"
-    }
+  "include": [
+    "./src/*"
+  ],
+  "compilerOptions": {
+    "jsx": "react",  // JSX 구문을 사용하기 위해 필요
+    "moduleResolution": "node",  // Node 모듈 해석 방식 사용
+    "target": "es6",  // ECMAScript 6 버전 사용
+    "module": "esnext",  // ECMAScript 모듈 사용
+    "lib": ["dom", "dom.iterable", "esnext"],  // 사용하려는 라이브러리들
+    "allowSyntheticDefaultImports": true,  // 디폴트 가져오기 허용
+    "esModuleInterop": true,  // ES 모듈과 CommonJS 모듈 간의 호환성 지원
+    "skipLibCheck": true,  // 라이브러리의 타입 검사를 건너뜀
+    "strict": true,  // 엄격한 타입 체크 옵션
+    "forceConsistentCasingInFileNames": true,  // 파일 이름의 대소문자 일관성 강제
+    "resolveJsonModule": true,  // JSON 모듈 지원
+    "isolatedModules": true,  // 개별 모듈 트랜스파일 지원
+    "noEmit": true  // 트랜스파일된 파일을 생성하지 않음
+  }
 }
