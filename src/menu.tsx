@@ -46,9 +46,9 @@ const Menu: React.FC = () => {
             <AntdMenu.Item key="5">
               <Link to="/setup_field" onClick={onClose}>환경설정</Link>
             </AntdMenu.Item>
-            <AntdMenu.Item key="6">
+            {/* <AntdMenu.Item key="6">
               <Link to="/setup_bussiness_info" onClick={onClose}>환경설정일반</Link>
-            </AntdMenu.Item>
+            </AntdMenu.Item> */}
           </AntdMenu>
         </Drawer>
 

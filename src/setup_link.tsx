@@ -11,7 +11,9 @@ function Setup_link() {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider width={200}>
+    
+      <Sider width={200} style={{ backgroundColor: '#ffffff' }}>
+      <h2>환경 설정</h2>
         <Menu
           mode="inline"
           selectedKeys={[location.pathname]} // 현재 경로를 선택된 키로 설정

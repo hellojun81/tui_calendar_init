@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Table, Layout, Collapse, Button, Modal, Form, Input, Select, Switch, Tabs } from 'antd';
+import { Table, Layout, Collapse, Button, Modal, Form, Input, Select, Switch } from 'antd';
 import { EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import SetupLink from './setup_link';
 import FieldTable from './FieldTable';
@@ -14,55 +14,55 @@ type FieldData = {
   dataType: string;
   fieldUse: boolean;
 };
+
 type DataStructure = {
   [key: string]: FieldData[];
 };
 
-
-
 const initialData: DataStructure = {
-  고객: [
-    { key: '1', fieldName: '고객 이름', dataType: '텍스트 (String)', fieldUse: true },
+  스케쥴_관리: [
+    { key: '1', fieldName: '거래처명', dataType: '텍스트 (String)', fieldUse: true },
+    { key: '2', fieldName: '대관일', dataType: '텍스트 (String)', fieldUse: true },
+    { key: '3', fieldName: '이메일', dataType: '텍스트 (String)', fieldUse: true },
+    { key: '4', fieldName: '주소', dataType: '텍스트 (String)', fieldUse: false },
+  ],
+  거래처_관리: [
+    { key: '1', fieldName: '거래처명', dataType: '텍스트 (String)', fieldUse: true },
     { key: '2', fieldName: '연락처', dataType: '텍스트 (String)', fieldUse: true },
     { key: '3', fieldName: '이메일', dataType: '텍스트 (String)', fieldUse: true },
     { key: '4', fieldName: '주소', dataType: '텍스트 (String)', fieldUse: false },
   ],
-  의뢰: [
-    { key: '1', fieldName: '의뢰 상태', dataType: '단수선택 리스트 (Single List)', fieldUse: true },
-    { key: '2', fieldName: '예상 견적', dataType: '숫자 (Number)', fieldUse: true },
+  CS_관리: [
+    { key: '1', fieldName: '거래처명', dataType: '단수선택 리스트 (Single List)', fieldUse: true },
+    { key: '2', fieldName: '대관일', dataType: '숫자 (Number)', fieldUse: true },
     { key: '3', fieldName: '의뢰 항목', dataType: '복수선택 리스트 (Multi List)', fieldUse: false },
     { key: '4', fieldName: '문의 일시', dataType: '날짜 (Date)', fieldUse: true },
   ],
-
 };
-
-
 
 const FieldSettings = () => {
   const [data, setData] = useState(initialData);
-  const [activeTab, setActiveTab] = useState('의뢰');
+  const [activeTab, setActiveTab] = useState<string | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [editingField, setEditingField] = useState<any | null>(null);
+  const [editingField, setEditingField] = useState<FieldData | null>(null);
   const [form] = Form.useForm();
 
   const handleAddOrEditField = () => {
     form.validateFields().then((values) => {
-      const newField = {
-        key: editingField ? editingField.key : (data[activeTab].length + 1).toString(),
+      const newField: FieldData = {
+        key: editingField ? editingField.key : (data[activeTab!].length + 1).toString(),
         fieldName: values.fieldName,
         dataType: values.dataType,
         fieldUse: values.fieldUse,
       };
 
       if (editingField) {
-        // Edit existing field
-        const updatedData = data[activeTab].map((item) =>
+        const updatedData = data[activeTab!].map((item) =>
           item.key === editingField.key ? newField : item
         );
-        setData({ ...data, [activeTab]: updatedData });
+        setData({ ...data, [activeTab!]: updatedData });
       } else {
-        // Add new field
-        setData({ ...data, [activeTab]: [...data[activeTab], newField] });
+        setData({ ...data, [activeTab!]: [...data[activeTab!], newField] });
       }
 
       form.resetFields();
@@ -71,7 +71,7 @@ const FieldSettings = () => {
     });
   };
 
-  const handleEdit = (record: any) => {
+  const handleEdit = (record: FieldData) => {
     setEditingField(record);
     form.setFieldsValue({
       fieldName: record.fieldName,
@@ -84,8 +84,16 @@ const FieldSettings = () => {
   const handleDelete = (key: string) => {
     setData({
       ...data,
-      [activeTab]: data[activeTab].filter((item) => item.key !== key),
+      [activeTab!]: data[activeTab!].filter((item) => item.key !== key),
     });
+  };
+
+  const handleAddField = () => {
+    setIsModalVisible(true);
+  };
+
+  const handleTabChange = (key: string) => {
+    setActiveTab(key);
   };
 
   const columns = [
@@ -106,9 +114,9 @@ const FieldSettings = () => {
       render: (fieldUse: boolean) => (fieldUse ? 'Yes' : 'No'),
     },
     {
-      title: '',
+      title: '액션',
       key: 'action',
-      render: (_: any, record: any) => (
+      render: (_: any, record: FieldData) => (
         <>
           <EditOutlined style={{ marginRight: 8 }} onClick={() => handleEdit(record)} />
           <DeleteOutlined onClick={() => handleDelete(record.key)} />
@@ -116,9 +124,6 @@ const FieldSettings = () => {
       ),
     },
   ];
-  const handleAddField = () => {
-    setIsModalVisible(true);
-  };
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -127,9 +132,9 @@ const FieldSettings = () => {
       </Sider>
       <Layout>
         <Content style={{ padding: '0 24px', minHeight: 280 }}>
-          <div style={{ padding: '0 24px', minHeight: 280 }}>
+          <div style={{ minHeight: 280 }}>
             <h2>필드 설정</h2>
-            <Collapse accordion>
+            <Collapse accordion onChange={handleTabChange}>
               {Object.keys(data).map((tab) => (
                 <Panel header={tab} key={tab}>
                   <Button

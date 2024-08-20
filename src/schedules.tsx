@@ -3,8 +3,7 @@ import { render } from "react-dom";
 import TUICalendar from "@toast-ui/react-calendar";
 import { ISchedule, ICalendarInfo } from "tui-calendar";
 import JexcelModal from "./JexcelModal"; // 새로 만든 JexcelModal 컴포넌트를 불러옵니다.
-
-
+import axios from 'axios';
 
 import "tui-calendar/dist/tui-calendar.css";
 import "tui-date-picker/dist/tui-date-picker.css";
@@ -70,6 +69,7 @@ const Schedule = () => {
   const [newTest, setnewTest] = useState("");
   const [selectedDateElement, setSelectedDateElement] = useState<HTMLElement | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [response, setResponse] = useState<string | null>(null);
   const handleStateKeyPress = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
       event.preventDefault();
@@ -86,8 +86,24 @@ const Schedule = () => {
 
 
 
+
+  const apitest = async () => {
+
+    try {
+      const res = await axios.get('http://localhost:3001/api?table=provider'); // Node.js 서버의 POST 엔드포인트
+      setResponse(res.data);
+      console.log(res)
+
+    } catch (err) {
+      setResponse('Error submitting data');
+    }
+  };
+
+
+
   // 모달이 열려 있을 때 ESC 키를 누르면 모달을 닫는 기능 추가
   useEffect(() => {
+    apitest();
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === "Escape" && isModalOpen) {
         closeModal();
@@ -166,7 +182,7 @@ const Schedule = () => {
 
   const onSaveSchedule = useCallback(() => {
     if (cal.current && newStart && newEnd) {
-      console.log({'newIsAllDay':newIsAllDay});
+      console.log({ 'newIsAllDay': newIsAllDay });
       const schedule: ISchedule = {
         id: currentSchedule?.id || String(Math.random()),
         calendarId: currentSchedule?.calendarId || "1",
