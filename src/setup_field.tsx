@@ -3,6 +3,8 @@ import { Table, Layout, Collapse, Button, Modal, Form, Input, Select, Switch } f
 import { EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import SetupLink from './setup_link';
 import FieldTable from './FieldTable';
+import ColumnTable from './ColumnTable';
+
 
 const { Sider, Content } = Layout;
 const { Option } = Select;
@@ -127,6 +129,7 @@ const FieldSettings = () => {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
+      
       <Sider width={200} className="site-layout-background">
         <SetupLink />
       </Sider>
@@ -135,7 +138,13 @@ const FieldSettings = () => {
           <div style={{ minHeight: 280 }}>
             <h2>필드 설정</h2>
             <Collapse accordion onChange={handleTabChange}>
-              {Object.keys(data).map((tab) => (
+            <Panel header={'거래처 관리'}>
+            <ColumnTable tableName={'provider'} fieldName={'test'} typeName={''}/>
+            </Panel>
+            <Panel header={'CS 관리'}>>
+            <ColumnTable tableName={'cs_table'} fieldName={'test'} typeName={''}/>
+            </Panel>
+              {/* {Object.keys(data).map((tab) => (
                 <Panel header={tab} key={tab}>
                   <Button
                     type="primary"
@@ -147,7 +156,8 @@ const FieldSettings = () => {
                   </Button>
                   <FieldTable dataSource={data[tab]} columns={columns} />
                 </Panel>
-              ))}
+              ))} */}
+      
             </Collapse>
           </div>
           <Modal
