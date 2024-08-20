@@ -32,7 +32,7 @@ const GeneralSettings = () => {
           <h2>일반 설정</h2>
           <Form layout="vertical">
             <Form.Item label="비즈니스 이름" required>
-              <Input defaultValue="(주) 타올" />
+              <Input defaultValue="(주) 타울" />
             </Form.Item>
             <Form.Item label="비즈니스 표시 컬러" required>
               <Input type="color" defaultValue="#E5E7EC" />
