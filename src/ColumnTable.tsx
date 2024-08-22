@@ -4,161 +4,215 @@ import { Table, Button, Modal, Form, Input, Select, message } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 
 interface ColumnData {
-  id: number;
-  name: string;
-  type: string;
+    displayName: string;
+    fieldName: string;
+    Type: string;
+    id: number;
 }
 
 interface ColumnTableProps {
     tableName: string | null;
     fieldName: string | null;
     typeName: string | null;
-  }
-
+}
 
 const { Option } = Select;
 const ColumnTable: React.FC<ColumnTableProps> = ({
     tableName,
     fieldName,
     typeName,
-  }) => {
-  const [columns, setColumns] = useState<ColumnData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [editingColumn, setEditingColumn] = useState<ColumnData | null>(null);
-  const [form] = Form.useForm();
+}) => {
+    const [columns, setColumns] = useState<ColumnData[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [editingColumn, setEditingColumn] = useState<ColumnData | null>(null);
+    const [selectedType, setSelectedType] = useState<string | null>(null);
+    const [form] = Form.useForm();
 
-  //  컬럼 목록 가져오기
-  const fetchColumns = async () => {
-    console.log('tableName',tableName)
-    try {
-      const response = await axios.get<ColumnData[]>(`http://localhost:3001/api/table/${tableName}`);
-      setColumns(response.data);
-      setLoading(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      setLoading(false);
-    }
-  };
+    // 컬럼 목록 가져오기
+    const fetchColumns = async () => {
+        try {
+            const response = await axios.get<ColumnData[]>(`http://localhost:3001/api/columns`, {
+                params: { tableName: tableName }
+            });
+            setColumns(response.data);
+            setLoading(false);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
+            setLoading(false);
+        }
+    };
 
-  useEffect(() => {
-    fetchColumns();
-  }, []);
+    useEffect(() => {
+        fetchColumns();
+    }, []);
 
-  // 컬럼 추가
-  const handleAddColumn = () => {
-    form.validateFields().then(async (values) => {
-      try {
-        const response = await axios.post<ColumnData>('http://localhost:3001/api/columns', {
-          name: values.name,
-          type: values.type,
+    // 컬럼 추가
+    const handleAddColumn = (column: ColumnData) => {
+        form.validateFields().then(async (values) => {
+            try {
+                const response = await axios.post<ColumnData>(`http://localhost:3001/api/columns`, {
+                    tableName: tableName,
+                    displayName: values.displayName,
+                    type: values.type,
+                    options: values.options, // enum 또는 set의 옵션 전달
+                });
+                setColumns([...columns, response.data]);
+                await fetchColumns();
+                form.resetFields();
+                setIsModalVisible(false);
+                message.success('Column added successfully');
+
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'An error occurred');
+            }
         });
-        setColumns([...columns, response.data]);
-        form.resetFields();
-        setIsModalVisible(false);
-        message.success('Column added successfully');
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      }
-    });
-  };
+    };
 
-  // 컬럼 수정
-  const handleEditColumn = () => {
-    form.validateFields().then(async (values) => {
-      try {
-        const response = await axios.put<ColumnData>(`http://localhost:3001/api/columns/${editingColumn?.id}`, {
-          name: values.name,
-          type: values.type,
+    // 컬럼 수정
+    const handleEditColumn = async (column: ColumnData) => {
+        form.validateFields().then(async (values) => {
+            try {
+                const response = await axios.put<ColumnData>(`http://localhost:3001/api/columns`, {
+                    tableName: tableName,
+                    id: values.id,
+                    newName: values.displayName,
+                    type: values.type,
+                    options: values.options, // enum 또는 set의 옵션 전달
+                });
+                await fetchColumns();
+                form.resetFields();
+                setIsModalVisible(false);
+                setEditingColumn(null);
+                message.success('Column renamed successfully');
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'An error occurred');
+            }
         });
-        setColumns(columns.map(col => (col.id === editingColumn?.id ? response.data : col)));
-        form.resetFields();
-        setIsModalVisible(false);
+    };
+
+    // 컬럼 삭제
+    const handleDeleteColumn = async (column: ColumnData) => {
+        try {
+            await axios.delete(`http://localhost:3001/api/columns/${tableName}?id=${column.id}`);
+            await fetchColumns();
+            message.success('Column deleted successfully');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
+        }
+    };
+
+    const showAddModal = () => {
+        form.resetFields();  
         setEditingColumn(null);
-        message.success('Column edited successfully');
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      }
-    });
-  };
+        setIsModalVisible(true);
+    };
 
-  // 컬럼 삭제
-  const handleDeleteColumn = async (id: number) => {
-    try {
-      await axios.delete(`http://localhost:3001/api/columns/${id}`);
-      setColumns(columns.filter(col => col.id !== id));
-      message.success('Column deleted successfully');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    }
-  };
+    const showEditModal = (column: ColumnData) => {
+        const typeMatch = column.Type.match(/^(\w+)\((.+)\)$/);
+        console.log(typeMatch)
+        if (typeMatch) {
+            console.log(typeMatch[1])
+            console.log(typeMatch[2])
+            setEditingColumn(column);
+            form.setFieldsValue({
+                displayName: column.displayName,
+                id: column.id,
+                type: typeMatch[1],
+                options: typeMatch[2], // 초기값 설정
+            });
+            setSelectedType(column.Type); // 선택된 타입을 상태로 설정
+            setIsModalVisible(true);
 
-  const showAddModal = () => {
-    setEditingColumn(null);
-    setIsModalVisible(true);
-  };
+        }else{
+            setEditingColumn(column);
+            form.setFieldsValue({
+                displayName: column.displayName,
+                id: column.id,
+                type: column.Type,
+                options: '', // 초기값 설정
+            });
+            setSelectedType(column.Type); // 선택된 타입을 상태로 설정
+            setIsModalVisible(true);
+        }
+    };
 
-  const showEditModal = (column: ColumnData) => {
-    setEditingColumn(column);
-    form.setFieldsValue({ name: column.Field, type: column.Type });
-    setIsModalVisible(true);
-  };
+    const handleTypeChange = (value: string) => {
+        setSelectedType(value); // 선택된 타입을 상태로 설정
+    };
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error}</p>;
+    const isEnumOrSet = selectedType?.toLowerCase().includes('enum') || selectedType?.toLowerCase().includes('set');
 
-  const tableColumns: ColumnsType<ColumnData> = [
-    { title: '필드명', dataIndex: 'Field', key: 'id' },
-    { title: '속성', dataIndex: 'Type', key: 'type' },
-    {
-      title: 'Action',
-      key: 'action',
-      render: (_, record) => (
-        <>
-          <Button onClick={() => showEditModal(record)} style={{ marginRight: 8 }}>Edit</Button>
-          <Button danger onClick={() => handleDeleteColumn(record.id)}>Delete</Button>
-        </>
-      ),
-    },
-  ];
+    if (loading) return <p>Loading...</p>;
+    if (error) return <p>Error: {error}</p>;
 
-  return (
-    <div>
-      <Button type="primary" onClick={showAddModal} style={{ marginBottom: 16 }}>Add Column</Button>
-      <Table dataSource={columns} columns={tableColumns} rowKey="id" />
+    const tableColumns: ColumnsType<ColumnData> = [
+        { title: '디스플레이명', dataIndex: 'displayName' },
+        { title: '타입', dataIndex: 'Type' },
+        {
+            title: 'Action',
+            key: 'action',
+            render: (_, record) => (
+                <>
+                    <Button onClick={() => showEditModal(record)} style={{ marginRight: 8 }}>Edit</Button>
+                    <Button danger onClick={() => handleDeleteColumn(record)}>Delete</Button>
+                </>
+            ),
+        },
+    ];
 
-      <Modal
-        title={editingColumn ? 'Edit Column' : 'Add Column'}
-        visible={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
-        onOk={editingColumn ? handleEditColumn : handleAddColumn}
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            name="name"
-            label="Column Name"
-            rules={[{ required: true, message: 'Please enter the column name' }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="type"
-            label="Column Type"
-            rules={[{ required: true, message: 'Please select the column type' }]}
-          >
-            <Select placeholder="Select a column type">
-              <Option value="VARCHAR(255)">VARCHAR(255)</Option>
-              <Option value="INT">INT</Option>
-              <Option value="TEXT">TEXT</Option>
-              <Option value="DATE">DATE</Option>
-              <Option value="BOOLEAN">BOOLEAN</Option>
-            </Select>
-          </Form.Item>
-        </Form>
-      </Modal>
-    </div>
-  );
+    return (
+        <div>
+            <Button type="primary" onClick={showAddModal} style={{ marginBottom: 16 }}>Add Column</Button>
+            <Table dataSource={columns} columns={tableColumns} rowKey="id" />
+            <Modal
+                title={editingColumn ? '수정' : '추가'}
+                visible={isModalVisible}
+                onCancel={() => setIsModalVisible(false)}
+                onOk={editingColumn ? handleEditColumn : handleAddColumn}
+            >
+                <Form form={form} layout="vertical">
+                    <Form.Item
+                        name="id"
+                        label="ID"
+                    >
+                        <Input disabled />
+                    </Form.Item>
+                    <Form.Item
+                        name="displayName"
+                        label="Display Name"
+                        rules={[{ required: true, message: 'Please enter the column name' }]}
+                    >
+                        <Input />
+                    </Form.Item>
+                    <Form.Item
+                        name="type"
+                        label="Column Type"
+                        rules={[{ required: true, message: 'Please select the column type' }]}
+                    >
+                        <Select placeholder="입력할 정보 타입을 선택하세요" onChange={handleTypeChange}>
+                            <Option value="VARCHAR(255)">텍스트(VARCHAR)</Option>
+                            <Option value="INT">숫자(INT)</Option>
+                            <Option value="DATE">날짜(DATE)</Option>
+                            <Option value="BOOLEAN">토글(BOOLEAN)</Option>
+                            <Option value="enum">enum</Option>
+                            <Option value="set">set</Option>
+                        </Select>
+                    </Form.Item>
+                    {isEnumOrSet ? (
+                        <Form.Item
+                            name="options"
+                            label="옵션 정보"
+                            rules={[{ required: true, message: 'Please enter the options for the ENUM or SET' }]}
+                        >
+                            <Input placeholder="예: '1','2','3' 또는 'a','b','c'" />
+                        </Form.Item>
+                    ) : null}
+                </Form>
+            </Modal>
+        </div>
+    );
 };
 
 export default ColumnTable;

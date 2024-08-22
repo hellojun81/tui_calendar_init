@@ -5,7 +5,7 @@ import 'jspreadsheet-ce/dist/jspreadsheet.css';
 
 // 스타일 상수 정의
 const inputStyle = {
-    fontSize: '0.875rem',
+    fontSize: '0.5rem',
     padding: '4px 8px',
     height: '36px',
 };
@@ -32,7 +32,7 @@ function Cs() {
 
     const [tableData, setTableData] = useState([]);
     const tableRef = useRef(null);
-
+   
     useEffect(() => {
         if (tableRef.current && tableData.length) {
             jspreadsheet(tableRef.current, {

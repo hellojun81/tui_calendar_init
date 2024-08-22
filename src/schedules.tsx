@@ -85,7 +85,10 @@ const Schedule = () => {
   };
 
 
+
+
   const apitest = async () => {
+
     try {
       const res = await axios.get('http://localhost:3001/api?table=provider'); // Node.js 서버의 POST 엔드포인트
       setResponse(res.data);
@@ -95,6 +98,7 @@ const Schedule = () => {
       setResponse('Error submitting data');
     }
   };
+
 
 
   // 모달이 열려 있을 때 ESC 키를 누르면 모달을 닫는 기능 추가

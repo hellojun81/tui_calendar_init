@@ -138,12 +138,19 @@ const FieldSettings = () => {
           <div style={{ minHeight: 280 }}>
             <h2>필드 설정</h2>
             <Collapse accordion onChange={handleTabChange}>
+            <Panel header={'테스트 관리'}>
+            <ColumnTable tableName={'testTable'} fieldName={''} typeName={''}/>
+            </Panel>
+            <Panel header={'스케쥴 관리'}>
+            <ColumnTable tableName={'scheduleTable'} fieldName={''} typeName={''}/>
+            </Panel>
             <Panel header={'거래처 관리'}>
-            <ColumnTable tableName={'provider'} fieldName={'test'} typeName={''}/>
+            <ColumnTable tableName={'providerTable'} fieldName={''} typeName={''}/>
             </Panel>
-            <Panel header={'CS 관리'}>>
-            <ColumnTable tableName={'cs_table'} fieldName={'test'} typeName={''}/>
+            <Panel header={'CS 관리'}>
+            <ColumnTable tableName={'csTable'} fieldName={''} typeName={''}/>
             </Panel>
+         
               {/* {Object.keys(data).map((tab) => (
                 <Panel header={tab} key={tab}>
                   <Button

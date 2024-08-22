@@ -43,7 +43,7 @@
 .modal-content {
   display: flex;
   flex-direction: column;
-  font-size: 9px;
+  font-size: 8px;
 }
 
 .modal-content h2 {
