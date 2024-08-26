@@ -1,26 +1,68 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { TextField, Button, Box } from '@mui/material';
+import { TextField, Box, Button } from '@mui/material';
 import jspreadsheet from 'jspreadsheet-ce';
 import 'jspreadsheet-ce/dist/jspreadsheet.css';
+import CrudButtons from './CrudButtons';
+import CustomerDialog from './CustomerDialog';
 
-// 스타일 상수 정의
-const inputStyle = {
-    fontSize: '0.875rem',
-    padding: '4px 8px',
-    height: '36px',
-};
 
-const inputLabelStyle = {
-    fontSize: '0.5rem',
-};
+interface Customer {
+    id: number;
+    customerName: string;
+    contactPerson: string;
+    position: string;
+    phone: string;
+    email: string;
+    leadSource: string;
+    inboundDate: string;
+    businessNumber: string;
+    representative: string;
+    location: string;
+    notes: string;
+}
 
-function Provider() {
+
+
+const Provider: React.FC = () => {
+    const [customers, setCustomers] = useState<Customer[]>([]);
+    const [selectedCustomer, setSelectedCustomer] = useState<Customer | undefined>(undefined);
+    const [dialogOpen, setDialogOpen] = useState(false);
+
+    const handleAddCustomer = () => {
+        setSelectedCustomer(undefined);
+        setDialogOpen(true);
+    };
+
+    const handleEditCustomer = (customer: Customer) => {
+        setSelectedCustomer(customer);
+        setDialogOpen(true);
+    };
+
+    const handleDeleteCustomer = (id: number) => {
+        setCustomers(customers.filter((customer) => customer.id !== id));
+    };
+
+    const handleSaveCustomer = (customer: Customer) => {
+        if (customer.id) {
+            // Update existing customer
+            setCustomers(
+                customers.map((c) => (c.id === customer.id ? customer : c))
+            );
+        } else {
+            // Add new customer
+            customer.id = new Date().getTime(); // Generate a unique ID
+            setCustomers([...customers, customer]);
+        }
+    };
+
+
+
+
     const currentDate = new Date();
-    const str_Date = currentDate.toISOString().split('T')[0]; // 현재 날짜를 YYYY-MM-DD 형식으로 변환
+    const str_Date = currentDate.toISOString().split('T')[0];
     const end_Date = new Date();
     end_Date.setDate(currentDate.getDate() - 14);
-    const endDateString = end_Date.toISOString().split('T')[0]; // 2주 전 날짜를 YYYY-MM-DD 형식으로 변환
-    console.log({ strDate: str_Date, endDate: endDateString });
+    const endDateString = end_Date.toISOString().split('T')[0];
 
     const [formData, setFormData] = useState({
         startDate: str_Date,
@@ -29,7 +71,7 @@ function Provider() {
     });
 
     const [tableData, setTableData] = useState<string[][]>([]);
-    const tableRef = useRef(null);
+    const tableRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (tableRef.current && tableData.length) {
@@ -46,22 +88,21 @@ function Provider() {
         }
     }, [tableData]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-      const { name, value } = e.target;
-      setFormData({ ...formData, [name]: value });
-  };
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+    };
 
     const handleSearch = () => {
-        // 여기에 검색 로직을 추가하세요. 예를 들어, formData를 사용하여 API를 호출하고 결과를 가져올 수 있습니다.
-        // 가져온 결과를 tableData로 설정합니다.
         const dummyData = [
             ['김철수', '010-1234-5678', 'kim@example.com', '서울', '2023-01-15'],
             ['이영희', '010-9876-5432', 'lee@example.com', '부산', '2023-01-18'],
-            // 더미 데이터 예시
         ];
 
         setTableData(dummyData);
     };
+
+
 
     return (
         <Box
@@ -75,7 +116,7 @@ function Provider() {
         >
             <h2>거래처 관리</h2>
             <Box sx={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-            <TextField
+                <TextField
                     label="끝 날짜"
                     name="endDate"
                     type="date"
@@ -93,7 +134,6 @@ function Provider() {
                     InputLabelProps={{ shrink: true }}
                     fullWidth
                 />
-            
                 <TextField
                     label="고객명"
                     name="customerName"
@@ -110,9 +150,26 @@ function Provider() {
                     검색
                 </Button>
             </Box>
-            <div ref={tableRef} />
+
+
+            <Box sx={{ padding: 2 }}>
+            <CrudButtons
+                onAdd={handleAddCustomer}
+                onEdit={() => selectedCustomer && handleEditCustomer(selectedCustomer)}
+                onDelete={() => selectedCustomer && handleDeleteCustomer(selectedCustomer.id)}
+            />
+                  <div ref={tableRef} />
+            <CustomerDialog
+                open={dialogOpen}
+                onClose={() => setDialogOpen(false)}
+                onSave={handleSaveCustomer}
+                customer={selectedCustomer}
+            />
+        </Box>
+
+
         </Box>
     );
-}
+};
 
 export default Provider;
