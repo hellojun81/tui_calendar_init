@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { TextField, Box, Button } from '@mui/material';
 import jspreadsheet from 'jspreadsheet-ce';
 import 'jspreadsheet-ce/dist/jspreadsheet.css';
-import CrudButtons from './CrudButtons';
+import CrudButtons from '../common/CrudButtons';
 import CustomerDialog from './CustomerDialog';
 
 
@@ -43,7 +43,8 @@ const Provider: React.FC = () => {
     };
 
     const handleSaveCustomer = (customer: Customer) => {
-        if (customer.id) {
+
+        if (customer.id !== undefined) {
             // Update existing customer
             setCustomers(
                 customers.map((c) => (c.id === customer.id ? customer : c))
@@ -93,15 +94,47 @@ const Provider: React.FC = () => {
         setFormData({ ...formData, [name]: value });
     };
 
-    const handleSearch = () => {
-        const dummyData = [
-            ['김철수', '010-1234-5678', 'kim@example.com', '서울', '2023-01-15'],
-            ['이영희', '010-9876-5432', 'lee@example.com', '부산', '2023-01-18'],
-        ];
+    const handleSearch = async () => {
+        try {
+            // 고객명을 포함한 쿼리 파라미터를 설정합니다.
+            const queryParams = new URLSearchParams({
+                startDate: formData.startDate,
+                endDate: formData.endDate,
+            });
+            let query
+            // 고객명이 입력된 경우, 쿼리 파라미터에 추가합니다.
+            if (formData.customerName) {
+                queryParams.append('customerName', formData.customerName);
+                console.log('queryParams',queryParams.get('customerName'))
+                query=`http://localhost:3001/api/customers/customerName?${queryParams}`
+            }else{
+                query=`http://localhost:3001/api/customers?${queryParams}`
+            }
 
-        setTableData(dummyData);
+            const response = await fetch(query);
+            
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
+    
+            // 응답 데이터를 테이블 형식으로 변환합니다.
+            const formattedData = data.map((customer: Customer) => [
+                customer.customerName,
+                customer.phone,
+                customer.email,
+                customer.location,
+                customer.inboundDate,
+            ]);
+    
+            // 테이블 데이터를 업데이트합니다.
+            setTableData(formattedData);
+        } catch (error) {
+            console.error('There was a problem with the fetch operation:', error);
+        }
     };
-
+    
+    
 
 
     return (

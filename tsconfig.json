@@ -1,7 +1,7 @@
 {
   "include": [
     "./src/*"
-  ],
+, "src/schedules/schedules_bk.tsx"  ],
   "compilerOptions": {
     "jsx": "react",  // JSX 구문을 사용하기 위해 필요
     "moduleResolution": "node",  // Node 모듈 해석 방식 사용

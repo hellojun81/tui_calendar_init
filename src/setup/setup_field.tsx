@@ -3,7 +3,7 @@ import { Table, Layout, Collapse, Button, Modal, Form, Input, Select, Switch } f
 import { EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import SetupLink from './setup_link';
 import FieldTable from './FieldTable';
-import ColumnTable from './ColumnTable';
+import ColumnTable from '../common/ColumnTable';
 
 
 const { Sider, Content } = Layout;
