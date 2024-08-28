@@ -16,7 +16,7 @@ interface Customer {
     phone: string;
     email: string;
     leadSource: string;
-    inboundDate: string;
+    inboundDate: calendar;
     businessNumber: string;
     representative: string;
     location: string;
@@ -46,10 +46,15 @@ const CustomerDialog: React.FC<CustomerDialogProps> = ({ open, onClose, onSave, 
     });
 
     useEffect(() => {
-        if (customer) {
+        if (customer && open) {
             setFormData(customer);
+            console.log('Customer inside useEffect:', customer);
         }
-    }, [customer]);
+    }, [customer, open]);
+
+    useEffect(() => {
+        console.log('Updated formData', formData);
+    }, [formData]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -57,7 +62,6 @@ const CustomerDialog: React.FC<CustomerDialogProps> = ({ open, onClose, onSave, 
     };
 
     const handleSave = () => {
-    
         onSave(formData);
         onClose();
     };

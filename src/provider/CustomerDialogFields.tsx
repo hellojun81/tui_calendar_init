@@ -30,7 +30,7 @@ const CustomerDialogFields: React.FC<CustomerDialogFieldsProps> = ({ formData, h
         { label: '연락처', name: 'phone' },
         { label: '이메일', name: 'email' },
         { label: '유입경로', name: 'leadSource' },
-        { label: '인바운드 등록일', name: 'inboundDate', type: 'date' },
+        { label: '2024.08.28', name: 'inboundDate', type: 'date' },
         { label: '사업자 등록번호', name: 'businessNumber' },
         { label: '대표자', name: 'representative' },
         { label: '소재지', name: 'location' },
@@ -44,10 +44,11 @@ const CustomerDialogFields: React.FC<CustomerDialogFieldsProps> = ({ formData, h
                     key={field.name}
                     label={field.label}
                     name={field.name}
+                    // value={field.label} // 타입 안전성을 위해 keyof 사용
                     value={formData[field.name as keyof Customer]} // 타입 안전성을 위해 keyof 사용
                     onChange={handleChange}
                     type={field.type || 'text'}
-                    fullWidth
+                    fullWidth 
                     multiline={field.multiline || false}
                     rows={field.rows || 1}
                     InputLabelProps={field.type === 'date' ? { shrink: true } : undefined}
