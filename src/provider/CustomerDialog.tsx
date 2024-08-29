@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Button,
-} from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import CustomerDialogFields from './CustomerDialogFields';
 
 interface Customer {

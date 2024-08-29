@@ -44,15 +44,14 @@ const Calendar: React.FC<CalendarProps> = ({
 
   return (
     <div>
-      <h2>
-       {currentYear}년 {currentMonth}월
-      </h2>
-      <button onClick={onClickPrevButton}>이전 달로 이동</button>
-      <button onClick={onClickNextButton}>다음 달로 이동</button>
+ 
+      <button onClick={onClickPrevButton}>이전 달</button>
+      {currentYear}년 {currentMonth}월
+      <button onClick={onClickNextButton}>다음 달</button>
 
       <TUICalendar
         ref={cal}
-        height="1000px"
+        height="500px"
         view="month"
         useCreationPopup={false}
         useDetailPopup={false}

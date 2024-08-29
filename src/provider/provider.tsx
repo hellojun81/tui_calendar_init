@@ -5,6 +5,7 @@ import 'jspreadsheet-ce/dist/jspreadsheet.css';
 import CrudButtons from '../common/CrudButtons';
 import CustomerDialog from './CustomerDialog';
 import SearchFields from './SearchFields';
+import dayjs from 'dayjs';
 import './provider.css';
 interface Customer {
     id: number;
@@ -119,7 +120,9 @@ const Provider: React.FC = () => {
                     { type: 'text', title: '연락처', width: 50 },
                     { type: 'text', title: 'Email', width: 50 },
                     { type: 'text', title: '유입경로', width: 50 },
-                    { type: 'calendar', title: '등록일', width: 80 },
+                    { type: 'calendar', title: '등록일', width: 80 , options: {
+                        format: 'YYYY-MM-DD'
+                    }},
                     { type: 'text', title: '사업자번호', width: 30 },
                     { type: 'text', title: '대표자', width: 30 },
                     { type: 'text', title: '소재지', width: 30 },
@@ -170,20 +173,38 @@ const Provider: React.FC = () => {
             }
 
             const data = await apiRequest(`http://localhost:3001/api/customers?${queryParams}`);
-            const formattedData = data.map((customer: Customer) => [
-                customer.id.toString(),
-                customer.customerName,
-                customer.contactPerson,
-                customer.position,
-                customer.phone,
-                customer.email,
-                customer.leadSource,
-                customer.inboundDate,
-                customer.businessNumber,
-                customer.representative,
-                customer.location,
-                customer.notes,
-            ]);
+            const formattedData = data.map((customer: Customer) => {
+                const formattedDate = dayjs(customer.inboundDate).format('YYYY-MM-DD'); // 'YYYY-MM-DD' format
+            
+                return [
+                  customer.id.toString(),
+                  customer.customerName,
+                  customer.contactPerson,
+                  customer.position,
+                  customer.phone,
+                  customer.email,
+                  customer.leadSource,
+                  formattedDate, // Use the formatted date
+                  customer.businessNumber,
+                  customer.representative,
+                  customer.location,
+                  customer.notes,
+                ];
+              });
+            // const formattedData = data.map((customer: Customer) => [
+            //     customer.id.toString(),
+            //     customer.customerName,
+            //     customer.contactPerson,
+            //     customer.position,
+            //     customer.phone,
+            //     customer.email,
+            //     customer.leadSource,
+            //     customer.inboundDate,
+            //     customer.businessNumber,
+            //     customer.representative,
+            //     customer.location,
+            //     customer.notes,
+            // ]);
 
             setTableData(formattedData);
         } catch (error) {
