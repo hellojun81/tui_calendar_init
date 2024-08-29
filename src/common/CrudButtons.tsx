@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button, Box } from '@mui/material';
+import './CrudButtons.css';
 
 interface CrudButtonsProps {
     onAdd: () => void;
@@ -9,14 +10,14 @@ interface CrudButtonsProps {
 
 const CrudButtons: React.FC<CrudButtonsProps> = ({ onAdd, onEdit, onDelete }) => {
     return (
-        <Box sx={{ display: 'flex', gap: '10px' }}>
-            <Button variant="contained" color="primary" onClick={onAdd}>
+        <Box sx={{ display: 'flex', gap: '10px' }} className='crud-buttons-container'>
+            <Button variant="contained" className='crud-button add-button'  onClick={onAdd}>
                 추가
             </Button>
-            <Button variant="contained" color="secondary" onClick={onEdit}>
+            <Button variant="contained"  className='crud-button edit-button' onClick={onEdit}>
                 수정
             </Button>
-            <Button variant="contained" color="error" onClick={onDelete}>
+            <Button variant="contained"  className='crud-button delete-button' onClick={onDelete}>
                 삭제
             </Button>
         </Box>

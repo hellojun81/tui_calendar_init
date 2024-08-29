@@ -1,15 +1,20 @@
 import React from 'react';
 import { TextField, Box } from '@mui/material';
+import './provider.css';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
 // Customer 데이터 구조를 정의하는 인터페이스
 interface Customer {
+    id: number;
     customerName: string;
     contactPerson: string;
     position: string;
     phone: string;
     email: string;
     leadSource: string;
-    inboundDate: string;
+    inboundDate: Date | null; // Date | null로 변경하여 DatePicker의 초기 상태와 호환되도록 설정
     businessNumber: string;
     representative: string;
     location: string;
@@ -20,17 +25,19 @@ interface Customer {
 interface CustomerDialogFieldsProps {
     formData: Customer;
     handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    handleDateChange: (name: string, date: Date | null) => void; // 추가: DatePicker의 날짜 변경 핸들러
 }
 
-const CustomerDialogFields: React.FC<CustomerDialogFieldsProps> = ({ formData, handleChange }) => {
+const CustomerDialogFields: React.FC<CustomerDialogFieldsProps> = ({ formData, handleChange, handleDateChange }) => {
     const fields = [
+        { label: 'ID', name: 'id' },
         { label: '고객명', name: 'customerName' },
         { label: '담당자', name: 'contactPerson' },
         { label: '직책', name: 'position' },
         { label: '연락처', name: 'phone' },
         { label: '이메일', name: 'email' },
         { label: '유입경로', name: 'leadSource' },
-        { label: '2024.08.28', name: 'inboundDate', type: 'date' },
+        { label: '등록일', name: 'inboundDate', type: 'date' },
         { label: '사업자 등록번호', name: 'businessNumber' },
         { label: '대표자', name: 'representative' },
         { label: '소재지', name: 'location' },
@@ -38,37 +45,32 @@ const CustomerDialogFields: React.FC<CustomerDialogFieldsProps> = ({ formData, h
     ];
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {fields.map((field) => (
-                <TextField
-                    key={field.name}
-                    label={field.label}
-                    name={field.name}
-                    // value={field.label} // 타입 안전성을 위해 keyof 사용
-                    value={formData[field.name as keyof Customer]} // 타입 안전성을 위해 keyof 사용
-                    onChange={handleChange}
-                    type={field.type || 'text'}
-                    fullWidth 
-                    multiline={field.multiline || false}
-                    rows={field.rows || 1}
-                    InputLabelProps={field.type === 'date' ? { shrink: true } : undefined}
-                    sx={{
-                        backgroundColor: '#f9f9f9',
-                        borderRadius: 1,
-                        width: '100%',
-                        '& .MuiInputBase-root': {
-                            fontSize: '0.875rem',
-                            padding: '8px',
-                        },
-                        '& .MuiInputLabel-root': {
-                            fontSize: '0.875rem',
-                        },
-                        '& .MuiOutlinedInput-root': {
-                            height: '36px',
-                        },
-                    }}
-                />
-            ))}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }} className="customer-dialog-field">
+            {fields.map((field) => 
+                field.name === 'inboundDate' ? (
+                    <LocalizationProvider key={field.name} dateAdapter={AdapterDateFns}>
+                        <DatePicker
+                            label={field.label}
+                            value={formData[field.name as keyof Customer] as Date | null}
+                            onChange={(date) => handleDateChange(field.name, date)}
+                            renderInput={(params) => <TextField {...params} fullWidth />}
+                        />
+                    </LocalizationProvider>
+                ) : (
+                    <TextField
+                        key={field.name}
+                        label={field.label}
+                        name={field.name}
+                        value={formData[field.name as keyof Customer] as string}
+                        onChange={handleChange}
+                        type={field.type || 'text'}
+                        fullWidth
+                        multiline={field.multiline || false}
+                        rows={field.rows || 1}
+                        InputLabelProps={field.type === 'date' ? { shrink: true } : undefined}
+                    />
+                )
+            )}
         </Box>
     );
 };

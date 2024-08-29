@@ -1,0 +1,83 @@
+/* CrudButtons.css */
+
+/* 버튼 컨테이너 스타일 */
+.crud-buttons-container {
+    display: flex;
+    gap: 10px;
+}
+
+/* 기본 버튼 스타일 (공통) */
+.crud-button {
+    padding: 3px 3px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+/* 추가 버튼 스타일 */
+.crud-button.add-button {
+    background-color: #626262; /* primary color */
+    color: white;
+}
+
+.crud-button.add-button:hover {
+    background-color: #7e7e7e; /* darkened primary */
+}
+
+/* 수정 버튼 스타일 */
+.crud-button.edit-button {
+    background-color: #686868; /* secondary color */
+    color: white;
+}
+
+.crud-button.edit-button:hover {
+    background-color: #6a0080; /* darkened secondary */
+}
+
+/* 삭제 버튼 스타일 */
+.crud-button.delete-button {
+    background-color: #d32f2f; /* error color */
+    color: white;
+}
+
+.crud-button.delete-button:hover {
+    background-color: #9a0007; /* darkened error */
+}
+
+
+.search-fields-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+/* 버튼 스타일 */
+.search-button {
+    padding: 12px 16px;
+    background-color: #1976d2; /* primary color */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+/* 버튼 호버 스타일 */
+.search-button:hover {
+    background-color: #115293; /* darker primary color */
+}
+
+/* 텍스트 필드 스타일 */
+.search-field {
+    width: 100%;
+}
+
+/* InputLabel shrink 상태에 따른 스타일 */
+.search-field .MuiInputLabel-shrink {
+    color: #555; /* Label color when shrink */
+}

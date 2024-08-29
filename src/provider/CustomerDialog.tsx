@@ -16,7 +16,7 @@ interface Customer {
     phone: string;
     email: string;
     leadSource: string;
-    inboundDate: calendar;
+    inboundDate: Date;
     businessNumber: string;
     representative: string;
     location: string;
@@ -38,7 +38,7 @@ const CustomerDialog: React.FC<CustomerDialogProps> = ({ open, onClose, onSave, 
         phone: '',
         email: '',
         leadSource: '',
-        inboundDate: '',
+        inboundDate: new Date,
         businessNumber: '',
         representative: '',
         location: '',
@@ -47,13 +47,22 @@ const CustomerDialog: React.FC<CustomerDialogProps> = ({ open, onClose, onSave, 
 
     useEffect(() => {
         if (customer && open) {
-            setFormData(customer);
+            if (formData.inboundDate === undefined) {
+                const today = new Date();
+                const formattedDate = today.toISOString().split('T')[0]; // 오늘 날짜를 'YYYY-MM-DD' 형식으로 포맷
+                setFormData((prevData) => ({
+                    ...prevData,
+                    inboundDate: today,
+                }));
+            } else {
+                setFormData(customer);
+            }
             console.log('Customer inside useEffect:', customer);
         }
     }, [customer, open]);
 
     useEffect(() => {
-        console.log('Updated formData', formData);
+        console.log('Updated inboundDate', formData.inboundDate);
     }, [formData]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

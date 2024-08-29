@@ -5,7 +5,7 @@ import 'jspreadsheet-ce/dist/jspreadsheet.css';
 import CrudButtons from '../common/CrudButtons';
 import CustomerDialog from './CustomerDialog';
 import SearchFields from './SearchFields';
-
+import './provider.css';
 interface Customer {
     id: number;
     customerName: string;
@@ -62,20 +62,20 @@ const Provider: React.FC = () => {
     const formatCustomerData = (row: string[]): Customer => ({
         id: Number(row[0]),
         customerName: row[1],
-        phone: row[2],
-        email: row[3],
-        location: row[4],
-        inboundDate: row[5],
-        contactPerson: '',
-        position: '',
-        leadSource: '',
-        businessNumber: '',
-        representative: '',
-        notes: '',
+        contactPerson:row[2],
+        position: row[3],
+        phone: row[4],
+        email: row[5],
+        leadSource: row[6],
+        inboundDate: row[7],
+        businessNumber: row[8],
+        representative:row[9],
+        location: row[10],
+        notes: row[11],
     });
 
     const handleAddCustomer = () => {
-        setSelectedCustomer(undefined);
+        setSelectedCustomer([]);
         setDialogOpen(true);
     };
 
@@ -103,32 +103,56 @@ const Provider: React.FC = () => {
 
     useEffect(() => {
         if (tableRef.current) {
+            // 기존 시트가 있다면 파괴
             if (tableRef.current.jspreadsheet) {
                 tableRef.current.jspreadsheet.destroy();
             }
-
+    
+            // Jspreadsheet 초기화
             jspreadsheet(tableRef.current, {
                 data: tableData.length ? tableData : [[]],
                 columns: [
                     { type: 'number', title: 'ID', width: 20 },
-                    { type: 'text', title: '고객명', width: 150 },
-                    { type: 'text', title: '전화번호', width: 150 },
-                    { type: 'text', title: '이메일', width: 200 },
-                    { type: 'text', title: '주소', width: 100 },
-                    { type: 'calendar', title: '가입일', width: 100 },
+                    { type: 'text', title: '고객명', width: 80 },
+                    { type: 'text', title: '담당자', width: 80 },
+                    { type: 'text', title: '직책', width: 50 },
+                    { type: 'text', title: '연락처', width: 50 },
+                    { type: 'text', title: 'Email', width: 50 },
+                    { type: 'text', title: '유입경로', width: 50 },
+                    { type: 'calendar', title: '등록일', width: 80 },
+                    { type: 'text', title: '사업자번호', width: 30 },
+                    { type: 'text', title: '대표자', width: 30 },
+                    { type: 'text', title: '소재지', width: 30 },
+                    { type: 'text', title: '메모', width: 30 },
                 ],
+                // 행 전체 선택을 처리하는 onselection 이벤트
+           
+
+
                 onselection: (instance, x1, y1, x2, y2, origin) => {
-                    if (tableData[y1]) {
-                        const selectedRow = tableData[y1];
-                        const newCustomer = formatCustomerData(selectedRow);
-                        setSelectedCustomer(newCustomer);
-                    } else {
-                        console.warn('Selected row is undefined');
+                    // 행 전체를 선택할 수 있도록 좌표를 조정
+                    const startRow = Math.min(y1, y2);
+                    const endRow = Math.max(y1, y2);
+    
+                    // 선택된 행들을 customers 배열로 변환
+                    const selectedCustomers = [];
+                    for (let rowIndex = startRow; rowIndex <= endRow; rowIndex++) {
+                        if (tableData[rowIndex]) {
+                            const selectedRow = tableData[rowIndex];
+                            selectedCustomers.push(formatCustomerData(selectedRow));
+                        }
+                    }
+    
+                    // 첫 번째 선택된 행의 데이터를 설정
+                    if (selectedCustomers.length > 0) {
+                        setSelectedCustomer(selectedCustomers[0]);
                     }
                 },
             });
         }
     }, [tableData]);
+
+
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -149,10 +173,16 @@ const Provider: React.FC = () => {
             const formattedData = data.map((customer: Customer) => [
                 customer.id.toString(),
                 customer.customerName,
+                customer.contactPerson,
+                customer.position,
                 customer.phone,
                 customer.email,
-                customer.location,
+                customer.leadSource,
                 customer.inboundDate,
+                customer.businessNumber,
+                customer.representative,
+                customer.location,
+                customer.notes,
             ]);
 
             setTableData(formattedData);
@@ -171,7 +201,7 @@ const Provider: React.FC = () => {
                     onEdit={() => selectedCustomer && handleEditCustomer(selectedCustomer)}
                     onDelete={() => selectedCustomer && handleDeleteCustomer(selectedCustomer.id)}
                 />
-                <div ref={tableRef} />
+                <div ref={tableRef} className='jexcel'/>
                 <CustomerDialog
                     open={dialogOpen}
                     onClose={() => setDialogOpen(false)}
