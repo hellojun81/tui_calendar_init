@@ -67,11 +67,6 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     };
   }, [closeModal]);
 
-  // useEffect(()=>{
-  //       console.log({'newTitle':newTitle,'newBody':newBody})
-  // })
-
-
 
   // 모달이 열리지 않았을 때 null을 반환
   if (!isOpen) {

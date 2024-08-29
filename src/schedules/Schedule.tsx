@@ -8,6 +8,8 @@ import { ISchedule } from "tui-calendar";
 const Schedule = () => {
   const cal = useRef(null);
   const [schedules, setSchedules] = useState<ISchedule[]>([]);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDateElement, setSelectedDateElement] = useState<HTMLElement | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [currentSchedule, setCurrentSchedule] = useState<ISchedule | null>(null);
@@ -25,10 +27,21 @@ const Schedule = () => {
     }
   });
   const [isJexcelModalOpen, setIsJexcelModalOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+
 
   const apitest = async () => {
     try {
       const res = await axios.get(`http://localhost:3001/api/schedules`);
+      console.log(res.data)
       const arr: ISchedule[] = Array.isArray(res.data) ? res.data : [res.data];
       const parsedSchedules = arr.map(arr => ({
         ...arr,
@@ -40,10 +53,6 @@ const Schedule = () => {
       console.error('Error fetching schedules:', err);
     }
   };
-
-
-
-  
 
   useEffect(() => {
     apitest();
@@ -61,11 +70,14 @@ const Schedule = () => {
   );
 
   const closeModal = useCallback(() => {
+    if (selectedDateElement) {
+      selectedDateElement.style.backgroundColor = ""; // Reset background color
+    }
+    setSelectedDateElement(null); // Then set selectedDateElement to null
     setIsModalOpen(false);
     setCurrentSchedule(null);
-    setNewStart(null);
-    setNewEnd(null);
-  }, []);
+  }, [selectedDateElement]);
+
 
   const onSaveSchedule = useCallback(() => {
     console.log('onSaveSchedule')
@@ -94,14 +106,15 @@ const Schedule = () => {
           return [...prev, schedule];
         }
       });
-
       closeModal();
     }
   }, [newStart, newEnd, currentSchedule, rawData, closeModal, modalMode]);
 
   const onClickSchedule = useCallback(
     (e: any) => {
-      console.log('onClickSchedule')
+      const schedule = e.schedule;
+      console.log('schedule', schedule)
+      const { calendarId, id } = e.schedule;
       openModal("edit", e.schedule);
     },
     [openModal]
@@ -133,10 +146,10 @@ const Schedule = () => {
   }, []);
 
   return (
+    <>
     <div className="App">
       <h1>스케줄_관리</h1>
       <Calendar
-
         schedules={schedules}
         onClickSchedule={onClickSchedule}
         onBeforeCreateSchedule={onBeforeCreateSchedule}
@@ -163,6 +176,7 @@ const Schedule = () => {
           ...prevRawData,
           [key]: value
         }))}
+
       />
       <JexcelModal
         isOpen={isJexcelModalOpen}
@@ -170,6 +184,7 @@ const Schedule = () => {
         onSelect={(value: string) => setRawData((prev) => ({ ...prev, 거래처명: value }))}
       />
     </div>
+    </>
   );
 };
 
