@@ -1,0 +1,6 @@
+.tui-full-calendar-month .tui-full-calendar-month-more-schedule {
+    display: block !important; /* '더보기' 링크를 항상 표시 */
+}
+.tui-full-calendar-month .tui-full-calendar-month-schedule {
+    height: 15px; /* 스케줄 항목의 높이를 수동으로 조정 */
+}

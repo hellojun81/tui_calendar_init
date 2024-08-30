@@ -6,7 +6,7 @@ interface ScheduleModalProps {
   newStart: Date | null;
   newEnd: Date | null;
   newTitle: string;
-  coustomerName: string;
+  customerName: string;
   rentPlace: string;
   setNewStart: (date: Date | null) => void;
   setNewEnd: (date: Date | null) => void;
@@ -15,8 +15,8 @@ interface ScheduleModalProps {
   closeModal: () => void;
   onRawDataChange: (key: string, value: string) => void;
   setNewTitle: (title: string) => void;
-  setCoustomerName: (title: string) => void;
-  setRentPlace: (title: string) => void;
+  setCustomerName: (text: string) => void;
+  setRentPlace: (text: string) => void;
 }
 
 const ScheduleModal: React.FC<ScheduleModalProps> = ({
@@ -25,7 +25,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   newStart,
   newEnd,
   newTitle,
-  coustomerName,
+  customerName,
   rentPlace,
   setNewStart,
   setNewEnd,
@@ -33,7 +33,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   onDeleteSchedule,
   closeModal,
   setNewTitle,
-  setCoustomerName,
+  setCustomerName,
   setRentPlace,
 }) => {
   const formatToKoreanTimeString = (date: Date): string => {
@@ -58,21 +58,19 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     };
   }, [closeModal]);
 
+
+  useEffect(() => {
+    console.log("customerName:", customerName);
+  }, [customerName]);
+
   if (!isOpen) {
     return null;
   }
-
-  const inputFields = [
-    { label: "제목", value: newTitle, onChange: (value: string) => setNewTitle(value) },
-    { label: "고객명", value: coustomerName, onChange: (value: string) => setCoustomerName(value) },
-    { label: "대관장소", value: rentPlace, onChange: (value: string) => setRentPlace(value) },
-  ];
 
   return (
     <div className="modal">
       <div className="modal-content">
         <h2>{modalMode === "edit" ? "스케줄 수정" : "새 스케줄 추가"}</h2>
-
         <div className="date-time-container">
           <div className="date-time-item">
             <label>시작일:</label>
@@ -91,28 +89,41 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
             />
           </div>
         </div>
-       
 
-          <div className="date-time-item">
-          <label>고객명:</label>
+        <div className="date-time-item">
+          <label>제목:</label>
           <input
             type="text"
-            value={coustomerName}
-            onChange={(e) => setCoustomerName(e.target.value)}
+            value={newTitle}
+            onChange={(e) => {
+              setNewTitle(e.target.value)
+              console.log('newTitle',newTitle)
+       
+            }}
           />
         </div>
 
+        <div className="date-time-item">
+          <label>고객명:</label>
+          <input
+            type="text"
+            value={customerName}
+            onChange={(e) => {
+              console.log("Previous customer name:", customerName);
+              setCustomerName(e.target.value);
+              console.log("New customer name:", e.target.value);
+            }}
+          />
+        </div>
 
-        {/* {inputFields.map((field, index) => (
-          <div className="date-time-item" key={index}>
-            <label>{field.label}:</label>
-            <input
-              type="text"
-              value={field.value}
-              onChange={(e) => field.onChange(e.target.value)}
-            />
-          </div>
-        ))} */}
+        <div className="date-time-item">
+          <label>대관장소:</label>
+          <input
+            type="text"
+            value={rentPlace}
+            onChange={(e) => setRentPlace(e.target.value)}
+          />
+        </div>
 
         <div className="modal-buttons">
           <button className="save-button" onClick={onSaveSchedule}>

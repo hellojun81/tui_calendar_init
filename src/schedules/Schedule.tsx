@@ -3,7 +3,6 @@ import Calendar from "./Calendar";
 import ScheduleModal from "./ScheduleModal";
 import JexcelModal from "./JexcelModal";
 import axios from 'axios';
-// import { ISchedule } from "tui-calendar";
 
 interface ISchedule {
   id?: string;
@@ -14,10 +13,7 @@ interface ISchedule {
   end?: Date;
   goingDuration?: number;
   comingDuration?: number;
-  isAllDay?: boolean;
   category?: string;
-  dueDateClass?: string;
-  location?: string;
   attendees?: string[];
   recurrenceRule?: string;
   isPending?: boolean;
@@ -32,7 +28,7 @@ interface ISchedule {
   customStyle?: string;
   rentPlace?: string;
   state?: string;
-  coustomerName?: string;
+  customerName?: string;
 }
 
 const Schedule = () => {
@@ -45,13 +41,16 @@ const Schedule = () => {
   const [newEnd, setNewEnd] = useState<Date | null>(null);
   const [rawData, setRawData] = useState<{ [key: string]: any }>({});
   const [isJexcelModalOpen, setIsJexcelModalOpen] = useState(false);
-  const [CoustomerName, setCoustomerName] = useState<string>('');
+  const [newTitle, setNewTitle] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [rentPlace, setRentPlace] = useState("");
 
   useEffect(() => {
     const fetchSchedules = async () => {
       try {
         const res = await axios.get(`http://localhost:3001/api/schedules`);
         setSchedules(res.data);
+        console.log('resData',res.data)
       } catch (err) {
         console.error('Error fetching schedules:', err);
       }
@@ -65,6 +64,9 @@ const Schedule = () => {
     setCurrentSchedule(scheduleData);
     setNewStart(scheduleData ? new Date(scheduleData.start) : null);
     setNewEnd(scheduleData ? new Date(scheduleData.end) : null);
+    setNewTitle(scheduleData ? scheduleData.title || "" : "");
+    setCustomerName(scheduleData ? scheduleData.customerName || "" : "");
+    setRentPlace(scheduleData ? scheduleData.rentPlace || "" : "");
     setIsModalOpen(true);
   }, []);
 
@@ -72,11 +74,7 @@ const Schedule = () => {
     try {
       const res = await axios.get(`http://localhost:3001/api/schedules/${id}`);
       const scheduleData = res.data;
-      const parsedSchedule = {
-        ...scheduleData,
-        raw: scheduleData.raw ? JSON.parse(scheduleData.raw) : {}
-      };
-      openModal("edit", parsedSchedule);
+      openModal("edit", scheduleData);
     } catch (err) {
       console.error('Error fetching schedule by ID:', err);
     }
@@ -87,42 +85,19 @@ const Schedule = () => {
     setCurrentSchedule(null);
   }, []);
 
-  const onSaveSchedule = useCallback(() => {
-    if (newStart && newEnd) {
-      const schedule: ISchedule = {
-        id: currentSchedule?.id || String(Math.random()),
-        calendarId: currentSchedule?.calendarId || "1",
-        title: currentSchedule?.title || "",
-        body: currentSchedule?.body || "",
-        start: newStart,
-        end: newEnd,
-        category: currentSchedule?.category || "time",
-        dueDateClass: currentSchedule?.dueDateClass || "",
-        bgColor: 'a33434'
-      };
-
-      setSchedules(prev => (
-        modalMode === "edit" && currentSchedule
-          ? prev.map(s => s.id === schedule.id ? schedule : s)
-          : [...prev, schedule]
-      ));
-      closeModal();
-    }
-  }, [newStart, newEnd, currentSchedule, rawData, closeModal, modalMode]);
-
   const onClickSchedule = useCallback((e: any) => {
     fetchScheduleById(e.schedule.id);
   }, [fetchScheduleById]);
 
   const onBeforeCreateSchedule = useCallback((scheduleData: any) => {
-    const schedule = {
+    const schedule: ISchedule = {
       id: String(Math.random()),
       title: "",
       body: "",
       start: scheduleData.start,
       end: scheduleData.end,
       category: "time",
-      coustomerName: ""
+      customerName: ""
     };
 
     if (calendarRef.current) {
@@ -156,14 +131,14 @@ const Schedule = () => {
         modalMode={modalMode}
         newStart={newStart}
         newEnd={newEnd}
-        newTitle={currentSchedule?.title || ""}
-        newBody={currentSchedule?.body || ""}
-        coustomerName={currentSchedule?.coustomerName || ""}
-        rentPlace={currentSchedule?.rentPlace || ""}
+        newTitle={newTitle}
+        customerName={customerName}
+        rentPlace={rentPlace || ""}
         setNewStart={setNewStart}
         setNewEnd={setNewEnd}
-        setcoustomerName={setCoustomerName}
-        onSaveSchedule={onSaveSchedule}
+        setCustomerName={setCustomerName}
+        setRentPlace={setRentPlace}
+        setNewTitle={setNewTitle}
         onDeleteSchedule={() => setSchedules(prev => prev.filter(s => s.id !== currentSchedule?.id))}
         closeModal={closeModal}
       />
