@@ -1,5 +1,6 @@
-import React, { useRef, useEffect, useState, useCallback } from "react";
-import TUICalendar from "@toast-ui/react-calendar";
+import React, { useRef, useEffect, useState, useCallback, forwardRef, useImperativeHandle } from "react";
+// import TUICalendar from "@toast-ui/react-calendar";
+const TUICalendar = require('@toast-ui/react-calendar').default;
 import { ISchedule } from "tui-calendar";
 
 interface CalendarProps {
@@ -9,12 +10,8 @@ interface CalendarProps {
   onBeforeUpdateSchedule: (e: any) => void;
 }
 
-const Calendar: React.FC<CalendarProps> = ({
-  schedules,
-  onClickSchedule,
-  onBeforeCreateSchedule,
-  onBeforeUpdateSchedule,
-}) => {
+const Calendar = forwardRef((props: CalendarProps, ref) => {
+  const { schedules, onClickSchedule, onBeforeCreateSchedule, onBeforeUpdateSchedule } = props;
   const cal = useRef<any>(null);
   const [currentMonth, setCurrentMonth] = useState<number>(0);
   const [currentYear, setCurrentYear] = useState<number>(0);
@@ -42,9 +39,13 @@ const Calendar: React.FC<CalendarProps> = ({
     updateCurrentMonthYear(); // Initialize with the current month and year on mount
   }, [updateCurrentMonthYear]);
 
+  // 부모 컴포넌트에서 ref를 통해 cal 참조에 접근할 수 있도록 설정
+  useImperativeHandle(ref, () => ({
+    getInstance: () => cal.current?.getInstance(),
+  }));
+
   return (
     <div>
- 
       <button onClick={onClickPrevButton}>이전 달</button>
       {currentYear}년 {currentMonth}월
       <button onClick={onClickNextButton}>다음 달</button>
@@ -62,6 +63,6 @@ const Calendar: React.FC<CalendarProps> = ({
       />
     </div>
   );
-};
+});
 
 export default Calendar;

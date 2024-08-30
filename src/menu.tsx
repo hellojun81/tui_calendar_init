@@ -8,6 +8,7 @@ import Cs from './cs';
 import Estimate from './estimate';
 import Setup from './setup/setup_field';
 import SetupBusinessInfo from './setup/setup_bussiness_info';
+import NewSchedule from './newSchedule'
 
 const Menu: React.FC = () => {
   const [visible, setVisible] = useState(false);
@@ -46,6 +47,11 @@ const Menu: React.FC = () => {
             <AntdMenu.Item key="5">
               <Link to="/setup/setup_field" onClick={onClose}>환경설정</Link>
             </AntdMenu.Item>
+
+            <AntdMenu.Item key="6">
+              <Link to="/newSchedule" onClick={onClose}>뉴스케쥴관리</Link>
+            </AntdMenu.Item>
+            
             {/* <AntdMenu.Item key="6">
               <Link to="/setup_bussiness_info" onClick={onClose}>환경설정일반</Link>
             </AntdMenu.Item> */}
@@ -59,6 +65,7 @@ const Menu: React.FC = () => {
           <Route path="/estimate" element={<Estimate />} />
           <Route path="/setup/setup_field" element={<Setup />} />
           <Route path="/setup/setup_bussiness_info" element={<SetupBusinessInfo />} />
+          <Route path="/newSchedule" element={<NewSchedule />} />
         </Routes>
       </div>
     </Router>

@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import RawDataForm from "./RawDataForm";
 
 interface ScheduleModalProps {
   isOpen: boolean;
@@ -8,16 +7,17 @@ interface ScheduleModalProps {
   newEnd: Date | null;
   newTitle: string;
   newBody: string;
-  newLocation: string;
-  newIsAllDay: boolean;
-  newDueDateClass: string;
-  rawData: { [key: string]: any };
+  coustomerName: string;
+  rentPlace: string;
   setNewStart: (date: Date | null) => void;
   setNewEnd: (date: Date | null) => void;
   onSaveSchedule: () => void;
   onDeleteSchedule: () => void;
   closeModal: () => void;
   onRawDataChange: (key: string, value: string) => void;
+  setNewTitle: (title: string) => void;
+  setCoustomerName: (title: string) => void;
+  setRentPlace: (title: string) => void;
 }
 
 const ScheduleModal: React.FC<ScheduleModalProps> = ({
@@ -26,21 +26,19 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   newStart,
   newEnd,
   newTitle,
-  newBody,
-  newLocation,
-  newIsAllDay,
-  newDueDateClass,
-  rawData,
+  coustomerName,
+  rentPlace,
   setNewStart,
   setNewEnd,
   onSaveSchedule,
   onDeleteSchedule,
   closeModal,
-  onRawDataChange,
+  setNewTitle,
+  setCoustomerName,
+  setRentPlace,
 }) => {
   const formatToKoreanTimeString = (date: Date): string => {
     if (!date) return "";
-    date.setHours(date.getHours());
     let year = date.getFullYear();
     let month = ('0' + (date.getMonth() + 1)).slice(-2);
     let day = ('0' + date.getDate()).slice(-2);
@@ -49,30 +47,27 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
-  // ESC 키를 눌렀을 때 모달을 닫는 이벤트 핸들러 추가
   useEffect(() => {
-
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         closeModal();
       }
     };
-
-    // 이벤트 리스너 등록
     document.addEventListener("keydown", handleKeyDown);
-
-    // 컴포넌트 언마운트 시 이벤트 리스너 제거
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [closeModal]);
 
-
-  // 모달이 열리지 않았을 때 null을 반환
   if (!isOpen) {
     return null;
   }
 
+  const inputFields = [
+    { label: "제목", value: newTitle, onChange: setNewTitle },
+    { label: "고객명", value: coustomerName, onChange: setCoustomerName },
+    { label: "대관장소", value: rentPlace, onChange: setRentPlace },
+  ];
 
   return (
     <div className="modal">
@@ -98,7 +93,16 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
           </div>
         </div>
 
-        <RawDataForm rawData={rawData} onRawDataChange={onRawDataChange} />
+        {inputFields.map((field, index) => (
+          <div className="date-time-item" key={index}>
+            <label>{field.label}:</label>
+            <input
+              type="text"
+              value={field.value}
+              onChange={(e) => field.onChange(e.target.value)}
+            />
+          </div>
+        ))}
 
         <div className="modal-buttons">
           <button className="save-button" onClick={onSaveSchedule}>
