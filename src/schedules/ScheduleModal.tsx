@@ -6,7 +6,6 @@ interface ScheduleModalProps {
   newStart: Date | null;
   newEnd: Date | null;
   newTitle: string;
-  newBody: string;
   coustomerName: string;
   rentPlace: string;
   setNewStart: (date: Date | null) => void;
@@ -64,9 +63,9 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   }
 
   const inputFields = [
-    { label: "제목", value: newTitle, onChange: setNewTitle },
-    { label: "고객명", value: coustomerName, onChange: setCoustomerName },
-    { label: "대관장소", value: rentPlace, onChange: setRentPlace },
+    { label: "제목", value: newTitle, onChange: (value: string) => setNewTitle(value) },
+    { label: "고객명", value: coustomerName, onChange: (value: string) => setCoustomerName(value) },
+    { label: "대관장소", value: rentPlace, onChange: (value: string) => setRentPlace(value) },
   ];
 
   return (
@@ -79,7 +78,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
             <label>시작일:</label>
             <input
               type="datetime-local"
-              value={newStart ? formatToKoreanTimeString(new Date(newStart)) : ""}
+              value={newStart ? formatToKoreanTimeString(newStart) : ""}
               onChange={(e) => setNewStart(new Date(e.target.value))}
             />
           </div>
@@ -87,13 +86,24 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
             <label>종료일:</label>
             <input
               type="datetime-local"
-              value={newEnd ? formatToKoreanTimeString(new Date(newEnd)) : ""}
+              value={newEnd ? formatToKoreanTimeString(newEnd) : ""}
               onChange={(e) => setNewEnd(new Date(e.target.value))}
             />
           </div>
         </div>
+       
 
-        {inputFields.map((field, index) => (
+          <div className="date-time-item">
+          <label>고객명:</label>
+          <input
+            type="text"
+            value={coustomerName}
+            onChange={(e) => setCoustomerName(e.target.value)}
+          />
+        </div>
+
+
+        {/* {inputFields.map((field, index) => (
           <div className="date-time-item" key={index}>
             <label>{field.label}:</label>
             <input
@@ -102,7 +112,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
               onChange={(e) => field.onChange(e.target.value)}
             />
           </div>
-        ))}
+        ))} */}
 
         <div className="modal-buttons">
           <button className="save-button" onClick={onSaveSchedule}>

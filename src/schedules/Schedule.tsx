@@ -3,7 +3,37 @@ import Calendar from "./Calendar";
 import ScheduleModal from "./ScheduleModal";
 import JexcelModal from "./JexcelModal";
 import axios from 'axios';
-import { ISchedule } from "tui-calendar";
+// import { ISchedule } from "tui-calendar";
+
+interface ISchedule {
+  id?: string;
+  calendarId?: string;
+  title?: string;
+  body?: string;
+  start?: Date;
+  end?: Date;
+  goingDuration?: number;
+  comingDuration?: number;
+  isAllDay?: boolean;
+  category?: string;
+  dueDateClass?: string;
+  location?: string;
+  attendees?: string[];
+  recurrenceRule?: string;
+  isPending?: boolean;
+  isFocused?: boolean;
+  isVisible?: boolean;
+  isReadOnly?: boolean;
+  isPrivate?: boolean;
+  color?: string;
+  bgColor?: string;
+  dragBgColor?: string;
+  borderColor?: string;
+  customStyle?: string;
+  rentPlace?: string;
+  state?: string;
+  coustomerName?: string;
+}
 
 const Schedule = () => {
   const calendarRef = useRef<any>(null);
@@ -15,15 +45,12 @@ const Schedule = () => {
   const [newEnd, setNewEnd] = useState<Date | null>(null);
   const [rawData, setRawData] = useState<{ [key: string]: any }>({});
   const [isJexcelModalOpen, setIsJexcelModalOpen] = useState(false);
+  const [CoustomerName, setCoustomerName] = useState<string>('');
 
   useEffect(() => {
     const fetchSchedules = async () => {
       try {
         const res = await axios.get(`http://localhost:3001/api/schedules`);
-        // const parsedSchedules = res.data.map((schedule: ISchedule) => ({
-        //   ...schedule,
-        //   raw: schedule.raw ? JSON.parse(schedule.raw) : {}
-        // }));
         setSchedules(res.data);
       } catch (err) {
         console.error('Error fetching schedules:', err);
@@ -71,6 +98,7 @@ const Schedule = () => {
         end: newEnd,
         category: currentSchedule?.category || "time",
         dueDateClass: currentSchedule?.dueDateClass || "",
+        bgColor: 'a33434'
       };
 
       setSchedules(prev => (
@@ -130,14 +158,14 @@ const Schedule = () => {
         newEnd={newEnd}
         newTitle={currentSchedule?.title || ""}
         newBody={currentSchedule?.body || ""}
-        coustomerName={currentSchedule?.coustomerName}
-        rentPlace={currentSchedule?.rentPlace}
+        coustomerName={currentSchedule?.coustomerName || ""}
+        rentPlace={currentSchedule?.rentPlace || ""}
         setNewStart={setNewStart}
         setNewEnd={setNewEnd}
+        setcoustomerName={setCoustomerName}
         onSaveSchedule={onSaveSchedule}
         onDeleteSchedule={() => setSchedules(prev => prev.filter(s => s.id !== currentSchedule?.id))}
         closeModal={closeModal}
-        onRawDataChange={(key, value) => setRawData(prev => ({ ...prev, [key]: value }))}
       />
       <JexcelModal
         isOpen={isJexcelModalOpen}
