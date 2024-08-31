@@ -44,13 +44,14 @@ const Schedule = () => {
   const [newTitle, setNewTitle] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [rentPlace, setRentPlace] = useState("");
+  const [searchQuery, setSearchQuery] = useState(""); // 검색어 상태 추가
 
   useEffect(() => {
     const fetchSchedules = async () => {
       try {
         const res = await axios.get(`http://localhost:3001/api/schedules`);
         setSchedules(res.data);
-        console.log('resData',res.data)
+        console.log('resData', res.data)
       } catch (err) {
         console.error('Error fetching schedules:', err);
       }
@@ -89,6 +90,7 @@ const Schedule = () => {
     fetchScheduleById(e.schedule.id);
   }, [fetchScheduleById]);
 
+
   const onBeforeCreateSchedule = useCallback((scheduleData: any) => {
     const schedule: ISchedule = {
       id: String(Math.random()),
@@ -96,7 +98,7 @@ const Schedule = () => {
       body: "",
       start: scheduleData.start,
       end: scheduleData.end,
-      category: "time",
+      category: "",
       customerName: ""
     };
 
@@ -115,6 +117,21 @@ const Schedule = () => {
     setNewStart(changes.start ? new Date(changes.start) : new Date(schedule.start));
     setNewEnd(changes.end ? new Date(changes.end) : new Date(schedule.end));
   }, []);
+
+  const openJexcelModal = useCallback(() => {
+    console.log('openJexcelModal' ,customerName)
+    setSearchQuery(customerName); 
+    setIsJexcelModalOpen(true);
+  }, []);
+
+  const closeJexcelModal = useCallback(() => {
+    setIsJexcelModalOpen(false);
+  }, []);
+
+  const onSelectCustomer = useCallback((selectedCustomer: string) => {
+    setCustomerName(selectedCustomer); // 선택된 고객명 설정
+    closeJexcelModal(); // 모달 닫기
+  }, [closeJexcelModal]);
 
   return (
     <div className="App">
@@ -141,11 +158,13 @@ const Schedule = () => {
         setNewTitle={setNewTitle}
         onDeleteSchedule={() => setSchedules(prev => prev.filter(s => s.id !== currentSchedule?.id))}
         closeModal={closeModal}
+        openJexcelModal={openJexcelModal}
       />
       <JexcelModal
         isOpen={isJexcelModalOpen}
-        onClose={() => setIsJexcelModalOpen(false)}
-        onSelect={(value: string) => setRawData(prev => ({ ...prev, 거래처명: value }))}
+        onClose={closeJexcelModal}
+        onSelect={onSelectCustomer}
+        searchQuery={searchQuery} 
       />
     </div>
   );

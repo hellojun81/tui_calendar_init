@@ -17,6 +17,7 @@ interface ScheduleModalProps {
   setNewTitle: (title: string) => void;
   setCustomerName: (text: string) => void;
   setRentPlace: (text: string) => void;
+  openJexcelModal:()=>void;
 }
 
 const ScheduleModal: React.FC<ScheduleModalProps> = ({
@@ -35,6 +36,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   setNewTitle,
   setCustomerName,
   setRentPlace,
+  openJexcelModal
 }) => {
   const formatToKoreanTimeString = (date: Date): string => {
     if (!date) return "";
@@ -59,9 +61,6 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   }, [closeModal]);
 
 
-  useEffect(() => {
-    console.log("customerName:", customerName);
-  }, [customerName]);
 
   if (!isOpen) {
     return null;
@@ -91,6 +90,15 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
         </div>
 
         <div className="date-time-item">
+          <label>고객명:</label>
+          <input
+            type="text"
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)} />
+             <button onClick={openJexcelModal}>검색</button>
+        </div>
+
+        <div className="date-time-item">
           <label>제목:</label>
           <input
             type="text"
@@ -103,18 +111,6 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
           />
         </div>
 
-        <div className="date-time-item">
-          <label>고객명:</label>
-          <input
-            type="text"
-            value={customerName}
-            onChange={(e) => {
-              console.log("Previous customer name:", customerName);
-              setCustomerName(e.target.value);
-              console.log("New customer name:", e.target.value);
-            }}
-          />
-        </div>
 
         <div className="date-time-item">
           <label>대관장소:</label>

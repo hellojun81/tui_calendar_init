@@ -1,6 +1,10 @@
-.tui-full-calendar-month .tui-full-calendar-month-more-schedule {
-    display: block !important; /* '더보기' 링크를 항상 표시 */
+.tui-full-calendar-weekday-schedule {
+    height: 10px !important; /* 원하는 높이로 설정 */
+    line-height: 10px !important; /* 원하는 높이로 설정 */
 }
-.tui-full-calendar-month .tui-full-calendar-month-schedule {
-    height: 15px; /* 스케줄 항목의 높이를 수동으로 조정 */
+.tui-full-calendar-weekday-schedule {
+    margin: 0px !important; /* 스케줄 사이의 간격 설정 */
+}
+.tui-full-calendar-weekday {
+    padding-bottom: 1px; /* 전체적으로 아래쪽 간격 추가 */
 }

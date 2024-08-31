@@ -2,6 +2,9 @@ import React, { useRef, useEffect, useState, useCallback, forwardRef, useImperat
 // import TUICalendar from "@toast-ui/react-calendar";
 const TUICalendar = require('@toast-ui/react-calendar').default;
 import { ISchedule } from "tui-calendar";
+import "./Calendar.css"; // CSS 파일을 import
+
+
 
 interface CalendarProps {
   schedules: ISchedule[];
@@ -57,6 +60,11 @@ const Calendar = forwardRef((props: CalendarProps, ref) => {
         useCreationPopup={false}
         useDetailPopup={false}
         schedules={schedules}
+        month={{
+          visibleScheduleCount: 3,  // 표시할 최대 스케줄 개수 설정
+          scheduleHeight: 10
+        }}
+        onC
         onClickSchedule={onClickSchedule}
         onBeforeCreateSchedule={onBeforeCreateSchedule}
         onBeforeUpdateSchedule={onBeforeUpdateSchedule}
