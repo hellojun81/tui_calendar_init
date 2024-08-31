@@ -191,20 +191,7 @@ const Provider: React.FC = () => {
                   customer.notes,
                 ];
               });
-            // const formattedData = data.map((customer: Customer) => [
-            //     customer.id.toString(),
-            //     customer.customerName,
-            //     customer.contactPerson,
-            //     customer.position,
-            //     customer.phone,
-            //     customer.email,
-            //     customer.leadSource,
-            //     customer.inboundDate,
-            //     customer.businessNumber,
-            //     customer.representative,
-            //     customer.location,
-            //     customer.notes,
-            // ]);
+    
 
             setTableData(formattedData);
         } catch (error) {
@@ -214,7 +201,7 @@ const Provider: React.FC = () => {
 
     return (
         <Box sx={{ maxWidth: '800px', margin: '0 auto', padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
-            <h2>거래처 관리</h2>
+
             <SearchFields formData={formData} handleChange={handleChange} handleSearch={handleSearch} />
             <Box sx={{ padding: 2 }}>
                 <CrudButtons

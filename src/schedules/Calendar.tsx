@@ -1,20 +1,18 @@
 import React, { useRef, useEffect, useState, useCallback, forwardRef, useImperativeHandle } from "react";
-// import TUICalendar from "@toast-ui/react-calendar";
 const TUICalendar = require('@toast-ui/react-calendar').default;
 import { ISchedule } from "tui-calendar";
 import "./Calendar.css"; // CSS 파일을 import
-
-
 
 interface CalendarProps {
   schedules: ISchedule[];
   onClickSchedule: (e: any) => void;
   onBeforeCreateSchedule: (scheduleData: any) => void;
   onBeforeUpdateSchedule: (e: any) => void;
+  onMonthChange: (year: number, month: number) => void; // 부모에게 전달할 연도와 월을 위한 함수
 }
 
 const Calendar = forwardRef((props: CalendarProps, ref) => {
-  const { schedules, onClickSchedule, onBeforeCreateSchedule, onBeforeUpdateSchedule } = props;
+  const { schedules, onClickSchedule, onBeforeCreateSchedule, onBeforeUpdateSchedule, onMonthChange } = props;
   const cal = useRef<any>(null);
   const [currentMonth, setCurrentMonth] = useState<number>(0);
   const [currentYear, setCurrentYear] = useState<number>(0);
@@ -23,10 +21,13 @@ const Calendar = forwardRef((props: CalendarProps, ref) => {
     if (cal.current) {
       const calendarInstance = cal.current.getInstance();
       const date = calendarInstance.getDate();
-      setCurrentMonth(date.getMonth() + 1); // Months are 0-indexed
-      setCurrentYear(date.getFullYear());
+      const month = date.getMonth() + 1;
+      const year = date.getFullYear();
+      setCurrentMonth(month); 
+      setCurrentYear(year);
+      onMonthChange(year, month); // 부모 컴포넌트에 전달
     }
-  }, []);
+  }, [onMonthChange]);
 
   const onClickNextButton = () => {
     cal.current.calendarInst.next();
@@ -64,7 +65,6 @@ const Calendar = forwardRef((props: CalendarProps, ref) => {
           visibleScheduleCount: 3,  // 표시할 최대 스케줄 개수 설정
           scheduleHeight: 10
         }}
-        onC
         onClickSchedule={onClickSchedule}
         onBeforeCreateSchedule={onBeforeCreateSchedule}
         onBeforeUpdateSchedule={onBeforeUpdateSchedule}

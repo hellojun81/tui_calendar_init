@@ -1,20 +1,10 @@
-import React, { useCallback, useRef, useState, useEffect } from "react";
-import { render } from "react-dom";
-import TUICalendar from "@toast-ui/react-calendar";
-// import { ISchedule, ICalendarInfo } from "tui-calendar";
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './App'; // App 컴포넌트를 임포트
 
-import "tui-calendar/dist/tui-calendar.css";
-import "tui-date-picker/dist/tui-date-picker.css";
-import "tui-time-picker/dist/tui-time-picker.css";
-import Menu from './menu'
-import "./styles.css";
-function App(){
-  return (
-    <div className="App">
-<Menu/>
-    </div>
-  );
-}
-
-const rootElement = document.getElementById("root");
-render(<App />, rootElement);
+ReactDOM.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+  document.getElementById('root')
+);

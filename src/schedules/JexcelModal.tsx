@@ -15,8 +15,9 @@ const JexcelModal: React.FC<JexcelModalProps> = ({ isOpen, onClose, onSelect, se
   const [selectedCustomer, setSelectedCustomer] = useState<string>("");
 
   useEffect(() => {
+    console.log('searchQuery',searchQuery)
     if (isOpen) {
-      axios.get(`http://localhost:3001/api/customers?customerName=${searchQuery}`)
+      axios.get(`http://localhost:3001/api/customers/customerName?customerName=${searchQuery}`)
         .then(res => {
           const fetchedData = res.data.map((customer: { customerName: string; phone: string; }) => [customer.customerName, customer.phone]);
           setData(fetchedData);

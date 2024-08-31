@@ -3,6 +3,15 @@ import Calendar from "./Calendar";
 import ScheduleModal from "./ScheduleModal";
 import JexcelModal from "./JexcelModal";
 import axios from 'axios';
+import dayjs from 'dayjs';
+// id: 일정의 고유 ID
+// calendarId: 캘린더의 ID
+// title: 일정 제목
+// category: 일정 카테고리 (예: "time", "allday")
+// start: 시작 시간 (Date 객체 또는 ISO 문자열)
+// end: 종료 시간 (Date 객체 또는 ISO 문자열)
+
+
 
 interface ISchedule {
   id?: string;
@@ -32,10 +41,14 @@ interface ISchedule {
 }
 
 const Schedule = () => {
+  // const currentYear = dayjs().year();
+  // const currentMonth = dayjs().month() + 1; // 월은 0부터 시작하므로 +1
   const calendarRef = useRef<any>(null);
   const [schedules, setSchedules] = useState<ISchedule[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+  const [currentYear, setCurrentYear] = useState<number>(dayjs().year());
+  const [currentMonth, setCurrentMonth] = useState<number>(dayjs().month() + 1);
   const [currentSchedule, setCurrentSchedule] = useState<ISchedule | null>(null);
   const [newStart, setNewStart] = useState<Date | null>(null);
   const [newEnd, setNewEnd] = useState<Date | null>(null);
@@ -45,20 +58,32 @@ const Schedule = () => {
   const [customerName, setCustomerName] = useState("");
   const [rentPlace, setRentPlace] = useState("");
   const [searchQuery, setSearchQuery] = useState(""); // 검색어 상태 추가
+  const [id, setId] = useState(""); // ID값
+
+  const formatMonth = (month: number): string => {
+    return month.toString().padStart(2, '0');
+  };
 
   useEffect(() => {
+    getSchedules(currentYear, currentMonth)
+
+  }, []);
+
+  async function getSchedules(year: number, month: number) {
     const fetchSchedules = async () => {
       try {
-        const res = await axios.get(`http://localhost:3001/api/schedules`);
+        const newMonth = `${year}-${formatMonth(month)}`
+        console.log('newMonth',newMonth)
+        // const res = await axios.get(`http://localhost:3001/api/schedules`);
+        const res = await axios.get(`http://localhost:3001/api/schedules/${newMonth}`);
         setSchedules(res.data);
         console.log('resData', res.data)
       } catch (err) {
         console.error('Error fetching schedules:', err);
       }
     };
-
     fetchSchedules();
-  }, []);
+  }
 
   const openModal = useCallback((mode: "create" | "edit", scheduleData: ISchedule | null = null) => {
     setModalMode(mode);
@@ -68,6 +93,7 @@ const Schedule = () => {
     setNewTitle(scheduleData ? scheduleData.title || "" : "");
     setCustomerName(scheduleData ? scheduleData.customerName || "" : "");
     setRentPlace(scheduleData ? scheduleData.rentPlace || "" : "");
+    setId(scheduleData ? scheduleData.id || "" : "");
     setIsModalOpen(true);
   }, []);
 
@@ -118,9 +144,9 @@ const Schedule = () => {
     setNewEnd(changes.end ? new Date(changes.end) : new Date(schedule.end));
   }, []);
 
-  const openJexcelModal = useCallback(() => {
-    console.log('openJexcelModal' ,customerName)
-    setSearchQuery(customerName); 
+  const openJexcelModal = useCallback((customerName: string) => {
+    console.log('openJexcelModal', customerName)
+    setSearchQuery(customerName);
     setIsJexcelModalOpen(true);
   }, []);
 
@@ -129,23 +155,80 @@ const Schedule = () => {
   }, []);
 
   const onSelectCustomer = useCallback((selectedCustomer: string) => {
+    console.log('selectedCustomer', selectedCustomer)
     setCustomerName(selectedCustomer); // 선택된 고객명 설정
     closeJexcelModal(); // 모달 닫기
   }, [closeJexcelModal]);
 
+  const onDeleteSchedule = useCallback(async (id: string) => {
+    console.log('onDeleteSchedule', id)
+    const res = await axios.delete(`http://localhost:3001/api/schedules/${id}`);
+    getSchedules(currentYear, currentMonth)
+
+    // setSchedules(prev => prev.filter(s => s.id !== currentSchedule?.id))
+    // setCustomerName(selectedCustomer); // 선택된 고객명 설정
+    closeJexcelModal(); // 모달 닫기
+  }, [closeJexcelModal]);
+
+  const onSaveSchedule = useCallback(async () => {
+    const newSchedule: ISchedule = {
+      id: currentSchedule?.id || String(Math.random()),
+      calendarId: "1",
+      title: newTitle,
+      start: newStart ? dayjs(newStart).format('YYYY-MM-DD HH:mm:ss') : null,
+      end: newEnd ? dayjs(newEnd).format('YYYY-MM-DD HH:mm:ss') : null,
+      category: 'allday',
+      bgColor: 'red',
+      customerName,
+      rentPlace,
+
+      // 필요한 다른 필드도 추가 가능
+    };
+    console.log('onSaveSchedule', newSchedule)
+    try {
+      if (modalMode === "create") {
+        // 새로운 스케줄 추가
+        await axios.post('http://localhost:3001/api/schedules', newSchedule);
+      } else {
+        // 기존 스케줄 업데이트
+        await axios.put(`http://localhost:3001/api/schedules/${currentSchedule?.id}`, newSchedule);
+      }
+
+      setSchedules(prev => (
+        modalMode === "edit" && currentSchedule
+          ? prev.map(s => (s.id === currentSchedule.id ? newSchedule : s))
+          : [...prev, newSchedule]
+      ));
+      getSchedules(currentYear, currentMonth)
+      closeModal();
+    } catch (err) {
+      console.error('Error saving schedule:', err);
+    }
+  }, [newTitle, newStart, newEnd, customerName, rentPlace, modalMode, currentSchedule, closeModal]);
+  const onMonthChange = useCallback((year: number, month: number) => {
+    setCurrentYear(year);
+    setCurrentMonth(month);
+    getSchedules(year, month)
+  }, []);
+
+
+
+
+
   return (
     <div className="App">
-      <h1>스케줄_관리</h1>
       <Calendar
         ref={calendarRef}
         schedules={schedules}
         onClickSchedule={onClickSchedule}
         onBeforeCreateSchedule={onBeforeCreateSchedule}
         onBeforeUpdateSchedule={onBeforeUpdateSchedule}
+        onMonthChange={onMonthChange} // onMonthChange 함수 전달
       />
       <ScheduleModal
         isOpen={isModalOpen}
         modalMode={modalMode}
+        id={id}
         newStart={newStart}
         newEnd={newEnd}
         newTitle={newTitle}
@@ -156,7 +239,9 @@ const Schedule = () => {
         setCustomerName={setCustomerName}
         setRentPlace={setRentPlace}
         setNewTitle={setNewTitle}
-        onDeleteSchedule={() => setSchedules(prev => prev.filter(s => s.id !== currentSchedule?.id))}
+        onDeleteSchedule={onDeleteSchedule}
+        onSaveSchedule={onSaveSchedule}
+        // onDeleteSchedule={() => setSchedules(prev => prev.filter(s => s.id !== currentSchedule?.id))}
         closeModal={closeModal}
         openJexcelModal={openJexcelModal}
       />
@@ -164,7 +249,7 @@ const Schedule = () => {
         isOpen={isJexcelModalOpen}
         onClose={closeJexcelModal}
         onSelect={onSelectCustomer}
-        searchQuery={searchQuery} 
+        searchQuery={searchQuery}
       />
     </div>
   );

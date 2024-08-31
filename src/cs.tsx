@@ -75,7 +75,7 @@ function Cs() {
                 borderRadius: '8px',
             }}
         >
-            <h2>CS관리</h2>
+    
             <Box sx={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
             <TextField
                     label="끝 날짜"

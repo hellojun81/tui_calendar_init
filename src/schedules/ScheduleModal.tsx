@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 interface ScheduleModalProps {
   isOpen: boolean;
   modalMode: "create" | "edit";
+  id:Number;
   newStart: Date | null;
   newEnd: Date | null;
   newTitle: string;
@@ -11,18 +12,19 @@ interface ScheduleModalProps {
   setNewStart: (date: Date | null) => void;
   setNewEnd: (date: Date | null) => void;
   onSaveSchedule: () => void;
-  onDeleteSchedule: () => void;
+  onDeleteSchedule: (id:number) => void;
   closeModal: () => void;
   onRawDataChange: (key: string, value: string) => void;
   setNewTitle: (title: string) => void;
   setCustomerName: (text: string) => void;
   setRentPlace: (text: string) => void;
-  openJexcelModal:()=>void;
+  openJexcelModal: (customerName: string) => void; // 수정된 부분
 }
 
 const ScheduleModal: React.FC<ScheduleModalProps> = ({
   isOpen,
   modalMode,
+  id,
   newStart,
   newEnd,
   newTitle,
@@ -95,7 +97,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
             type="text"
             value={customerName}
             onChange={(e) => setCustomerName(e.target.value)} />
-             <button onClick={openJexcelModal}>검색</button>
+         <button onClick={() => openJexcelModal(customerName)}>검색</button>
         </div>
 
         <div className="date-time-item">
@@ -126,7 +128,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
             저장
           </button>
           {modalMode === "edit" && (
-            <button className="delete-button" onClick={onDeleteSchedule}>
+            <button className="delete-button" onClick={()=>onDeleteSchedule(id)}>
               삭제
             </button>
           )}
