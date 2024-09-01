@@ -6,21 +6,8 @@ import CrudButtons from '../common/CrudButtons';
 import CustomerDialog from './CustomerDialog';
 import SearchFields from './SearchFields';
 import dayjs from 'dayjs';
+import { Customer } from './Customer'
 import './provider.css';
-interface Customer {
-    id: number;
-    customerName: string;
-    contactPerson: string;
-    position: string;
-    phone: string;
-    email: string;
-    leadSource: string;
-    inboundDate: string;
-    businessNumber: string;
-    representative: string;
-    location: string;
-    notes: string;
-}
 
 const Provider: React.FC = () => {
     const [customers, setCustomers] = useState<Customer[]>([]);
@@ -63,14 +50,14 @@ const Provider: React.FC = () => {
     const formatCustomerData = (row: string[]): Customer => ({
         id: Number(row[0]),
         customerName: row[1],
-        contactPerson:row[2],
+        contactPerson: row[2],
         position: row[3],
         phone: row[4],
         email: row[5],
         leadSource: row[6],
         inboundDate: row[7],
         businessNumber: row[8],
-        representative:row[9],
+        representative: row[9],
         location: row[10],
         notes: row[11],
     });
@@ -86,8 +73,10 @@ const Provider: React.FC = () => {
     };
 
     const handleDeleteCustomer = async (id: number) => {
-        await apiRequest(`http://localhost:3001/api/customers/${id}`, 'DELETE');
-        setCustomers(customers.filter((customer) => customer.id !== id));
+        console.log('handleDeleteCustomer', id)
+        // await apiRequest(`http://localhost:3001/api/customers/${id}`, 'DELETE');
+        // setCustomers(customers.filter((customer) => customer.id !== id));
+        // handleSearch() 
     };
 
     const handleSaveCustomer = async (customer: Customer) => {
@@ -100,6 +89,7 @@ const Provider: React.FC = () => {
             setCustomers([...customers, customer]);
         }
         setDialogOpen(false);
+        handleSearch();
     };
 
     useEffect(() => {
@@ -108,7 +98,7 @@ const Provider: React.FC = () => {
             if (tableRef.current.jspreadsheet) {
                 tableRef.current.jspreadsheet.destroy();
             }
-    
+
             // Jspreadsheet 초기화
             jspreadsheet(tableRef.current, {
                 data: tableData.length ? tableData : [[]],
@@ -120,33 +110,32 @@ const Provider: React.FC = () => {
                     { type: 'text', title: '연락처', width: 50 },
                     { type: 'text', title: 'Email', width: 50 },
                     { type: 'text', title: '유입경로', width: 50 },
-                    { type: 'calendar', title: '등록일', width: 80 , options: {
-                        format: 'YYYY-MM-DD'
-                    }},
+                    {
+                        type: 'calendar', title: '등록일', width: 80, options: {
+                            format: 'YYYY-MM-DD'
+                        }
+                    },
                     { type: 'text', title: '사업자번호', width: 30 },
                     { type: 'text', title: '대표자', width: 30 },
                     { type: 'text', title: '소재지', width: 30 },
                     { type: 'text', title: '메모', width: 30 },
                 ],
-                // 행 전체 선택을 처리하는 onselection 이벤트
-           
 
 
                 onselection: (instance, x1, y1, x2, y2, origin) => {
-                    // 행 전체를 선택할 수 있도록 좌표를 조정
                     const startRow = Math.min(y1, y2);
                     const endRow = Math.max(y1, y2);
-    
-                    // 선택된 행들을 customers 배열로 변환
+
                     const selectedCustomers = [];
                     for (let rowIndex = startRow; rowIndex <= endRow; rowIndex++) {
                         if (tableData[rowIndex]) {
                             const selectedRow = tableData[rowIndex];
-                            selectedCustomers.push(formatCustomerData(selectedRow));
+                            const customerData = formatCustomerData(selectedRow);
+                            selectedCustomers.push(customerData);
+                            console.log('Selected Row Data:', customerData); // 선택된 행의 데이터 출력
                         }
                     }
-    
-                    // 첫 번째 선택된 행의 데이터를 설정
+
                     if (selectedCustomers.length > 0) {
                         setSelectedCustomer(selectedCustomers[0]);
                     }
@@ -175,25 +164,25 @@ const Provider: React.FC = () => {
             const data = await apiRequest(`http://localhost:3001/api/customers?${queryParams}`);
             const formattedData = data.map((customer: Customer) => {
                 const formattedDate = dayjs(customer.inboundDate).format('YYYY-MM-DD'); // 'YYYY-MM-DD' format
-            
                 return [
-                  customer.id.toString(),
-                  customer.customerName,
-                  customer.contactPerson,
-                  customer.position,
-                  customer.phone,
-                  customer.email,
-                  customer.leadSource,
-                  formattedDate, // Use the formatted date
-                  customer.businessNumber,
-                  customer.representative,
-                  customer.location,
-                  customer.notes,
+                    customer.id.toString(),
+                    customer.customerName,
+                    customer.contactPerson,
+                    customer.position,
+                    customer.phone,
+                    customer.email,
+                    customer.leadSource,
+                    formattedDate, // Use the formatted date
+                    customer.businessNumber,
+                    customer.representative,
+                    customer.location,
+                    customer.notes,
                 ];
-              });
-    
-
+            });
             setTableData(formattedData);
+            // if (jspreadsheet.current && formattedData.length > 0) {
+            //     jspreadsheet.current.selectCell(0, 0, 0, 0); // 첫 번째 셀(0,0)을 선택
+            // }
         } catch (error) {
             console.error('There was a problem with the fetch operation:', error);
         }
@@ -209,7 +198,7 @@ const Provider: React.FC = () => {
                     onEdit={() => selectedCustomer && handleEditCustomer(selectedCustomer)}
                     onDelete={() => selectedCustomer && handleDeleteCustomer(selectedCustomer.id)}
                 />
-                <div ref={tableRef} className='jexcel'/>
+                <div ref={tableRef} className='jexcel' />
                 <CustomerDialog
                     open={dialogOpen}
                     onClose={() => setDialogOpen(false)}

@@ -1,21 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import CustomerDialogFields from './CustomerDialogFields';
-
-interface Customer {
-    id?: number;
-    customerName: string;
-    contactPerson: string;
-    position: string;
-    phone: string;
-    email: string;
-    leadSource: string;
-    inboundDate: Date;
-    businessNumber: string;
-    representative: string;
-    location: string;
-    notes: string;
-}
+import { Customer } from './Customer';
+import dayjs from 'dayjs';
 
 interface CustomerDialogProps {
     open: boolean;
@@ -26,13 +13,14 @@ interface CustomerDialogProps {
 
 const CustomerDialog: React.FC<CustomerDialogProps> = ({ open, onClose, onSave, customer }) => {
     const [formData, setFormData] = useState<Customer>({
+        id: customer?.id || 0, // 기본값으로 id 설정
         customerName: '',
         contactPerson: '',
         position: '',
         phone: '',
         email: '',
         leadSource: '',
-        inboundDate: new Date,
+        inboundDate: customer?.inboundDate || new Date(), // Date 객체로 설정
         businessNumber: '',
         representative: '',
         location: '',
@@ -41,16 +29,7 @@ const CustomerDialog: React.FC<CustomerDialogProps> = ({ open, onClose, onSave, 
 
     useEffect(() => {
         if (customer && open) {
-            if (formData.inboundDate === undefined) {
-                const today = new Date();
-                const formattedDate = today.toISOString().split('T')[0]; // 오늘 날짜를 'YYYY-MM-DD' 형식으로 포맷
-                setFormData((prevData) => ({
-                    ...prevData,
-                    inboundDate: today,
-                }));
-            } else {
-                setFormData(customer);
-            }
+            setFormData(customer);
             console.log('Customer inside useEffect:', customer);
         }
     }, [customer, open]);
@@ -61,7 +40,16 @@ const CustomerDialog: React.FC<CustomerDialogProps> = ({ open, onClose, onSave, 
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+        setFormData({
+            ...formData,
+            [name]: name === 'inboundDate' ? dayjs(value).format('YYYY-MM-DD') : value, // inboundDate를 Date 타입으로 처리
+        });
+    };
+    const handleDateChange = (name: string, date: Date | null) => {
+        setFormData((prevData) => ({
+            ...prevData,
+            [name]: date,
+        }));
     };
 
     const handleSave = () => {
@@ -73,7 +61,7 @@ const CustomerDialog: React.FC<CustomerDialogProps> = ({ open, onClose, onSave, 
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
             <DialogTitle>{customer ? '고객 수정' : '고객 추가'}</DialogTitle>
             <DialogContent>
-                <CustomerDialogFields formData={formData} handleChange={handleChange} />
+                <CustomerDialogFields formData={formData} handleChange={handleChange} handleDateChange={handleDateChange} />
             </DialogContent>
             <DialogActions>
                 <Button onClick={onClose} color="secondary">
@@ -88,3 +76,4 @@ const CustomerDialog: React.FC<CustomerDialogProps> = ({ open, onClose, onSave, 
 };
 
 export default CustomerDialog;
+

@@ -34,7 +34,7 @@ const Menu: React.FC = () => {
       case '/newSchedule':
         return '뉴스케쥴 관리';
       default:
-        return '메뉴';
+        return 'AUBE STUDIO CRM';
     }
   };
 
@@ -42,7 +42,7 @@ const Menu: React.FC = () => {
     <div>
       <div className="header-container">
         <Button type="primary" icon={<MenuOutlined />} onClick={showDrawer} />
-        <h1 className="header-title">{getTitle()}</h1> {/* 동적 제목 */}
+        <h1 className="header-title">{getTitle()}</h1> 
       </div>
       <Drawer
         title="메뉴"

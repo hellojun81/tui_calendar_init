@@ -160,7 +160,7 @@ const Schedule = () => {
     closeJexcelModal(); // 모달 닫기
   }, [closeJexcelModal]);
 
-  const onDeleteSchedule = useCallback(async (id: string) => {
+  const onDeleteSchedule = useCallback(async (id: Number) => {
     console.log('onDeleteSchedule', id)
     const res = await axios.delete(`http://localhost:3001/api/schedules/${id}`);
     getSchedules(currentYear, currentMonth)
@@ -175,8 +175,8 @@ const Schedule = () => {
       id: currentSchedule?.id || String(Math.random()),
       calendarId: "1",
       title: newTitle,
-      start: newStart ? dayjs(newStart).format('YYYY-MM-DD HH:mm:ss') : null,
-      end: newEnd ? dayjs(newEnd).format('YYYY-MM-DD HH:mm:ss') : null,
+      start: newStart ? new Date(dayjs(newStart).format('YYYY-MM-DD HH:mm:ss')) : undefined,
+      end: newEnd ? new Date(dayjs(newEnd).format('YYYY-MM-DD HH:mm:ss')) : undefined,      
       category: 'allday',
       bgColor: 'red',
       customerName,
@@ -228,7 +228,7 @@ const Schedule = () => {
       <ScheduleModal
         isOpen={isModalOpen}
         modalMode={modalMode}
-        id={id}
+        id={Number(id)}
         newStart={newStart}
         newEnd={newEnd}
         newTitle={newTitle}
@@ -239,7 +239,7 @@ const Schedule = () => {
         setCustomerName={setCustomerName}
         setRentPlace={setRentPlace}
         setNewTitle={setNewTitle}
-        onDeleteSchedule={onDeleteSchedule}
+        onDeleteSchedule={id => onDeleteSchedule(Number(id))}
         onSaveSchedule={onSaveSchedule}
         // onDeleteSchedule={() => setSchedules(prev => prev.filter(s => s.id !== currentSchedule?.id))}
         closeModal={closeModal}

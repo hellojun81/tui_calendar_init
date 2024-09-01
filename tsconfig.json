@@ -1,6 +1,6 @@
 {
   "include": [
-    "./src/*"
+    "./src/"
 , "src/schedules/schedules.tsx"  ],
   "compilerOptions": {
     "jsx": "react",  // JSX 구문을 사용하기 위해 필요
