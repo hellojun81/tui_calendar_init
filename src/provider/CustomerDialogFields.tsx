@@ -1,11 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { TextField, Box } from '@mui/material';
 import './provider.css';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { Customer } from './Customer';
+// import { Customer } from './Customer';
 import dayjs from 'dayjs';
+
+interface Customer {
+    id: number;
+    customerName: string;
+    contactPerson: string;
+    position: string;
+    phone: string;
+    email: string;
+    leadSource: string;
+    inboundDate: Date;
+    businessNumber: string;
+    representative: string;
+    location: string;
+    notes: string;
+}
+
+
 
 interface CustomerDialogFieldsProps {
     formData: Customer;
@@ -35,12 +52,16 @@ const CustomerDialogFields: React.FC<CustomerDialogFieldsProps> = ({ formData, h
             const newFormatDate = dayjs(newDate).format('YYYY-MM-DD')
             return formData.inboundDate || newFormatDate  // inboundDate가 없으면 오늘 날짜를 반환
         }
+        // console.log(formData['inboundDate' as keyof Customer])
         return formData[name as keyof Customer];
     };
+
+    
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }} className="customer-dialog-field">
             {fields.map((field) => {
+                // console.log(field)
                 return field.name === 'inboundDate' ? (
                     <TextField
                         key={field.name}

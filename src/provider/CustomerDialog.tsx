@@ -1,9 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import CustomerDialogFields from './CustomerDialogFields';
-import { Customer } from './Customer';
+// import { Customer } from './Customer';
 import dayjs from 'dayjs';
-
+interface Customer {
+    id: number;
+    customerName: string;
+    contactPerson: string;
+    position: string;
+    phone: string;
+    email: string;
+    leadSource: string;
+    inboundDate: Date;
+    businessNumber: string;
+    representative: string;
+    location: string;
+    notes: string;
+}
 interface CustomerDialogProps {
     open: boolean;
     onClose: () => void;
@@ -26,17 +39,13 @@ const CustomerDialog: React.FC<CustomerDialogProps> = ({ open, onClose, onSave, 
         location: '',
         notes: '',
     });
-
     useEffect(() => {
         if (customer && open) {
             setFormData(customer);
-            console.log('Customer inside useEffect:', customer);
         }
     }, [customer, open]);
+    
 
-    useEffect(() => {
-        console.log('Updated inboundDate', formData.inboundDate);
-    }, [formData]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;

@@ -70,7 +70,7 @@ const JexcelModal: React.FC<JexcelModalProps> = ({ isOpen, onClose, onSelect, se
   };
 
   const openCustomerDialog = () => {
-    setSelectedCustomer([]);
+    setSelectedCustomer('');
     setDialogOpen(true);
   };
 
