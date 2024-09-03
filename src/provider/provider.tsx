@@ -102,7 +102,7 @@ const Provider: React.FC = () => {
                 oneditionstart: (instance, cell, x, y) => {
                     DblClickEdit(y, y)
                 },
-                onselection: (instance, x1, y1, x2, y2) => {
+                onchange: (instance, x1, y1, x2, y2) => {
                     // 클릭된 셀의 행(row) 인덱스 사용
                     const selectedRowIndex = y1;
                     console.log('selectedRowIndex',selectedRowIndex, x1);
