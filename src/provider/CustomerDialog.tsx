@@ -27,7 +27,7 @@ interface CustomerDialogProps {
 
 const CustomerDialog: React.FC<CustomerDialogProps> = ({ open, onClose, onSave, customer }) => {
     const initialFormData: Customer = {
-        id: '',
+        id: 0,
         customerName: '',
         contactPerson: '',
         position: '',

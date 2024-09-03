@@ -8,7 +8,7 @@ import Estimate from './estimate';
 import Setup from './setup/setup_field';
 import SetupBusinessInfo from './setup/setup_bussiness_info';
 import NewSchedule from './newSchedule';
-
+import Test from './provider/test'; // Test 컴포넌트 가져오기
 const App: React.FC = () => {
   return (
     <Router>
@@ -21,6 +21,7 @@ const App: React.FC = () => {
         <Route path="/setup/setup_field" element={<Setup />} />
         <Route path="/setup/setup_bussiness_info" element={<SetupBusinessInfo />} />
         <Route path="/newSchedule" element={<NewSchedule />} />
+        <Route path="/provider/test" element={<Test />} />  {/* 추가된 경로 */}
       </Routes>
     </Router>
   );

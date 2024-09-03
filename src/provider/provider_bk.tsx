@@ -29,7 +29,7 @@ const Provider: React.FC = () => {
     const [tableData, setTableData] = useState<string[][]>([]);
     const tableRef = useRef<HTMLDivElement>(null);
     const initialLoad = useRef(true); // 최초 로드를 감지하는 useRef
-
+    const jexcelInstance = useRef<any>(null);
     // 고객 데이터 형식으로 변환하는 함수
     const formatCustomerData = (row: string[]): Customer => ({
         id: Number(row[0]),
@@ -49,12 +49,18 @@ const Provider: React.FC = () => {
         setSelectedCustomer(undefined);
         setDialogOpen(true);
     };
-
+    const handleEditCustomer = async (customer: Customer) => {
+        setSelectedCustomer(customer);
+        setDialogOpen(true);
+        console.log('handleEditCustomer', customer)
+    };
 
     const handleDeleteCustomer = async (customer: Customer) => {
         console.log('handleDeleteCustomer', customer)
+        if(selectedCustomer!==undefined){
         await apiRequest(`http://localhost:3001/api/customers/${selectedCustomer.id}`, 'DELETE');
         handleSearch()
+        }
     };
 
 
@@ -75,81 +81,78 @@ const Provider: React.FC = () => {
 
     useEffect(() => {
         if (tableRef.current) {
-            if (tableRef.current.jspreadsheet) {
-                tableRef.current.jspreadsheet.destroy();
-            }
-
-            tableRef.current.jspreadsheet = jspreadsheet(tableRef.current, {
-                data: tableData.length ? tableData : [[]],
-                columns: [
-                    { type: 'number', title: 'ID', width: 20 },
-                    { type: 'text', title: '고객명', width: 80 },
-                    { type: 'text', title: '담당자', width: 80 },
-                    { type: 'text', title: '직책', width: 50 },
-                    { type: 'text', title: '연락처', width: 50 },
-                    { type: 'text', title: 'Email', width: 50 },
-                    { type: 'text', title: '유입경로', width: 50 },
-                    {
-                        type: 'calendar', title: '등록일', width: 80, options: {
-                            format: 'YYYY-MM-DD',
+            console.log("tableData", tableData);
+            if (!jexcelInstance.current) {
+                // console.log("JSpreadsheet 초기화 시작");
+                jexcelInstance.current = jspreadsheet(tableRef.current, {
+                    data: tableData.length ? tableData : [[]],
+                    columns: [
+                        { type: 'numeric', title: 'ID', width: 20 },
+                        { type: 'text', title: '고객명', width: 80 },
+                        { type: 'text', title: '담당자', width: 80 },
+                        { type: 'text', title: '직책', width: 50 },
+                        { type: 'text', title: '연락처', width: 50 },
+                        { type: 'text', title: 'Email', width: 50 },
+                        { type: 'text', title: '유입경로', width: 50 },
+                        {
+                            type: 'calendar', title: '등록일', width: 80, options: {
+                                format: 'YYYY-MM-DD',
+                            },
                         },
+                        { type: 'text', title: '사업자번호', width: 30 },
+                        { type: 'text', title: '대표자', width: 30 },
+                        { type: 'text', title: '소재지', width: 30 },
+                        { type: 'text', title: '메모', width: 30 },
+                    ],
+                    // oneditionstart: (instance, cell, x, y) => {
+                    //     DblClickEdit(y, y)
+                    // },
+                    onselection: (instance, x1, y1, x2, y2) => {
+                        const rowData = jexcelInstance.current.getRowData(y1);
+                        console.log('Selected Row Data:', rowData);
+                        setSelectedCustomer(rowData)
+                        // console.log("tableData", tableData);
+                        // const selectedCustomers = [];
+                        // for (let rowIndex = y1; rowIndex <= y1; rowIndex++) {
+                        //     if (tableData[rowIndex]) {
+                        //         const selectedRow = tableData[rowIndex];
+                        //         selectedCustomers.push(formatCustomerData(selectedRow));
+                        //     }
+                        // }
+                        // selectedCustomers[0].inboundDate = dayjs(selectedCustomers[0].inboundDate).format('YYYY-MM-DD')
+                        // console.log('selectedCustomers', selectedCustomers)
+                        // setSelectedCustomer(selectedCustomers[0]);
+                        // setDialogOpen(true);
                     },
-                    { type: 'text', title: '사업자번호', width: 30 },
-                    { type: 'text', title: '대표자', width: 30 },
-                    { type: 'text', title: '소재지', width: 30 },
-                    { type: 'text', title: '메모', width: 30 },
-                ],
-                oneditionstart: (instance, cell, x, y) => {
-                    DblClickEdit(y, y)
-                },
-                onchange: (instance, x1, y1, x2, y2) => {
-                    // 클릭된 셀의 행(row) 인덱스 사용
-                    const selectedRowIndex = y1;
-                    console.log('selectedRowIndex',selectedRowIndex, x1);
-                    console.log(instance);
-                    console.log(x2, y2);
-                },
-            });
-        }
+                });
 
-        if (selectedCustomer === undefined) {
-            console.log('Customer state has been reset:', selectedCustomer);
-        }
-
-    }, [tableData, selectedCustomer]);
-
-    const handleSelection = useCallback((instance, x1, y1, x2, y2) => {
-        // 최초 로드 시에는 무시
-        if (initialLoad.current) {
-            initialLoad.current = false;
-            return;
-        }
-
-        const selectedRowIndex = y1;
-        const selectedRowData = tableData[selectedRowIndex];
-        const newCustomer = formatCustomerData(selectedRowData);
-
-        // 기존 상태와 비교하여 다를 때만 업데이트
-        if (JSON.stringify(selectedCustomer) !== JSON.stringify(newCustomer)) {
-            setSelectedCustomer(newCustomer);
-        }
-    }, [tableData, selectedCustomer]);
-
-
-
-    const DblClickEdit = (startRow: Number, endRow: Number) => {
-        const selectedCustomers = [];
-        for (let rowIndex = startRow; rowIndex <= endRow; rowIndex++) {
-            if (tableData[rowIndex]) {
-                const selectedRow = tableData[rowIndex];
-                selectedCustomers.push(formatCustomerData(selectedRow));
+            } else {
+                // 기존 인스턴스에 데이터만 업데이트
+                jexcelInstance.current.setData(tableData);
             }
+        } else {
+            console.error("tableRef.current가 null입니다.");
         }
-        selectedCustomers[0].inboundDate = dayjs(selectedCustomers[0].inboundDate).format('YYYY-MM-DD')
-        console.log('selectedCustomers', selectedCustomers)
-        setSelectedCustomer(selectedCustomers[0]);
-        setDialogOpen(true);
-    }
+
+    }, [tableData, selectedCustomer]);
+
+
+
+    // const DblClickEdit = (startRow: Number, endRow: Number) => {
+    //     const selectedCustomers = [];
+    //     for (let rowIndex = startRow; rowIndex <= endRow; rowIndex++) {
+    //         if (tableData[rowIndex]) {
+    //             const selectedRow = tableData[rowIndex];
+    //             selectedCustomers.push(formatCustomerData(selectedRow));
+    //         }
+    //     }
+    //     selectedCustomers[0].inboundDate = dayjs(selectedCustomers[0].inboundDate).format('YYYY-MM-DD')
+    //     console.log('selectedCustomers', selectedCustomers)
+    //     setSelectedCustomer(selectedCustomers[0]);
+    //     setDialogOpen(true);
+    // }
+
+
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -195,7 +198,7 @@ const Provider: React.FC = () => {
             <Box sx={{ padding: 2 }}>
                 <CrudButtons
                     onAdd={handleAddCustomer}
-                    // onEdit={() => selectedCustomer && handleEditCustomer(selectedCustomer)}
+                    onEdit={() => selectedCustomer && handleEditCustomer(selectedCustomer)}
                     onDelete={() => selectedCustomer && handleDeleteCustomer(selectedCustomer)}
                 />
                 <div ref={tableRef} className='jexcel' />
@@ -211,3 +214,5 @@ const Provider: React.FC = () => {
 };
 
 export default Provider;
+
+
