@@ -47,15 +47,20 @@ const CustomerDialogFields: React.FC<CustomerDialogFieldsProps> = ({ formData, h
     ];
 
     const getValue = (name: string) => {
+        // console.log('Field name:', name); // 필드 이름 출력
+    
         if (name === 'inboundDate') {
-            const newDate = new Date()
-            const newFormatDate = dayjs(newDate).format('YYYY-MM-DD')
-            return formData.inboundDate || newFormatDate  // inboundDate가 없으면 오늘 날짜를 반환
+            const newDate = new Date();
+            const newFormatDate = dayjs(newDate).format('YYYY-MM-DD');
+            const value = dayjs(formData.inboundDate).format('YYYY-MM-DD') || newFormatDate; // inboundDate가 없으면 오늘 날짜를 반환
+            // console.log('Returning value for inboundDate:', value);
+            return value;
         }
-        // console.log(formData['inboundDate' as keyof Customer])
-        return formData[name as keyof Customer];
+    
+        const value = formData[name as keyof Customer];
+        // console.log(`Returning value for ${name}:`, value);
+        return value;
     };
-
     
 
     return (
@@ -72,22 +77,6 @@ const CustomerDialogFields: React.FC<CustomerDialogFieldsProps> = ({ formData, h
                         type={field.type || 'date'}
 
                     />
-                    // <LocalizationProvider key={field.name} dateAdapter={AdapterDateFns}>
-                    //     <DatePicker
-                    //         label={field.label}
-                    //         value={getValue(field.name)}
-                    //         onChange={(date) => {
-                    //             if (date) {
-                    //                 const formattedDate = format(date, 'yyyy-MM-dd'); // 원하는 포맷으로 변환 (예: 'yyyy-MM-dd')
-                    //                 console.log(`DatePicker changed: ${field.name}`, formattedDate); // 변환된 날짜 출력
-                    //                 handleDateChange(field.name, formattedDate);
-                    //             } else {
-                    //                 handleDateChange(field.name, null); // date가 null일 경우 처리
-                    //             }
-                    //         }}
-                    //         renderInput={(params) => <TextField {...params} fullWidth />}
-                    //     />
-                    // </LocalizationProvider>
                 ) : (
                     <TextField
                         key={field.name}

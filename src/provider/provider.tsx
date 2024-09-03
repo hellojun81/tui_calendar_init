@@ -8,23 +8,8 @@ import SearchFields from './SearchFields';
 import dayjs from 'dayjs';
 import { Customer } from './Customer';
 import './provider.css';
+import { apiRequest } from '../utils/api';  // Importing the apiRequest function
 
-// API 호출을 처리하는 함수
-const apiRequest = async (url: string, method: string = 'GET', body?: any) => {
-    const options: RequestInit = {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-    };
-    if (body) {
-        options.body = JSON.stringify(body);
-    }
-
-    const response = await fetch(url, options);
-    if (!response.ok) {
-        throw new Error('Network response was not ok');
-    }
-    return response.json();
-};
 
 const Provider: React.FC = () => {
     const [customers, setCustomers] = useState<Customer[]>([]);
@@ -43,6 +28,7 @@ const Provider: React.FC = () => {
 
     const [tableData, setTableData] = useState<string[][]>([]);
     const tableRef = useRef<HTMLDivElement>(null);
+    const initialLoad = useRef(true); // 최초 로드를 감지하는 useRef
 
     // 고객 데이터 형식으로 변환하는 함수
     const formatCustomerData = (row: string[]): Customer => ({
@@ -53,34 +39,33 @@ const Provider: React.FC = () => {
         phone: row[4],
         email: row[5],
         leadSource: row[6],
-        inboundDate: new Date(row[7]),
+        inboundDate: new Date(dayjs(row[7]).format('YYYY-MM-DD')),
         businessNumber: row[8],
         representative: row[9],
         location: row[10],
         notes: row[11],
     });
-
     const handleAddCustomer = () => {
         setSelectedCustomer(undefined);
         setDialogOpen(true);
     };
 
-    const handleEditCustomer = (customer: Customer) => {
-        setSelectedCustomer(customer);
-        setDialogOpen(true);
-    };
 
     const handleDeleteCustomer = async (customer: Customer) => {
-        console.log('handleDeleteCustomer', customer.id);
-        // API 삭제 요청 코드 추가
+        console.log('handleDeleteCustomer', customer)
+        await apiRequest(`http://localhost:3001/api/customers/${selectedCustomer.id}`, 'DELETE');
+        handleSearch()
     };
 
+
     const handleSaveCustomer = async (customer: Customer) => {
-        if (customer.id !== undefined) {
+        // console.log('handleSaveCustomer', customer)
+        if (customer.id !== '') {
             await apiRequest(`http://localhost:3001/api/customers/${customer.id}`, 'PUT', customer);
             setCustomers(customers.map((c) => (c.id === customer.id ? customer : c)));
         } else {
-            customer.id = new Date().getTime();
+            console.log('New SaveCustomer', customer)
+            customer.inboundDate = dayjs(customer.inboundDate).format('YYYY-MM-DD')
             await apiRequest('http://localhost:3001/api/customers', 'POST', customer);
             setCustomers([...customers, customer]);
         }
@@ -88,37 +73,12 @@ const Provider: React.FC = () => {
         handleSearch();
     };
 
-    const handleSelection = useCallback((instance: any, x1: number, y1: number, x2: number, y2: number) => {
-        const startRow = Math.min(y1, y2);
-        const endRow = Math.max(y1, y2);
-        const selectedCustomers = [];
-    
-        console.log(`Selection Event: StartRow=${startRow}, EndRow=${endRow}`);
-    
-        for (let rowIndex = startRow; rowIndex <= endRow; rowIndex++) {
-            if (tableData[rowIndex]) {
-                const selectedRow = tableData[rowIndex];
-                selectedCustomers.push(formatCustomerData(selectedRow));
-            }
-        }
-    
-        // 상태가 실제로 변경된 경우에만 업데이트
-        if (selectedCustomers.length > 0 && !deepEqual(selectedCustomer, selectedCustomers[0])) {
-            setSelectedCustomer(selectedCustomers[0]);
-        }
-    }, [selectedCustomer, tableData]);
-
-    function deepEqual(obj1: any, obj2: any): boolean {
-        return JSON.stringify(obj1) === JSON.stringify(obj2);
-    }
-
-
     useEffect(() => {
         if (tableRef.current) {
             if (tableRef.current.jspreadsheet) {
                 tableRef.current.jspreadsheet.destroy();
             }
-            console.log('useEffect')
+
             tableRef.current.jspreadsheet = jspreadsheet(tableRef.current, {
                 data: tableData.length ? tableData : [[]],
                 columns: [
@@ -139,16 +99,62 @@ const Provider: React.FC = () => {
                     { type: 'text', title: '소재지', width: 30 },
                     { type: 'text', title: '메모', width: 30 },
                 ],
-                onselection: handleSelection,
+                oneditionstart: (instance, cell, x, y) => {
+                    DblClickEdit(y, y)
+                },
+                onselection: (instance, x1, y1, x2, y2) => {
+                    // 클릭된 셀의 행(row) 인덱스 사용
+                    const selectedRowIndex = y1;
+                    console.log('selectedRowIndex',selectedRowIndex, x1);
+                    console.log(instance);
+                    console.log(x2, y2);
+                },
             });
         }
-    }, [tableData, handleSelection]);
+
+        if (selectedCustomer === undefined) {
+            console.log('Customer state has been reset:', selectedCustomer);
+        }
+
+    }, [tableData, selectedCustomer]);
+
+    const handleSelection = useCallback((instance, x1, y1, x2, y2) => {
+        // 최초 로드 시에는 무시
+        if (initialLoad.current) {
+            initialLoad.current = false;
+            return;
+        }
+
+        const selectedRowIndex = y1;
+        const selectedRowData = tableData[selectedRowIndex];
+        const newCustomer = formatCustomerData(selectedRowData);
+
+        // 기존 상태와 비교하여 다를 때만 업데이트
+        if (JSON.stringify(selectedCustomer) !== JSON.stringify(newCustomer)) {
+            setSelectedCustomer(newCustomer);
+        }
+    }, [tableData, selectedCustomer]);
+
+
+
+    const DblClickEdit = (startRow: Number, endRow: Number) => {
+        const selectedCustomers = [];
+        for (let rowIndex = startRow; rowIndex <= endRow; rowIndex++) {
+            if (tableData[rowIndex]) {
+                const selectedRow = tableData[rowIndex];
+                selectedCustomers.push(formatCustomerData(selectedRow));
+            }
+        }
+        selectedCustomers[0].inboundDate = dayjs(selectedCustomers[0].inboundDate).format('YYYY-MM-DD')
+        console.log('selectedCustomers', selectedCustomers)
+        setSelectedCustomer(selectedCustomers[0]);
+        setDialogOpen(true);
+    }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
-
     const handleSearch = async () => {
         try {
             const queryParams = new URLSearchParams({
@@ -187,13 +193,13 @@ const Provider: React.FC = () => {
         <Box sx={{ maxWidth: '800px', margin: '0 auto', padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
             <SearchFields formData={formData} handleChange={handleChange} handleSearch={handleSearch} />
             <Box sx={{ padding: 2 }}>
-           <CrudButtons
+                <CrudButtons
                     onAdd={handleAddCustomer}
-                    onEdit={() => selectedCustomer && handleEditCustomer(selectedCustomer)}
+                    // onEdit={() => selectedCustomer && handleEditCustomer(selectedCustomer)}
                     onDelete={() => selectedCustomer && handleDeleteCustomer(selectedCustomer)}
-                /> 
+                />
                 <div ref={tableRef} className='jexcel' />
-             <CustomerDialog
+                <CustomerDialog
                     open={dialogOpen}
                     onClose={() => setDialogOpen(false)}
                     onSave={handleSaveCustomer}
@@ -205,3 +211,5 @@ const Provider: React.FC = () => {
 };
 
 export default Provider;
+
+

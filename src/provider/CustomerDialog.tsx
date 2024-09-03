@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import CustomerDialogFields from './CustomerDialogFields';
-// import { Customer } from './Customer';
 import dayjs from 'dayjs';
+
 interface Customer {
     id: number;
     customerName: string;
@@ -17,6 +17,7 @@ interface Customer {
     location: string;
     notes: string;
 }
+
 interface CustomerDialogProps {
     open: boolean;
     onClose: () => void;
@@ -25,35 +26,44 @@ interface CustomerDialogProps {
 }
 
 const CustomerDialog: React.FC<CustomerDialogProps> = ({ open, onClose, onSave, customer }) => {
-    const [formData, setFormData] = useState<Customer>({
-        id: customer?.id || 0, // 기본값으로 id 설정
+    const initialFormData: Customer = {
+        id: '',
         customerName: '',
         contactPerson: '',
         position: '',
         phone: '',
         email: '',
         leadSource: '',
-        inboundDate: customer?.inboundDate || new Date(), // Date 객체로 설정
+        inboundDate: new Date(),
         businessNumber: '',
         representative: '',
         location: '',
         notes: '',
-    });
+    };
+
+    const [formData, setFormData] = useState<Customer>(initialFormData);
+
     useEffect(() => {
+        console.log(customer)
         if (customer && open) {
             setFormData(customer);
         }
     }, [customer, open]);
-    
 
+    useEffect(() => {
+        if (!open) {
+            setFormData(initialFormData); // 폼 초기화
+        }
+    }, [open]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData({
             ...formData,
-            [name]: name === 'inboundDate' ? dayjs(value).format('YYYY-MM-DD') : value, // inboundDate를 Date 타입으로 처리
+            [name]: name === 'inboundDate' ? dayjs(value).format('YYYY-MM-DD') : value,
         });
     };
+
     const handleDateChange = (name: string, date: Date | null) => {
         setFormData((prevData) => ({
             ...prevData,
@@ -85,4 +95,3 @@ const CustomerDialog: React.FC<CustomerDialogProps> = ({ open, onClose, onSave, 
 };
 
 export default CustomerDialog;
-
