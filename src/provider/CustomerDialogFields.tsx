@@ -45,9 +45,9 @@ const CustomerDialogFields: React.FC<CustomerDialogFieldsProps> = ({ formData, h
         { label: '소재지', name: 'location' },
         { label: '메모', name: 'notes', multiline: true, rows: 3 },
     ];
-    console.log('fields', fields)
+    // console.log('fields', fields)
     const getValue = (name: string) => {
-       console.log('formData:', formData); // 필드 이름 출력
+    //    console.log('formData:', formData); // 필드 이름 출력
 
         if (name === 'inboundDate') {
             const newDate = new Date();
@@ -59,7 +59,7 @@ const CustomerDialogFields: React.FC<CustomerDialogFieldsProps> = ({ formData, h
         
         const value = formData[name as keyof Customer];
         // console.log(`Returning value for ${name}:`, value);
-        console.log('value',value)
+        // console.log('value',value)
         return value;
     };
 
