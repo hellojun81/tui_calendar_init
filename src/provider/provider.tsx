@@ -6,10 +6,9 @@ import CrudButtons from '../common/CrudButtons';
 import CustomerDialog from './CustomerDialog';
 import SearchFields from './SearchFields';
 import dayjs from 'dayjs';
-import { Customer,JSpreadsheetInstance } from './Customer';
+import { Customer, JSpreadsheetInstance } from './Customer';
 import './provider.css';
-import { apiRequest } from '../utils/api';  // Importing the apiRequest function
-
+import axios, { Axios } from 'axios';
 
 const Provider: React.FC = () => {
     const [customers, setCustomers] = useState<Customer[]>([]);
@@ -25,7 +24,7 @@ const Provider: React.FC = () => {
         endDate: endDateString,
         customerName: '',
     });
-    const [activeRow,SetactiveRow]=useState<number>(0);
+    const [activeRow, SetactiveRow] = useState<number>(0);
     const [tableData, setTableData] = useState<string[][]>([]);
     const tableRef = useRef<HTMLDivElement>(null);
     const jexcelInstance = useRef<any>(null);
@@ -50,7 +49,7 @@ const Provider: React.FC = () => {
         setSelectedCustomer(undefined);
         setDialogOpen(true);
     };
-    const handleEditCustomer =  () => {
+    const handleEditCustomer = () => {
         const selectedCustomers = [];
         for (let rowIndex = activeRow; rowIndex <= activeRow; rowIndex++) {
             if (tableData[rowIndex]) {
@@ -68,9 +67,9 @@ const Provider: React.FC = () => {
     const handleDeleteCustomer = async (activeRow: Number) => {
         // const id=tableData[activeRow][0]
         const id = tableData[activeRow as number][0];
-        if(id!==undefined){
-        await apiRequest(`http://localhost:3001/api/customers/${id}`, 'DELETE');
-        handleSearch()
+        if (id !== undefined) {
+            await axios.delete(`http://localhost:3001/api/customers/${id}`);
+            handleSearch()
         }
     };
 
@@ -78,12 +77,12 @@ const Provider: React.FC = () => {
     const handleSaveCustomer = async (customer: Customer) => {
         // console.log('handleSaveCustomer', customer)
         if (customer.id !== 0) {
-            await apiRequest(`http://localhost:3001/api/customers/${customer.id}`, 'PUT', customer);
+            await axios.put(`http://localhost:3001/api/customers/${customer.id}`, customer);
             setCustomers(customers.map((c) => (c.id === customer.id ? customer : c)));
         } else {
             console.log('New SaveCustomer', customer)
             customer.inboundDate = dayjs(customer.inboundDate).format('YYYY-MM-DD')
-            await apiRequest('http://localhost:3001/api/customers', 'POST', customer);
+            await axios.post('http://localhost:3001/api/customers', customer);
             setCustomers([...customers, customer]);
         }
         setDialogOpen(false);
@@ -93,7 +92,7 @@ const Provider: React.FC = () => {
     useEffect(() => {
         if (tableRef.current) {
             if (!jexcelInstance.current) {
-                 console.log("JSpreadsheet 초기화 시작");
+                console.log("JSpreadsheet 초기화 시작");
                 jexcelInstance.current = jspreadsheet(tableRef.current, {
                     data: tableData.length ? tableData : [[]],
                     columns: [
@@ -113,7 +112,7 @@ const Provider: React.FC = () => {
                         { type: 'text', title: '대표자', width: 30 },
                         { type: 'text', title: '소재지', width: 30 },
                         { type: 'text', title: '메모', width: 30 },
-                    ],           
+                    ],
                 });
             } else {
                 // 기존 인스턴스에 데이터만 업데이트
@@ -149,46 +148,49 @@ const Provider: React.FC = () => {
                 endDate: formData.endDate,
                 ...(formData.customerName && { customerName: formData.customerName }),
             });
-    
-            const data = await apiRequest(`http://localhost:3001/api/customers?${queryParams}`);
-            setTableData(data.map((customer: Customer) => [
-                customer.id.toString(),
-                customer.customerName,
-                customer.contactPerson,
-                customer.position,
-                customer.phone,
-                customer.email,
-                customer.leadSource,
-                dayjs(customer.inboundDate).format('YYYY-MM-DD'),
-                customer.businessNumber,
-                customer.representative,
-                customer.location,
-                customer.notes,
-            ]));
-        } catch (error) {
-            console.error('There was a problem with the fetch operation:', error);
-        }
+
+            await axios.get(`http://localhost:3001/api/customers?${queryParams}`)
+            .then(res => {
+                const data = res.data
+                setTableData(data.map((customer: Customer) => [
+                    customer.id.toString(),
+                    customer.customerName,
+                    customer.contactPerson,
+                    customer.position,
+                    customer.phone,
+                    customer.email,
+                    customer.leadSource,
+                    dayjs(customer.inboundDate).format('YYYY-MM-DD'),
+                    customer.businessNumber,
+                    customer.representative,
+                    customer.location,
+                    customer.notes,
+                ]));
+            })
+        }catch (error) {
+    console.error('There was a problem with the fetch operation:', error);
+}
     };
-    
-    return (
-        <Box sx={{ maxWidth: '800px', margin: '0 auto', padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
-            <SearchFields formData={formData} handleChange={handleChange} handleSearch={handleSearch} />
-            <Box sx={{ padding: 2 }}>
-                <CrudButtons
-                    onAdd={handleAddCustomer}
-                    onEdit={() => activeRow && handleEditCustomer()}
-                    onDelete={() => activeRow && handleDeleteCustomer(activeRow)}
-                />
-                <div ref={tableRef} />
-                <CustomerDialog
-                    open={dialogOpen}
-                    onClose={() => setDialogOpen(false)}
-                    onSave={handleSaveCustomer}
-                    customer={selectedCustomer}
-                />
-            </Box>
+
+return (
+    <Box sx={{ maxWidth: '800px', margin: '0 auto', padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
+        <SearchFields formData={formData} handleChange={handleChange} handleSearch={handleSearch} />
+        <Box sx={{ padding: 2 }}>
+            <CrudButtons
+                onAdd={handleAddCustomer}
+                onEdit={() => activeRow && handleEditCustomer()}
+                onDelete={() => activeRow && handleDeleteCustomer(activeRow)}
+            />
+            <div ref={tableRef} />
+            <CustomerDialog
+                open={dialogOpen}
+                onClose={() => setDialogOpen(false)}
+                onSave={handleSaveCustomer}
+                customer={selectedCustomer}
+            />
         </Box>
-    );
+    </Box>
+);
 };
 
 export default Provider;

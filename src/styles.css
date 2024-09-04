@@ -53,8 +53,8 @@
 }
 
 input, textarea {
-  margin-bottom: 15px;
-  padding: 5px;
+  /* margin-bottom: 15px;
+  padding: 5px; */
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 12px;
@@ -70,11 +70,12 @@ textarea {
 }
 
 button {
-  padding: 10px 15px;
+  padding: 5px;
   border: none;
-  border-radius: 4px;
-  font-size: 14px;
+  /* border-radius: 4px; */
+  font-size: 12px;
   cursor: pointer;
+  color: #000;
 }
 
 button.save-button {
@@ -91,28 +92,28 @@ button.cancel-button {
   background-color: #6c757d;
   color: white;
 }
-.date-time-container {
+/* .date-time-container {
   display: flex;
   justify-content: space-between;
   width: 100%;
 }
 
 .date-time-item {
-  flex: 0 0 48%; /* Each div takes up 48% of the width, with 4% margin in total for spacing */
+  flex: 0 0 48%; Each div takes up 48% of the width, with 4% margin in total for spacing 
 }
 
 .date-time-item label {
   display: block;
-  margin-bottom: 8px; /* Space between label and input */
+  margin-bottom: 8px; Space between label and input 
 }
-
+*/
 .date-time-item input {
   width: 100%;
   padding: 3px;
   font-size: 9px;
   letter-spacing: 0px; 
-  box-sizing: border-box; /* Include padding in the width */
-}
+  box-sizing: border-box; /* Include padding in the width 
+} 
 
 .ant-tabs-content-holder {
   min-height: 100px; /* 적절한 최소 높이를 설정 */

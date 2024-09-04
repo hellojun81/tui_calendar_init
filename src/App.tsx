@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Menu from './Menu'; // Menu 컴포넌트를 임포트
 import Provider from './provider/provider';
-import Schedules from './schedules/Schedule';
+import Schedules from './schedules/Schedule.tsx';
 import Cs from './cs';
 import Estimate from './estimate';
 import Setup from './setup/setup_field';

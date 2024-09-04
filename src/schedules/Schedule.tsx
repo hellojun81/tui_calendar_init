@@ -4,41 +4,8 @@ import ScheduleModal from "./ScheduleModal";
 import JexcelModal from "./JexcelModal";
 import axios from 'axios';
 import dayjs from 'dayjs';
-// id: 일정의 고유 ID
-// calendarId: 캘린더의 ID
-// title: 일정 제목
-// category: 일정 카테고리 (예: "time", "allday")
-// start: 시작 시간 (Date 객체 또는 ISO 문자열)
-// end: 종료 시간 (Date 객체 또는 ISO 문자열)
+import {ISchedule} from './schedule'
 
-
-
-interface ISchedule {
-  id?: string;
-  calendarId?: string;
-  title?: string;
-  body?: string;
-  start?: Date;
-  end?: Date;
-  goingDuration?: number;
-  comingDuration?: number;
-  category?: string;
-  attendees?: string[];
-  recurrenceRule?: string;
-  isPending?: boolean;
-  isFocused?: boolean;
-  isVisible?: boolean;
-  isReadOnly?: boolean;
-  isPrivate?: boolean;
-  color?: string;
-  bgColor?: string;
-  dragBgColor?: string;
-  borderColor?: string;
-  customStyle?: string;
-  rentPlace?: string;
-  state?: string;
-  customerName?: string;
-}
 
 const Schedule = () => {
   // const currentYear = dayjs().year();
@@ -52,9 +19,12 @@ const Schedule = () => {
   const [currentSchedule, setCurrentSchedule] = useState<ISchedule | null>(null);
   const [newStart, setNewStart] = useState<Date | null>(null);
   const [newEnd, setNewEnd] = useState<Date | null>(null);
-  const [rawData, setRawData] = useState<{ [key: string]: any }>({});
+  // const [rawData, setRawData] = useState<{ [key: string]: any }>({});
   const [isJexcelModalOpen, setIsJexcelModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
+  const [estPrice, setEstprice] = useState("");
+  const [userInt, setUserInt] = useState("");
+  const [gubun, setGubun] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [rentPlace, setRentPlace] = useState("");
   const [searchQuery, setSearchQuery] = useState(""); // 검색어 상태 추가
@@ -239,6 +209,9 @@ const Schedule = () => {
         setCustomerName={setCustomerName}
         setRentPlace={setRentPlace}
         setNewTitle={setNewTitle}
+        setGubun={setGubun}
+        setUserInt={setUserInt}
+        setEstprice={setEstprice}
         onDeleteSchedule={id => onDeleteSchedule(Number(id))}
         onSaveSchedule={onSaveSchedule}
         // onDeleteSchedule={() => setSchedules(prev => prev.filter(s => s.id !== currentSchedule?.id))}
