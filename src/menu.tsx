@@ -23,7 +23,7 @@ const Menu: React.FC = () => {
         return '스케쥴 관리';
       case '/provider/provider':
         return '거래처 관리';
-      case '/cs':
+      case '/cs/cs':
         return 'CS 관리';
       case '/estimate':
         return '견적서 관리';
@@ -60,7 +60,7 @@ const Menu: React.FC = () => {
             <Link to="/provider/provider" onClick={onClose}>거래처관리</Link>
           </AntdMenu.Item>
           <AntdMenu.Item key="3">
-            <Link to="/cs" onClick={onClose}>CS관리</Link>
+            <Link to="/cs/cs" onClick={onClose}>CS관리</Link>
           </AntdMenu.Item>
           <AntdMenu.Item key="4">
             <Link to="/estimate" onClick={onClose}>견적서관리</Link>

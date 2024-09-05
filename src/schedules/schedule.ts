@@ -26,6 +26,7 @@ export interface ISchedule {
     gubun?:string;
     userInt?:string;
     estPrice?:number;
+    etc?:string;
   }
 
 export interface ScheduleModalProps {
@@ -37,14 +38,22 @@ export interface ScheduleModalProps {
     newTitle: string;
     customerName: string;
     rentPlace: string;
+    etc: string;
+    gubun?:string;
+    userInt?:string;
+    estPrice?:number;
     setNewStart: (date: Date | null) => void;
     setNewEnd: (date: Date | null) => void;
     onSaveSchedule: () => void;
     onDeleteSchedule: (id: number) => void;
     closeModal: () => void;
-    onRawDataChange: (key: string, value: string) => void;
+    // onRawDataChange: (key: string, value: string) => void;
     setNewTitle: (title: string) => void;
     setCustomerName: (text: string) => void;
     setRentPlace: (text: string) => void;
     openJexcelModal: (customerName: string) => void; // 수정된 부분
+    setGubun: (text: string) => void;
+    setUserInt: (text: string) => void;
+    setEtc: (text: string) => void;
+    setEstprice: (text: number) => void;
   }

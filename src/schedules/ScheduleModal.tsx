@@ -3,6 +3,8 @@ import "./Calendar";
 import { ScheduleModalProps } from './schedule'
 import { ClassNames } from "@emotion/react";
 import RentPlaceSelector from './RentPlaceSelector'; // RentPlaceSelector 컴포넌트 import
+import GetCsKind from './get_csKind'
+
 
 const ScheduleModal: React.FC<ScheduleModalProps> = ({
   isOpen,
@@ -16,6 +18,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   gubun,
   userInt,
   estPrice,
+  etc,
   setNewStart,
   setNewEnd,
   onSaveSchedule,
@@ -27,7 +30,8 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   openJexcelModal,
   setGubun,
   setUserInt,
-  setEstprice
+  setEstprice,
+  setEtc
 }) => {
   const [selrentPlace, setSelRentPlace] = useState<string[]>([]);
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
@@ -78,59 +82,65 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   }
 
   return (
-    <div className="modal">
+    <div className="modal" id="ScheduleModal">
+         <GetCsKind />
       <div className="modal-content">
         <h2>{modalMode === "edit" ? "스케줄 수정" : "새 스케줄 추가"}</h2>
-        <div className="date-time-item">
-          <label>고객명:</label>
-          <div className="input-with-button">
+         
+        <div className="date-time-container">
+          <div className="date-time-item-row">
+            <label>고객명:</label>
+
             <input
               type="text"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
             />
             <button onClick={() => openJexcelModal(customerName)} className="search-button">검색</button>
+
           </div>
-        </div>
-        <div className="date-time-container">
           <div className="date-time-item-row">
-            <div className="box">
+            <div className="date_box">
               <label>시작일:</label>
-              <input
-                type="date"
-                value={newStart ? formatToKoreanTimeString(newStart) : ""}
-                onChange={(e) => setNewStart(new Date(e.target.value))}
-                className="date-view"
-              />
+              <div>
+                <input
+                  type="date"
+                  value={newStart ? formatToKoreanTimeString(newStart) : ""}
+                  onChange={(e) => setNewStart(new Date(e.target.value))}
+                  className="date-view"
+                />
 
-              <select
-                value={newStart ? newStart.getHours() : "00"}
-                onChange={(e) => handleHourChange(newStart, e.target.value, setNewStart)}
-                className="time-view"
-              >
-                {generateHourOptions()}
-              </select>
+                <select
+                  value={newStart ? newStart.getHours() : "00"}
+                  onChange={(e) => handleHourChange(newStart, e.target.value, setNewStart)}
+                  className="time-view"
+                >
+                  {generateHourOptions()}
+                </select>
+              </div>
             </div>
-            <div className="box">
+            <div className="date_box" >
               <label>종료일:</label>
-              <input
-                type="date"
-                value={newEnd ? formatToKoreanTimeString(newEnd) : ""}
-                onChange={(e) => setNewEnd(new Date(e.target.value))}
-                className="date-view"
-              />
-              <select
-                value={newEnd ? newEnd.getHours() : "00"}
-                onChange={(e) => handleHourChange(newEnd, e.target.value, setNewEnd)}
-                className="time-view"
-              >
-                {generateHourOptions()}
-              </select>
+              <div>
+                <input
+                  type="date"
+                  value={newEnd ? formatToKoreanTimeString(newEnd) : ""}
+                  onChange={(e) => setNewEnd(new Date(e.target.value))}
+                  className="date-view"
+                />
+                <select
+                  value={newEnd ? newEnd.getHours() : "00"}
+                  onChange={(e) => handleHourChange(newEnd, e.target.value, setNewEnd)}
+                  className="time-view"
+                >
+                  {generateHourOptions()}
+                </select>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="date-time-item">
+        <div className="date-time-item-row">
           <label>제목:</label>
           <input
             type="text"
@@ -142,18 +152,37 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
         </div>
 
 
-        <div className="date-time-item">
-          <label>촬영구분:</label>
-          <input
-            type="text"
-            value={gubun}
-            onChange={(e) => {
-              setGubun(e.target.value);
-            }}
-          />
+        <div className="date-time-item-row photoGubun">
+          <div className="box">
+            <label>촬영구분:</label>
+            <select
+              value={gubun}
+              onChange={(e) => setGubun(e.target.value)} >
+              <option value="사진">사진</option>
+              <option value="영상">영상</option>
+              <option value="행사">행사</option>
+              <option value="전시">전시</option>
+              <option value="비영리">비영리</option>
+              <option value="기타">기타</option>
+            </select>
+          </div>
+          <div className="box">
+            <label>인원:</label>
+            <select
+              value={userInt}
+              onChange={(e) => setUserInt(e.target.value)} >
+              <option value="10인이하">10인이하</option>
+              <option value="11~15인">11~15인</option>
+              <option value="16~20인">16~20인</option>
+              <option value="21~25인">21~25인</option>
+              <option value="26~30인">26~30인</option>
+              <option value="31인이상">31인이상</option>
+            </select>
+          </div>
         </div>
 
-        <div className="date-time-item">
+
+        <div className="date-time-item-row">
           <label>대관장소:</label>
           <input
             type="text"
@@ -170,27 +199,27 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
             />
           )}
         </div>
-        <div className="date-time-item">
-          <label>인원:</label>
-          <input
-            type="text"
-            value={userInt}
-            onChange={(e) => {
-              setUserInt(e.target.value);
-            }}
-          />
-        </div>
-        <div className="date-time-item">
+
+        <div className="date-time-item-row">
           <label>견적가:</label>
           <input
             type="text"
             value={estPrice}
             onChange={(e) => {
-              setEstprice(e.target.value);
+              setEstprice(Number(e.target.value));
             }}
           />
         </div>
-
+        <div className="date-time-item-row">
+          <label>비고:</label>
+          <input
+            type="text"
+            value={etc}
+            onChange={(e) => {
+              setEtc(e.target.value);
+            }}
+          />
+        </div>
 
 
         <div className="modal-buttons">
@@ -198,7 +227,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
             저장
           </button>
           {modalMode === "edit" && (
-            <button className="delete-button" onClick={() => onDeleteSchedule(id)}>
+            <button className="delete-button" onClick={() => onDeleteSchedule(Number(id))}>
               삭제
             </button>
           )}

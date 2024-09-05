@@ -15,82 +15,7 @@
   /* 전체적으로 아래쪽 간격 추가 */
 }
 
-.date-time-item {
-    margin-bottom: 10px;
-    /* display: flex;
-    align-items: center; 
-    gap: 10px;  */
-  }
 
-  .date-time-item label {
-    min-width:30px; /* label의 최소 너비 설정, 필요에 따라 조정 가능 */
-  }
-
-.date-view {
-  font-size: 9px;
-  line-height: 10px;
-  width: 100%;
-  max-width: 100px;
-  height: 20px;
-}
-
-.time-view {
-  font-size: 9px;
-  width: 100%;
-  max-width: 30px;
-  line-height: 10px;
-  height: 20px;
-}
-
-
-.input-with-button {
-  display: flex;
-  align-items: center;
-}
-
-.input-with-button input {
-  flex: 1;
-  margin-right: 10px;
-  /* Add some space between the input and the button */
-}
-
-.input-with-button button {
-  flex-shrink: 0;
-}
-
-.date-time-container {
-  display: flex;
-  flex-direction: column;
-}
-
-.date-time-item-row {
-  display: flex;
-  gap: 3px;
-  /* 박스 간 간격 */
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-
-.date-time-item-row label {
-  margin-right: 5px;
-}
-
-/* .date-time-item-row input, */
-/* .date-time-item-row select {
-  margin-right: 10px;
-  flex: 1;
-} */
-
-.input-with-button {
-  display: flex;
-  align-items: center;
-}
-
-.input-with-button input {
-  flex: 1;
-  margin-right: 10px;
-}
 .modal {
   position: fixed;
   top: 50%;
@@ -100,46 +25,66 @@
   padding: 10px;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 300px;
+  width: 100% !important;
+  max-width: 400px !important;
   z-index: 1000;
 }
+
 .modal-buttons {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
+  padding:10px;
+}
+.date_box{
+  display: flex;
+  flex-direction: column; /* 요소를 세로로 배치 */
+  gap: 5px; 
+  flex: 1; /* 두 박스가 동일한 크기를 차지하도록 */
+  padding: 0; /* 박스 내부 패딩 제거 */
+  margin: 0; 
+}
+.date_box div {
+  display: flex;
+  gap: 10px; /* input과 select 간의 간격 */
 }
 
-/* .box {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  flex: 1;
-} */
-.box select{
+.box {
+  display: flex; /* flex: 1; */
+  align-items: center;
+  /* 수직 가운데 정렬 */
+  gap: 1px;
+  flex: 2 1 200px;
+  flex-wrap: nowrap; /* 기본적으로 한 줄로 유지 */
+}
+
+
+.box select {
   border-radius: 4px;
 }
 
 .date-view,
 .time-view {
-  height: 20px;
+  /* height: 20px; */
   /* 모든 입력 필드와 드롭다운의 높이를 40px로 설정 */
-  padding: 5px;
-  font-size: 9px;
+  padding: 3px;
   box-sizing: border-box;
-  border-color: black;
-}
-
-.time-view {
+  border-color: #ddd;
   appearance: none;
   /* 브라우저 기본 스타일 제거 */
   font-size: 12px;
   color: black
 }
 
-label {
+
+select {
+  border-color: #ddd;
+}
+
+
+#ScheduleModal label {
   margin-bottom: 5px;
-  font-weight: bold;
+  min-width: 30px;
 }
 
 .search-button {
@@ -158,23 +103,13 @@ label {
   /* 버튼 테두리 */
   box-sizing: border-box;
   cursor: pointer;
-  color:black;
+  color: black;
 }
 
 .search-button:hover {
   background-color: #e0e0e0;
   /* 마우스를 올렸을 때의 배경색 */
 }
-
-
-
-
-@media (max-width: 600px) {
-  .date-time-item-row {
-    flex-direction: column;
-  }
-}
-
 
 .modal-overlay {
   position: fixed;
@@ -194,7 +129,7 @@ label {
   /* padding: 20px; */
   border-radius: 8px;
   width: 100%;
-  max-width: 300px;
+  max-width: 400px;
 
 }
 
@@ -230,6 +165,7 @@ label {
   border-radius: 4px;
   margin-bottom: 10px;
 }
+
 .checkbox-list {
   display: flex;
   flex-direction: column;
@@ -239,8 +175,10 @@ label {
 
 .checkbox-list label {
   display: flex;
-  align-items: center; /* 수직으로 가운데 정렬 */
-  gap: 10px; /* input과 텍스트 사이 간격 */
+  align-items: center;
+  /* 수직으로 가운데 정렬 */
+  gap: 10px;
+  /* input과 텍스트 사이 간격 */
 }
 
 .close-button {
@@ -255,19 +193,42 @@ label {
 .close-button:hover {
   background-color: #0056b3;
 }
+
 input {
-  flex: 1; /* input의 너비를 유동적으로 설정 */
-}
-.box {
-  display: flex;
-  align-items: center; /* input과 select를 수직으로 가운데 정렬 */
-  gap: 2px; /* input과 select 사이의 간격 */
+  flex: 1;
+  /* input의 너비를 유동적으로 설정 */
 }
 
+.date-time-item-row {
+  display: flex;
+  gap: 3px;
+  /* 박스 간 간격 */
+  align-items: baseline;
+  flex-wrap: nowrap;
+  padding:10px
+}
+
+
+@media (max-width: 400px) {
+  .date-time-item-row  {
+    flex-wrap: wrap; /* 화면 너비가 400px 이하일 때 요소들이 두 줄로 배치 */
+  }
+}
+
+
+.date-time-item-row label {
+  margin-right: 5px;
+}
+
+.photoGubun select{
+  width:80%;
+}
 .date-view {
-  flex: 1; /* input의 너비를 유동적으로 설정 */
+  flex: 2;
+  /* input의 너비를 유동적으로 설정 */
 }
 
 .time-view {
-  width: 100px; /* select의 고정 너비 설정 */
+  flex: 1;
+  /* select의 너비를 유동적으로 설정 */
 }
