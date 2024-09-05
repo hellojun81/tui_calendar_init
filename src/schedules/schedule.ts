@@ -33,8 +33,8 @@ export interface ScheduleModalProps {
     isOpen: boolean;
     modalMode: "create" | "edit";
     id: Number;
-    newStart: Date | null;
-    newEnd: Date | null;
+    newStart: Date | undefined;
+    newEnd: Date | undefined;
     newTitle: string;
     customerName: string;
     rentPlace: string;
