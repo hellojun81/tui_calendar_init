@@ -1,8 +1,66 @@
 // scheduleUtils.ts
 import axios from 'axios';
 import dayjs from 'dayjs';
-import { ISchedule } from '../schedules/schedule';
+// import { ISchedule } from '../schedules/schedule';
+export interface ISchedule {
+  id?: string;
+  calendarId?: string;
+  title?: string;
+  body?: string;
+  start?: Date;
+  end?: Date;
+  goingDuration?: number;
+  comingDuration?: number;
+  category?: string;
+  attendees?: string[];
+  recurrenceRule?: string;
+  isPending?: boolean;
+  isFocused?: boolean;
+  isVisible?: boolean;
+  isReadOnly?: boolean;
+  isPrivate?: boolean;
+  color?: string;
+  bgColor?: string;
+  dragBgColor?: string;
+  borderColor?: string;
+  customStyle?: string;
+  rentPlace?: string;
+  state?: string;
+  customerName?: string;
+  gubun?:string;
+  userInt?:string;
+  estPrice?:number;
+  etc?:string;
+}
 
+export interface ScheduleModalProps {
+  isOpen: boolean;
+  modalMode: "create" | "edit";
+  id: Number;
+  newStart: Date | undefined;
+  newEnd: Date | undefined;
+  newTitle: string;
+  customerName: string;
+  rentPlace: string;
+  etc: string;
+  gubun?:string;
+  userInt?:string;
+  estPrice?:number;
+  setNewStart: (date: Date | null) => void;
+  setNewEnd: (date: Date | null) => void;
+  onSaveSchedule: () => void;
+  onDeleteSchedule: (id: number) => void;
+  closeModal: () => void;
+  // onRawDataChange: (key: string, value: string) => void;
+  setNewTitle: (title: string) => void;
+  setCustomerName: (text: string) => void;
+  setRentPlace: (text: string) => void;
+  openJexcelModal: (customerName: string) => void; // 수정된 부분
+  setGubun: (text: string) => void;
+  setUserInt: (text: string) => void;
+  setEtc: (text: string) => void;
+  setEstprice: (text: number) => void;
+}
 
 export const openModalUtil = (
     mode: "create" | "edit",

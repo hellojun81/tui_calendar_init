@@ -4,8 +4,7 @@ import ScheduleModal from "./ScheduleModal";
 import JexcelModal from "./JexcelModal";
 import axios from 'axios';
 import dayjs from 'dayjs';
-import { ISchedule } from './schedule'
-import { saveSchedule ,openModalUtil} from '../utils/scheduleUtils';
+import { ISchedule,saveSchedule ,openModalUtil} from '../utils/scheduleUtils';
 
 
 const Schedule = () => {

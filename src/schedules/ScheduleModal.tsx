@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import "./Calendar";
-import { ScheduleModalProps } from './schedule'
+// import { ScheduleModalProps } from './schedule'
 import { ClassNames } from "@emotion/react";
 import RentPlaceSelector from './RentPlaceSelector'; // RentPlaceSelector 컴포넌트 import
 import GetCsKind from './get_csKind'
-
+import { ScheduleModalProps} from '../utils/scheduleUtils';
 
 const ScheduleModal: React.FC<ScheduleModalProps> = ({
   isOpen,
