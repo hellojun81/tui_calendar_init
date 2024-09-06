@@ -9,19 +9,16 @@ import dayjs from 'dayjs';
 import { Customer, JSpreadsheetInstance } from './Customer';
 import './provider.css';
 import axios, { Axios } from 'axios';
+import { getCurrentDate } from '../utils/scheduleUtils';
 
 const Provider: React.FC = () => {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | undefined>(undefined);
     const [dialogOpen, setDialogOpen] = useState(false);
-    const currentDate = new Date();
-    const str_Date = currentDate.toISOString().split('T')[0];
-    const end_Date = new Date();
-    end_Date.setDate(currentDate.getDate() - 14);
-    const endDateString = end_Date.toISOString().split('T')[0];
+    const { startDate, endDate } = getCurrentDate();
     const [formData, setFormData] = useState({
-        startDate: str_Date,
-        endDate: endDateString,
+        startDate: startDate,
+        endDate: endDate,
         customerName: '',
     });
     const [activeRow, SetactiveRow] = useState<number>(0);
@@ -61,9 +58,7 @@ const Provider: React.FC = () => {
         console.log('selectedCustomers', selectedCustomers);
         setSelectedCustomer(selectedCustomers[0]);
         setDialogOpen(true);
-
     };
-
     const handleDeleteCustomer = async (activeRow: Number) => {
         // const id=tableData[activeRow][0]
         const id = tableData[activeRow as number][0];
@@ -72,7 +67,6 @@ const Provider: React.FC = () => {
             handleSearch()
         }
     };
-
 
     const handleSaveCustomer = async (customer: Customer) => {
         // console.log('handleSaveCustomer', customer)
@@ -115,9 +109,6 @@ const Provider: React.FC = () => {
                     ],
                 });
             } else {
-                // 기존 인스턴스에 데이터만 업데이트
-                // console.log("기존 인스턴스에 데이터만 업데이트");
-
                 jexcelInstance.current.setData(tableData);
                 jexcelInstance.current.options.onselection = (
                     instance: JSpreadsheetInstance,
@@ -132,15 +123,13 @@ const Provider: React.FC = () => {
         } else {
             console.error("tableRef.current가 null입니다.");
         }
-
     }, [tableData, selectedCustomer]);
-
-
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
+    
     const handleSearch = async () => {
         try {
             const queryParams = new URLSearchParams({
@@ -149,52 +138,45 @@ const Provider: React.FC = () => {
                 ...(formData.customerName && { customerName: formData.customerName }),
             });
 
-            await axios.get(`http://localhost:3001/api/customers?${queryParams}`)
-            .then(res => {
-                const data = res.data
-                setTableData(data.map((customer: Customer) => [
-                    customer.id.toString(),
-                    customer.customerName,
-                    customer.contactPerson,
-                    customer.position,
-                    customer.phone,
-                    customer.email,
-                    customer.leadSource,
-                    dayjs(customer.inboundDate).format('YYYY-MM-DD'),
-                    customer.businessNumber,
-                    customer.representative,
-                    customer.location,
-                    customer.notes,
-                ]));
-            })
-        }catch (error) {
-    console.error('There was a problem with the fetch operation:', error);
-}
+            // const res = await axios.get(`http://localhost:3001/api/customers`);
+            const res = await axios.get(`http://localhost:3001/api/customers/coustomerName?${queryParams.toString()}`);
+            setTableData(res.data.map((customer: Customer) => [
+                customer.id.toString(),
+                customer.customerName,
+                customer.contactPerson,
+                customer.position,
+                customer.phone,
+                customer.email,
+                customer.leadSource,
+                dayjs(customer.inboundDate).format('YYYY-MM-DD'),
+                customer.businessNumber,
+                customer.representative,
+                customer.location,
+                customer.notes,
+            ]));
+        } catch (error) {
+            console.error('There was a problem with the fetch operation:', error);
+        }
     };
-
-return (
-    <Box sx={{ maxWidth: '800px', margin: '0 auto', padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
-        <SearchFields formData={formData} handleChange={handleChange} handleSearch={handleSearch} />
-        <Box sx={{ padding: 2 }}>
-            <CrudButtons
-                onAdd={handleAddCustomer}
-                onEdit={() => activeRow && handleEditCustomer()}
-                onDelete={() => activeRow && handleDeleteCustomer(activeRow)}
-            />
-            <div ref={tableRef} />
-            <CustomerDialog
-                open={dialogOpen}
-                onClose={() => setDialogOpen(false)}
-                onSave={handleSaveCustomer}
-                customer={selectedCustomer}
-            />
+    return (
+        <Box sx={{ maxWidth: '800px', margin: '0 auto', padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
+            <SearchFields formData={formData} handleChange={handleChange} handleSearch={handleSearch} />
+            <Box sx={{ padding: 2 }}>
+                <CrudButtons
+                    onAdd={handleAddCustomer}
+                    onEdit={() => activeRow && handleEditCustomer()}
+                    onDelete={() => activeRow && handleDeleteCustomer(activeRow)}
+                />
+                <div ref={tableRef} />
+                <CustomerDialog
+                    open={dialogOpen}
+                    onClose={() => setDialogOpen(false)}
+                    onSave={handleSaveCustomer}
+                    customer={selectedCustomer}
+                />
+            </Box>
         </Box>
-    </Box>
-);
+    );
 };
 
 export default Provider;
-
-
-
-

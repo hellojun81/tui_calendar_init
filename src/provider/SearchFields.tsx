@@ -3,8 +3,8 @@ import { TextField, Box, Button } from '@mui/material';
 
 // Fields configuration
 const fields = [
-    { label: '시작일', name: 'endDate', type: 'date' },
-    { label: '종료일', name: 'startDate', type: 'date' },
+    { label: '시작일', name: 'startDate', type: 'date' },
+    { label: '종료일', name: 'endDate', type: 'date' },
     { label: '고객명', name: 'customerName', type: 'text' }
 ];
 

@@ -1,7 +1,7 @@
-// scheduleUtils.ts
+
 import axios from 'axios';
 import dayjs from 'dayjs';
-// import { ISchedule } from '../schedules/schedule';
+
 export interface ISchedule {
   id?: string;
   calendarId?: string;
@@ -31,6 +31,8 @@ export interface ISchedule {
   userInt?:string;
   estPrice?:number;
   etc?:string;
+  csKind:number;
+  created_at:Date;
 }
 
 export interface ScheduleModalProps {
@@ -46,8 +48,9 @@ export interface ScheduleModalProps {
   gubun?:string;
   userInt?:string;
   estPrice?:number;
-  setNewStart: (date: Date | null) => void;
-  setNewEnd: (date: Date | null) => void;
+  csKind?:number;
+  setNewStart: (date: Date | undefined) => void;
+  setNewEnd: (date: Date | undefined) => void;
   onSaveSchedule: () => void;
   onDeleteSchedule: (id: number) => void;
   closeModal: () => void;
@@ -93,8 +96,24 @@ export const openModalUtil = (
     setEtc(scheduleData ? scheduleData.etc || "" : "");
     setIsModalOpen(true);
   };
+  export const openJexcelModalUtil = (
+    customerName: string,
+    setSearchQuery: React.Dispatch<React.SetStateAction<string>>,
+    setIsJexcelModalOpen: React.Dispatch<React.SetStateAction<boolean>>
+  ) => {
+    console.log('openJexcelModal', customerName);
+    setSearchQuery(customerName);  // 검색어 상태 설정
+    setIsJexcelModalOpen(true);    // 모달 열기
+  };
 
 
+  export const closeModalUtil = (
+    setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>,
+    setCurrentSchedule: React.Dispatch<React.SetStateAction<ISchedule | null>>
+  ) => {
+    setIsModalOpen(false);
+    setCurrentSchedule(null);
+  };
 
 
 export const saveSchedule = async (
@@ -109,6 +128,7 @@ export const saveSchedule = async (
   userInt: string,
   estPrice: number,
   etc: string,
+  csKind:number,
   currentYear: number,
   currentMonth: number,
   setSchedules: Function,
@@ -129,6 +149,7 @@ export const saveSchedule = async (
     userInt,
     gubun,
     etc,
+    csKind
   };
   
   try {
@@ -144,11 +165,44 @@ export const saveSchedule = async (
         ? prev.map(s => (s.id === currentSchedule.id ? newSchedule : s))
         : [...prev, newSchedule]
     ));
-    getSchedules(currentYear, currentMonth);
+    getSchedulesUtil(currentYear, currentMonth);
     closeModal();
   } catch (err) {
     console.error('Error saving schedule:', err);
   }
 };
 
+export const getCurrentDate = (daysOffset: number = 14) => {
+  const currentDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(currentDate.getDate() - daysOffset);
 
+  const str_Date = startDate.toISOString().split('T')[0];
+  const end_Date = currentDate.toISOString().split('T')[0];
+
+  return { startDate: str_Date, endDate: end_Date };
+};
+
+
+
+export const getSchedulesUtil = async (
+  year: number,
+  month: number,
+  setSchedules: React.Dispatch<React.SetStateAction<any[]>>, // 스케줄 데이터를 저장할 상태 함수
+  formatMonth: (month: number) => string // 월을 포맷팅하는 함수
+) => {
+  const fetchSchedules = async () => {
+    try {
+      const newMonth = `${year}-${formatMonth(month)}`;
+      console.log('newMonth', newMonth);
+
+      // 서버로부터 데이터를 가져오는 비동기 호출
+      const res = await axios.get<ISchedule[]>(`http://localhost:3001/api/schedules?${newMonth}`);
+      setSchedules(res.data);  // 가져온 데이터를 상태에 저장
+      console.log('resData', res.data);
+    } catch (err) {
+      console.error('Error fetching schedules:', err);
+    }
+  };
+  await fetchSchedules();  // 비동기 함수를 호출
+};

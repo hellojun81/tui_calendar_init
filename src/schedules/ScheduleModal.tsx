@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import "./Calendar";
-// import { ScheduleModalProps } from './schedule'
 import { ClassNames } from "@emotion/react";
 import RentPlaceSelector from './RentPlaceSelector'; // RentPlaceSelector 컴포넌트 import
 import GetCsKind from './get_csKind'
-import { ScheduleModalProps} from '../utils/scheduleUtils';
+import { ScheduleModalProps } from '../utils/scheduleUtils';
 
 const ScheduleModal: React.FC<ScheduleModalProps> = ({
   isOpen,
@@ -19,6 +18,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   userInt,
   estPrice,
   etc,
+  csKind,
   setNewStart,
   setNewEnd,
   onSaveSchedule,
@@ -31,7 +31,8 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   setGubun,
   setUserInt,
   setEstprice,
-  setEtc
+  setEtc,
+  setCsKind
 }) => {
   const [selrentPlace, setSelRentPlace] = useState<string[]>([]);
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
@@ -77,17 +78,28 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     };
   }, [closeModal]);
 
+
+  const handleChildValueChange = (value) => {
+    setCsKind(value)
+    console.log(value);  // 부모 컴포넌트의 상태를 업데이트
+  };
+
+
+
   if (!isOpen) {
     return null;
   }
 
   return (
     <div className="modal" id="ScheduleModal">
-         <GetCsKind />
+
       <div className="modal-content">
-        <h2>{modalMode === "edit" ? "스케줄 수정" : "새 스케줄 추가"}</h2>
-         
+        <h2>{modalMode === "edit" ? "수정" : "추가"}</h2>
+
         <div className="date-time-container">
+          <div className="date-time-item-row">
+            <GetCsKind onValueChange={handleChildValueChange} cskind={setCsKind} />
+          </div>
           <div className="date-time-item-row">
             <label>고객명:</label>
 
@@ -139,7 +151,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
             </div>
           </div>
         </div>
-
+        {/* 
         <div className="date-time-item-row">
           <label>제목:</label>
           <input
@@ -149,7 +161,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
               setNewTitle(e.target.value);
             }}
           />
-        </div>
+        </div> */}
 
 
         <div className="date-time-item-row photoGubun">

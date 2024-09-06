@@ -4,7 +4,7 @@ import ScheduleModal from "./ScheduleModal";
 import JexcelModal from "./JexcelModal";
 import axios from 'axios';
 import dayjs from 'dayjs';
-import { ISchedule,saveSchedule ,openModalUtil} from '../utils/scheduleUtils';
+import { ISchedule,saveSchedule,closeModalUtil ,openModalUtil,openJexcelModalUtil,getSchedulesUtil} from '../utils/scheduleUtils';
 
 
 const Schedule = () => {
@@ -25,62 +25,29 @@ const Schedule = () => {
   const [customerName, setCustomerName] = useState("");
   const [rentPlace, setRentPlace] = useState("");
   const [etc, setEtc] = useState("");
+  const [csKind, setCsKind] = useState<number>(0);
   const [searchQuery, setSearchQuery] = useState(""); // 검색어 상태 추가
   const [id, setId] = useState(""); // ID값
   const formatMonth = (month: number): string => {
     return month.toString().padStart(2, '0');
   };
 
-
   useEffect(() => {
-    getSchedules(currentYear, currentMonth)
-  }, []);
+    getSchedulesUtil(currentYear, currentMonth, setSchedules, formatMonth);
+  }, [currentYear, currentMonth]);
 
   const closeModal = useCallback(() => {
-    setIsModalOpen(false);
-    setCurrentSchedule(null);
+    closeModalUtil(setIsModalOpen, setCurrentSchedule); // 유틸리티 함수 호출
   }, []);
 
-
   const handleSave = () => {
-    saveSchedule(newTitle, newStart, newEnd, customerName, rentPlace, modalMode, currentSchedule, gubun, userInt, estPrice, etc, currentYear, currentMonth, setSchedules, closeModal, getSchedules);
-  };
-
-  const getSchedules = async (year: number, month: number) => {
-    const fetchSchedules = async () => {
-      try {
-        const newMonth = `${year}-${formatMonth(month)}`;
-        console.log('newMonth', newMonth);
-
-        // 서버로부터 데이터를 가져오는 비동기 호출
-        const res = await axios.get(`http://localhost:3001/api/schedules/${newMonth}`);
-        setSchedules(res.data);  // 가져온 데이터를 상태에 저장
-        console.log('resData', res.data);
-      } catch (err) {
-        console.error('Error fetching schedules:', err);
-      }
-    };
-    await fetchSchedules();  // 비동기 함수를 호출
+    console.log('cskind',csKind)
+    // saveSchedule(csKind,newTitle, newStart, newEnd, customerName, rentPlace, modalMode, currentSchedule, gubun, userInt, estPrice, etc, currentYear, currentMonth setSchedules, closeModal, getSchedulesUtil);
   };
 
   const openModal = useCallback((mode: "create" | "edit", scheduleData: ISchedule | null = null) => {
-    openModalUtil(
-      mode,
-      scheduleData,
-      setModalMode,
-      setCurrentSchedule,
-      setNewStart,
-      setNewEnd,
-      setNewTitle,
-      setCustomerName,
-      setRentPlace,
-      setGubun,
-      setUserInt,
-      setEstprice,
-      setId,
-      setEtc,
-      setIsModalOpen
-    );
+    openModalUtil( mode,scheduleData,setModalMode,setCurrentSchedule,setNewStart,setNewEnd,setNewTitle,setCustomerName,setRentPlace,
+      setGubun,setUserInt,setEstprice,setId,setEtc,setIsModalOpen);
   }, []);
 
   const fetchScheduleById = useCallback(async (id: string) => {
@@ -131,9 +98,7 @@ const Schedule = () => {
   }, []);
 
   const openJexcelModal = useCallback((customerName: string) => {
-    console.log('openJexcelModal', customerName)
-    setSearchQuery(customerName);
-    setIsJexcelModalOpen(true);
+    openJexcelModalUtil(customerName, setSearchQuery, setIsJexcelModalOpen); // 유틸리티 함수 호출
   }, []);
 
   const closeJexcelModal = useCallback(() => {
@@ -149,14 +114,14 @@ const Schedule = () => {
   const onDeleteSchedule = useCallback(async (id: Number) => {
     console.log('onDeleteSchedule', id)
     const res = await axios.delete(`http://localhost:3001/api/schedules/${id}`);
-    getSchedules(currentYear, currentMonth)
+    getSchedulesUtil(currentYear, currentMonth, setSchedules, formatMonth);
     closeJexcelModal(); // 모달 닫기
   }, [closeJexcelModal]);
 
   const onMonthChange = useCallback((year: number, month: number) => {
     setCurrentYear(year);
     setCurrentMonth(month);
-    getSchedules(year, month)
+    getSchedulesUtil(year, month)
   }, []);
 
   return (
@@ -181,6 +146,7 @@ const Schedule = () => {
         estPrice={estPrice}
         customerName={customerName}
         etc={etc}
+        csKind={csKind}
         rentPlace={rentPlace || ""}
         setNewStart={setNewStart}
         setNewEnd={setNewEnd}
@@ -191,7 +157,7 @@ const Schedule = () => {
         setUserInt={setUserInt}
         setEstprice={setEstprice}
         setEtc={setEtc}
-
+        setCsKind={setCsKind}
         onDeleteSchedule={id => onDeleteSchedule(Number(id))}
         onSaveSchedule={handleSave}
         // onDeleteSchedule={() => setSchedules(prev => prev.filter(s => s.id !== currentSchedule?.id))}
@@ -209,47 +175,4 @@ const Schedule = () => {
 };
 
 export default Schedule;
-
-
-
-
-// const onSaveSchedule = useCallback(async () => {
-//   const newSchedule: ISchedule = {
-//     id: currentSchedule?.id || String(Math.random()),
-//     calendarId: "1",
-//     title: newTitle,
-//     start: newStart ? new Date(dayjs(newStart).format('YYYY-MM-DD HH:mm:ss')) : undefined,
-//     end: newEnd ? new Date(dayjs(newEnd).format('YYYY-MM-DD HH:mm:ss')) : undefined,
-//     category: 'allday',
-//     bgColor: 'red',
-//     customerName:customerName,
-//     rentPlace:rentPlace,
-//     estPrice:Number(estPrice),
-//     userInt:userInt,
-//     gubun :gubun,
-//     etc:etc
-//     // 필요한 다른 필드도 추가 가능
-//   };
-//   console.log('onSaveSchedule', newSchedule)
-//     return
-//   try {
-//     if (modalMode === "create") {
-//       // 새로운 스케줄 추가
-//       await axios.post('http://localhost:3001/api/schedules', newSchedule);
-//     } else {
-//       // 기존 스케줄 업데이트
-//       await axios.put(`http://localhost:3001/api/schedules/${currentSchedule?.id}`, newSchedule);
-//     }
-
-//     setSchedules(prev => (
-//       modalMode === "edit" && currentSchedule
-//         ? prev.map(s => (s.id === currentSchedule.id ? newSchedule : s))
-//         : [...prev, newSchedule]
-//     ));
-//     getSchedules(currentYear, currentMonth)
-//     closeModal();
-//   } catch (err) {
-//     console.error('Error saving schedule:', err);
-//   }
-// }, [newTitle, newStart, newEnd, customerName, rentPlace, modalMode, currentSchedule,gubun,userInt,estPrice ,closeModal]);
 

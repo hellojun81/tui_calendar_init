@@ -1,7 +1,18 @@
 import React, { useCallback,useState, useEffect } from 'react';
 import axios from 'axios';
 
-const GetCsKind = () => {
+
+
+interface GetCsKindProps {
+  onValueChange: (value: string) => void;
+  cskind: (value: string) => void;
+}
+
+
+
+
+const GetCsKind: React.FC<GetCsKindProps> = ({ onValueChange,cskind }) => {
+
   const [options, setOptions] = useState([]); // 서버에서 가져올 옵션 리스트
   const [selectedOption, setSelectedOption] = useState(''); // 선택한 옵션 상태
 
@@ -41,7 +52,12 @@ const GetCsKind = () => {
   }, [options]); // 옵션이 업데이트될 때 실행
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedOption(e.target.value); // 선택한 옵션 저장
+
+    const selectedValue = e.target.value;
+    
+    setSelectedOption(selectedValue);
+    onValueChange(selectedValue)
+    console.log('선택된 키 값:', selectedValue);
   };
 
   return (
@@ -50,7 +66,8 @@ const GetCsKind = () => {
       <select id="selectBox" value={selectedOption} onChange={handleSelectChange}>
         <option value="">옵션을 선택하세요</option>
         {options.map((option) => (
-          <option key={option[0]} value={option[1]}>
+          <option key={option[0]} value={option[0]}>
+   
             {option[1]}
           </option>
         ))}
