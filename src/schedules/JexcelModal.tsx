@@ -21,12 +21,12 @@ const JexcelModal: React.FC<JexcelModalProps> = ({ isOpen, onClose, onSelect, se
 
 
   useEffect(() => {
-    console.log('searchQuery', searchQuery)
+    // console.log('searchQuery', searchQuery)
     SearchCusTomerName(searchQuery)
   }, [isOpen, searchQuery]);
 
   const SearchCusTomerName = (customerName: string) => {
-    console.log('SearchCustomerName',customerName)
+    // console.log('SearchCustomerName',customerName)
     if (isOpen) {
       axios.get(`http://localhost:3001/api/customers/customerName?customerName=${searchQuery}`)
         .then(res => {

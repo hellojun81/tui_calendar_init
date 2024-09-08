@@ -33,7 +33,7 @@ const Menu: React.FC = () => {
         return '사업 정보 설정';
       case '/newSchedule':
         return '뉴스케쥴 관리';
-      case '/provider/test':
+      case '/schedules/test':
         return '테스트';
       default:
         return 'AUBE STUDIO CRM';
@@ -72,7 +72,7 @@ const Menu: React.FC = () => {
             <Link to="/newSchedule" onClick={onClose}>뉴스케쥴관리</Link>
           </AntdMenu.Item>
           <AntdMenu.Item key="7">
-            <Link to="/provider/test" onClick={onClose}>테스트</Link>
+            <Link to="/schedules/test" onClick={onClose}>테스트</Link>
           </AntdMenu.Item>
         </AntdMenu>
       </Drawer>

@@ -33,6 +33,9 @@ const Calendar = forwardRef((props: CalendarProps, ref) => {
     cal.current.calendarInst.next();
     updateCurrentMonthYear();
   };
+  const onClickTest = () => {
+ console.log(schedules)
+  };
 
   const onClickPrevButton = () => {
     cal.current.calendarInst.prev();
@@ -53,6 +56,7 @@ const Calendar = forwardRef((props: CalendarProps, ref) => {
       <button onClick={onClickPrevButton}>이전 달</button>
       {currentYear}년 {currentMonth}월
       <button onClick={onClickNextButton}>다음 달</button>
+      <button onClick={onClickTest}>test</button>
 
       <TUICalendar
         ref={cal}

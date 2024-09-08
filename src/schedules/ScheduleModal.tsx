@@ -11,20 +11,20 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   id,
   newStart,
   newEnd,
-  newTitle,
+  startTime,
+  endTime,
   customerName,
-  rentPlace,
   gubun,
   userInt,
   estPrice,
   etc,
-  csKind,
   setNewStart,
   setNewEnd,
+  setStartTime,
+  setEndTime,
   onSaveSchedule,
   onDeleteSchedule,
   closeModal,
-  setNewTitle,
   setCustomerName,
   setRentPlace,
   openJexcelModal,
@@ -32,15 +32,13 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   setUserInt,
   setEstprice,
   setEtc,
-  setCsKind
+  setCsKind,
 }) => {
   const [selrentPlace, setSelRentPlace] = useState<string[]>([]);
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
 
   const openSelector = () => setIsSelectorOpen(true);
   const closeSelector = () => setIsSelectorOpen(false);
-
-
 
   const formatToKoreanTimeString = (date: Date): string => {
     if (!date) return "";
@@ -50,13 +48,10 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     return `${year}-${month}-${day}`;
   };
 
-  const handleHourChange = (date: Date | null, hour: string, setDate: (date: Date | null) => void) => {
-    if (date) {
-      const updatedDate = new Date(date);
-      updatedDate.setHours(parseInt(hour, 10));
-      setDate(updatedDate);
-    }
+  const handleHourChange = (hour: string, setDate: (time: number | null) => void) => {
+    setDate(parseInt(hour, 10));
   };
+
 
   const generateHourOptions = () => {
     return Array.from({ length: 24 }, (_, i) => (
@@ -66,7 +61,9 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     ));
   };
 
+
   useEffect(() => {
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         closeModal();
@@ -78,13 +75,19 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     };
   }, [closeModal]);
 
-
-  const handleChildValueChange = (value) => {
-    setCsKind(value)
-    console.log(value);  // 부모 컴포넌트의 상태를 업데이트
+  const handleSelectorChange = (selected: string[]) => {
+    setSelRentPlace(selected); // 선택된 값을 업데이트
+    setRentPlace(selected); // 선택된 값을 업데이트
   };
 
 
+
+
+  useEffect(() => {
+    if (isOpen) {
+      setSelRentPlace([]); // 모달이 열릴 때 대관 장소 초기화
+    }
+  }, [isOpen]);
 
   if (!isOpen) {
     return null;
@@ -92,24 +95,21 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
 
   return (
     <div className="modal" id="ScheduleModal">
-
       <div className="modal-content">
         <h2>{modalMode === "edit" ? "수정" : "추가"}</h2>
 
         <div className="date-time-container">
           <div className="date-time-item-row">
-            <GetCsKind onValueChange={handleChildValueChange} cskind={setCsKind} />
+            <GetCsKind onValueChange={setCsKind} />
           </div>
           <div className="date-time-item-row">
             <label>고객명:</label>
-
             <input
               type="text"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
             />
             <button onClick={() => openJexcelModal(customerName)} className="search-button">검색</button>
-
           </div>
           <div className="date-time-item-row">
             <div className="date_box">
@@ -123,8 +123,8 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
                 />
 
                 <select
-                  value={newStart ? newStart.getHours() : "00"}
-                  onChange={(e) => handleHourChange(newStart, e.target.value, setNewStart)}
+                  value={startTime ? startTime : "00"}
+                  onChange={(e) => handleHourChange(e.target.value, setStartTime)} // setStartTime 함수 호출
                   className="time-view"
                 >
                   {generateHourOptions()}
@@ -141,8 +141,8 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
                   className="date-view"
                 />
                 <select
-                  value={newEnd ? newEnd.getHours() : "00"}
-                  onChange={(e) => handleHourChange(newEnd, e.target.value, setNewEnd)}
+                  value={endTime ? endTime : "00"}
+                  onChange={(e) => handleHourChange(e.target.value, setEndTime)}
                   className="time-view"
                 >
                   {generateHourOptions()}
@@ -151,25 +151,14 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
             </div>
           </div>
         </div>
-        {/* 
-        <div className="date-time-item-row">
-          <label>제목:</label>
-          <input
-            type="text"
-            value={newTitle}
-            onChange={(e) => {
-              setNewTitle(e.target.value);
-            }}
-          />
-        </div> */}
-
 
         <div className="date-time-item-row photoGubun">
           <div className="box">
             <label>촬영구분:</label>
             <select
               value={gubun}
-              onChange={(e) => setGubun(e.target.value)} >
+              onChange={(e) => setGubun(e.target.value)}
+            >
               <option value="사진">사진</option>
               <option value="영상">영상</option>
               <option value="행사">행사</option>
@@ -206,8 +195,9 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
           {isSelectorOpen && (
             <RentPlaceSelector
               selectedPlaces={selrentPlace}
-              onChange={setSelRentPlace}
+              onChange={handleSelectorChange}
               onClose={closeSelector}
+            // setSelRentPlace={setSelRentPlace}
             />
           )}
         </div>
@@ -233,7 +223,6 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
           />
         </div>
 
-
         <div className="modal-buttons">
           <button className="save-button" onClick={onSaveSchedule}>
             저장
@@ -252,4 +241,4 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   );
 };
 
-export default ScheduleModal;
+export default ScheduleModal;  
