@@ -23,7 +23,7 @@ export interface ISchedule {
   dragBgColor?: string;
   borderColor?: string;
   customStyle?: string;
-  rentPlace?: string[];
+  rentPlace?: string;
   state?: string;
   customerName?: string;
   gubun?: string;
@@ -44,7 +44,7 @@ export interface ScheduleModalProps {
   newEnd: Date | undefined;
   newTitle: string;
   customerName: string;
-  rentPlace: string[];
+  rentPlace: string;
   etc: string;
   gubun?: string;
   userInt?: string;
@@ -59,15 +59,15 @@ export interface ScheduleModalProps {
   closeModal: () => void;
   setNewTitle: (title: string) => void;
   setCustomerName: (text: string) => void;
-  setRentPlace: (text: string[]) => void;
+  setRentPlace: (text: string) => void;
   openJexcelModal: (customerName: string) => void;
   setGubun: (text: string) => void;
   setUserInt: (text: string) => void;
   setEtc: (text: string) => void;
   setEstprice: (text: number) => void;
   setCsKind: (text: number) => void;
-  setStartTime:(text: number) => void;
-  setEndTime:(text: number) => void;
+  setStartTime:(time: number) => void;
+  setEndTime:(time: number) => void;
 }
 
 export const openModalUtil = (
@@ -77,11 +77,11 @@ export const openModalUtil = (
   setCurrentSchedule: (schedule: ISchedule | null) => void,
   setNewStart: (date: Date | undefined) => void,
   setNewEnd: (date: Date | undefined) => void,
-  setStartTime: (startTime: number) => void,
-  setEndTime: (endTime: number) => void,
+  setStartTime: (time: number) => void,
+  setEndTime: (time: number) => void,
   setNewTitle: (title: string) => void,
   setCustomerName: (name: string) => void,
-  setRentPlace: (place: string[]) => void,
+  setRentPlace: (place: string) => void,
   setGubun: (gubun: string) => void,
   setUserInt: (userInt: string) => void,
   setEstprice: (price: number) => void,
@@ -102,7 +102,7 @@ export const openModalUtil = (
     setEndTime(0);
     setNewTitle('');
     setCustomerName("");
-    setRentPlace([]);
+    setRentPlace("");
     setGubun("사진");
     setUserInt("10인이하");
     setEstprice(0);
@@ -114,9 +114,12 @@ export const openModalUtil = (
     setCurrentSchedule(scheduleData);
     setNewStart(new Date(dayjs(scheduleData.start).format('YYYY-MM-DD')));
     setNewEnd(new Date(dayjs(scheduleData.end).format('YYYY-MM-DD')));
+    setStartTime(scheduleData.startTime || 0);
+    setEndTime(scheduleData.endTime || 0);
     setNewTitle(scheduleData.title || "");
     setCustomerName(scheduleData.customerName || "");
-    setRentPlace(Array.isArray(scheduleData.rentPlace) ? scheduleData.rentPlace : []);
+    setRentPlace(scheduleData.rentPlace ? scheduleData.rentPlace : "");
+    // setRentPlace(scheduleData.rentPlace ? scheduleData.rentPlace : "");
     setGubun(scheduleData.gubun || "");
     setUserInt(scheduleData.userInt || "");
     setEstprice(scheduleData.estPrice || 0);
@@ -154,7 +157,7 @@ export const saveSchedule = async (
   startTime:number,
   endTime:number,
   customerName: string,
-  rentPlace: string[],
+  rentPlace: string,
   modalMode: string,
   currentSchedule: ISchedule | null,
   gubun: string,
@@ -182,15 +185,15 @@ export const saveSchedule = async (
     etc,
     csKind,
   };
-  newSchedule.start=dayjs(newSchedule.start).format('YYYY-MM-DD')
-  newSchedule.end=dayjs(newSchedule.end).format('YYYY-MM-DD')
-
-  
+  newSchedule.start = dayjs(dayjs(newSchedule.start).format('YYYY-MM-DD')).toDate();  
+  newSchedule.end = dayjs(dayjs(newSchedule.end).format('YYYY-MM-DD')).toDate();  
+ 
+  console.log({'save newSchedule':newSchedule});
   try {
     if (modalMode === "create") {
       await axios.post('http://localhost:3001/api/schedules', newSchedule);
     } else {
-      console.log({'EditMode newSchedule':newSchedule});
+      // console.log({'EditMode newSchedule':newSchedule});
       await axios.put(`http://localhost:3001/api/schedules/${currentSchedule?.id}`, newSchedule);
     }
 

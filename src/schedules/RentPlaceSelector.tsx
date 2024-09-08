@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 
 interface RentPlaceSelectorProps {
-  selectedPlaces: string[];
-  onChange: (selected: string[]) => void;
+  selectedPlaces: string;
+  onChange: (selected: string) => void;
   onClose: () => void;
 }
 

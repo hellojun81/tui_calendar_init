@@ -18,6 +18,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   userInt,
   estPrice,
   etc,
+  rentPlace,
   setNewStart,
   setNewEnd,
   setStartTime,
@@ -67,6 +68,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         closeModal();
+        closeSelector();
       }
     };
     document.addEventListener("keydown", handleKeyDown);
@@ -76,16 +78,19 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   }, [closeModal]);
 
   const handleSelectorChange = (selected: string[]) => {
-    setSelRentPlace(selected); // 선택된 값을 업데이트
-    setRentPlace(selected); // 선택된 값을 업데이트
+    setSelRentPlace(selected); //선택 대관장소 값을 업데이트
+    const newSelected=selected.join(',')///대관장소를 []받아서 string으로 변경
+    setRentPlace(newSelected); //부모창에 대관장소 업데이트
   };
-
-
 
 
   useEffect(() => {
     if (isOpen) {
-      setSelRentPlace([]); // 모달이 열릴 때 대관 장소 초기화
+      console.log('rentplace',rentPlace)
+      const arr=rentPlace   //대관장소 를 텍스트로 받아와서 배열로 변경후 업데이트
+      const arrToArray = arr.split(',');
+      console.log(arrToArray)
+      setSelRentPlace(arrToArray)
     }
   }, [isOpen]);
 
@@ -187,14 +192,15 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
           <label>대관장소:</label>
           <input
             type="text"
+            // value={selrentPlace.join(", ")}
             value={selrentPlace.join(", ")}
-            readOnly
+            // readOnly
             onClick={openSelector}
             className="selected-values-input"
           />
           {isSelectorOpen && (
             <RentPlaceSelector
-              selectedPlaces={selrentPlace}
+              selectedPlaces={selrentPlace.join(',')}
               onChange={handleSelectorChange}
               onClose={closeSelector}
             // setSelRentPlace={setSelRentPlace}

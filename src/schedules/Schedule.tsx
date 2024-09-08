@@ -28,7 +28,7 @@ const Schedule = () => {
     const [userInt, setUserInt] = useState("");
     const [gubun, setGubun] = useState("");
     const [customerName, setCustomerName] = useState("");
-    const [rentPlace, setRentPlace] = useState<string[]>([]);
+    const [rentPlace, setRentPlace] = useState<string>("1floor");
     const [etc, setEtc] = useState("");
     const [csKind, setCsKind] = useState<number>(0);
     const [searchQuery, setSearchQuery] = useState(""); // 검색어 상태 추가
@@ -56,7 +56,7 @@ const Schedule = () => {
             alert("모든 필수 입력란을 작성해 주세요.");
             return;
         }
-        console.log('MODE',modalMode)
+        console.log('MODE', modalMode)
         saveSchedule(csKind, newTitle, newStart, newEnd, startTime, endTime, customerName, rentPlace, modalMode, currentSchedule, gubun, userInt, estPrice, etc, setSchedules, closeModal);
     };
 
@@ -66,7 +66,7 @@ const Schedule = () => {
     }, []);
 
     const fetchScheduleById = useCallback(async (id: string) => {
-        console.log('id',id)
+        console.log('id', id)
         try {
             const res = await axios.get(`http://localhost:3001/api/schedules/${id}`);
             const scheduleData = res.data;
@@ -88,37 +88,77 @@ const Schedule = () => {
             const calendarInstance = calendarRef.current.getInstance();
             calendarInstance.createSchedules([scheduleData]);
         }
-        // console.log('onBeforeCreateSchedule',schedule)
         openModal("create", scheduleData);
     }, [openModal]);
 
-    // const onBeforeUpdateSchedule = useCallback((event) => {
-    //   const { schedule, changes } = event;
-    //   setSchedules(prev =>
-    //     prev.map(s => (s.id === schedule.id ? { ...s, ...changes } : s))
-    //   );
-    //   setNewStart(changes.start ? new Date(changes.start) : new Date(schedule.start));
-    //   setNewEnd(changes.end ? new Date(changes.end) : new Date(schedule.end));
-    // }, []);
 
-
-    const onBeforeUpdateSchedule = useCallback((e) => {
-        console.log(e);
+    const onBeforeUpdateSchedule = useCallback(async (e: any) => {
         const { schedule, changes } = e;
+    
+        // 스케줄 업데이트 처리
         calendarRef.current.calendarInst.updateSchedule(
             schedule.id,
             schedule.calendarId,
             changes
         );
-
-        // setSchedules(prev =>
-        //     prev.map(s => (s.id === schedule.id ? { ...s, ...changes } : s))
-        // );
- 
+    
+        // 날짜와 변경된 값이 있을 때 처리
+        const startDate = changes.start ? dayjs(changes.start).format('YYYY-MM-DD') : undefined;
+        const endDate = changes.end ? dayjs(changes.end).format('YYYY-MM-DD') : undefined;
+    
+        // 새로운 스케줄 객체 생성
+        const newSchedule: ISchedule = {
+            id: schedule?.id || String(Math.random()),
+            start: startDate ? startDate : undefined,
+            end: endDate ? endDate : undefined,
+        };
+    
+        // 서버에 업데이트 요청
+        try {
+            await axios.put(`http://localhost:3001/api/schedules/${schedule?.id}`, newSchedule);
+        } catch (error) {
+            console.error('Error updating schedule:', error);
+        }
+    
+        // 상태 업데이트
         setNewStart(changes.start ? new Date(changes.start) : new Date(schedule.start));
         setNewEnd(changes.end ? new Date(changes.end) : new Date(schedule.end));
+    
+    }, [calendarRef, currentSchedule]);
+    
 
-    }, []);
+    // const onBeforeUpdateSchedule = useCallback(async (e: any) => {
+    //     const { schedule, changes } = e;
+    //     calendarRef.current.calendarInst.updateSchedule(
+    //         schedule.id,
+    //         schedule.calendarId,
+    //         changes
+    //     );
+   
+    //     if (Object.keys(changes).length>1) {
+    //         const startDate = dayjs(changes.start._date).format('YYYY-MM-DD')
+    //         const endDate = dayjs(changes.end._date).format('YYYY-MM_DD')
+    //         const newSchedule: ISchedule = {
+    //             id: currentSchedule?.id || String(Math.random()),
+    //             start: dayjs(startDate).format('YYYY-MM-DD') ? new Date(dayjs(startDate).format('YYYY-MM-DD')) : undefined,
+    //             end: dayjs(endDate).format('YYYY-MM-DD') ? new Date(dayjs(endDate).format('YYYY-MM-DD')) : undefined,
+    //           };  
+    //     }else{
+    //         const endDate = dayjs(changes.end._date).format('YYYY-MM_DD') 
+    //         const newSchedule: ISchedule = {
+    //             id: currentSchedule?.id || String(Math.random()),
+    //             end: dayjs(endDate).format('YYYY-MM-DD') ? new Date(dayjs(endDate).format('YYYY-MM-DD')) : undefined,
+    //           };
+    //     }
+    //     //날짜만 업데이트
+
+
+    //       await axios.put(`http://localhost:3001/api/schedules/${currentSchedule?.id}`, newSchedule);
+
+    //     setNewStart(changes.start ? new Date(changes.start) : new Date(schedule.start));
+    //     setNewEnd(changes.end ? new Date(changes.end) : new Date(schedule.end));
+
+    // }, []);
 
 
     const updateCurrentMonthYear = useCallback(() => {
@@ -129,9 +169,9 @@ const Schedule = () => {
             const year = date.getFullYear();
             setCurrentMonth(month);
             setCurrentYear(year);
-            //   onMonthChange(year, month); // 부모 컴포넌트에 전달
         }
-    },);
+    }, [calendarRef]); // calendarRef 의존성 추가
+
 
     const openJexcelModal = useCallback((customerName: string) => {
         openJexcelModalUtil(customerName, setSearchQuery, setIsJexcelModalOpen); // 유틸리티 함수 호출
