@@ -1,6 +1,7 @@
 import axios from 'axios';
 import dayjs from 'dayjs';
-
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
 export interface ISchedule {
   id?: string;
   calendarId?: string;
@@ -230,7 +231,16 @@ export const getSchedulesUtil = async (
       const newMonth = `${year}-${formatMonth(month)}`;
       const res = await axios.get<ISchedule[]>(`http://localhost:3001/api/schedules/schedules?SearchMonth=${newMonth}`);
       console.log(res.data)
-      setSchedules(res.data);
+      const updatedSchedules = res.data.map(schedule => ({
+        ...schedule,
+        // start: dayjs(schedule.start).tz('Asia/Seoul').format(), // start 값을 변경
+        //   end: dayjs(schedule.end).tz('Asia/Seoul').format(), // start 값을 변경
+        start: dayjs(schedule.start).format('YYYY-MM-DD'), // start 값을 변경
+        end: dayjs(schedule.end).format('YYYY-MM-DD') // start 값을 변경
+      }));
+
+      // 업데이트된 스케줄 배열을 상태에 저장
+      setSchedules(updatedSchedules);
     } catch (err) {
       console.error('Error fetching schedules:', err);
     }

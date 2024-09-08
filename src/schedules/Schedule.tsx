@@ -4,7 +4,10 @@ import ScheduleModal from "./ScheduleModal";
 import JexcelModal from "./JexcelModal";
 import axios from 'axios';
 import dayjs from 'dayjs';
-import { ISchedule, saveSchedule, closeModalUtil, openModalUtil, openJexcelModalUtil, getSchedulesUtil } from '../utils/scheduleUtils';
+// import timezone from 'dayjs/plugin/timezone';
+// import utc from 'dayjs/plugin/utc';
+import { ISchedule } from "tui-calendar";
+import {  saveSchedule, closeModalUtil, openModalUtil, openJexcelModalUtil, getSchedulesUtil } from '../utils/scheduleUtils';
 
 import TUICalendar from "@toast-ui/react-calendar";
 
@@ -42,6 +45,7 @@ const Schedule = () => {
 
     useEffect(() => {
         getSchedulesUtil(currentYear, currentMonth, setSchedules, formatMonth);
+        console.log('setSchedules',schedules)
     }, [currentYear, currentMonth]);
 
     const closeModal = useCallback(() => {
@@ -127,40 +131,6 @@ const Schedule = () => {
     }, [calendarRef, currentSchedule]);
     
 
-    // const onBeforeUpdateSchedule = useCallback(async (e: any) => {
-    //     const { schedule, changes } = e;
-    //     calendarRef.current.calendarInst.updateSchedule(
-    //         schedule.id,
-    //         schedule.calendarId,
-    //         changes
-    //     );
-   
-    //     if (Object.keys(changes).length>1) {
-    //         const startDate = dayjs(changes.start._date).format('YYYY-MM-DD')
-    //         const endDate = dayjs(changes.end._date).format('YYYY-MM_DD')
-    //         const newSchedule: ISchedule = {
-    //             id: currentSchedule?.id || String(Math.random()),
-    //             start: dayjs(startDate).format('YYYY-MM-DD') ? new Date(dayjs(startDate).format('YYYY-MM-DD')) : undefined,
-    //             end: dayjs(endDate).format('YYYY-MM-DD') ? new Date(dayjs(endDate).format('YYYY-MM-DD')) : undefined,
-    //           };  
-    //     }else{
-    //         const endDate = dayjs(changes.end._date).format('YYYY-MM_DD') 
-    //         const newSchedule: ISchedule = {
-    //             id: currentSchedule?.id || String(Math.random()),
-    //             end: dayjs(endDate).format('YYYY-MM-DD') ? new Date(dayjs(endDate).format('YYYY-MM-DD')) : undefined,
-    //           };
-    //     }
-    //     //날짜만 업데이트
-
-
-    //       await axios.put(`http://localhost:3001/api/schedules/${currentSchedule?.id}`, newSchedule);
-
-    //     setNewStart(changes.start ? new Date(changes.start) : new Date(schedule.start));
-    //     setNewEnd(changes.end ? new Date(changes.end) : new Date(schedule.end));
-
-    // }, []);
-
-
     const updateCurrentMonthYear = useCallback(() => {
         if (calendarRef.current) {
             const calendarInstance = calendarRef.current.getInstance();
@@ -223,6 +193,13 @@ const Schedule = () => {
                 onBeforeCreateSchedule={onBeforeCreateSchedule}
                 // onBeforeDeleteSchedule={onBeforeDeleteSchedule}
                 onBeforeUpdateSchedule={onBeforeUpdateSchedule}
+                timezones={[
+                    {
+                      timezoneOffset: 540, // 대한민국 표준시 (GMT+9)
+                      displayLabel: 'GMT+09:00',
+                      tooltip: 'Seoul',
+                    },
+                  ]}
             />
             <ScheduleModal
                 isOpen={isModalOpen}
@@ -270,3 +247,36 @@ const Schedule = () => {
 
 export default Schedule;
 
+
+    // const onBeforeUpdateSchedule = useCallback(async (e: any) => {
+    //     const { schedule, changes } = e;
+    //     calendarRef.current.calendarInst.updateSchedule(
+    //         schedule.id,
+    //         schedule.calendarId,
+    //         changes
+    //     );
+   
+    //     if (Object.keys(changes).length>1) {
+    //         const startDate = dayjs(changes.start._date).format('YYYY-MM-DD')
+    //         const endDate = dayjs(changes.end._date).format('YYYY-MM_DD')
+    //         const newSchedule: ISchedule = {
+    //             id: currentSchedule?.id || String(Math.random()),
+    //             start: dayjs(startDate).format('YYYY-MM-DD') ? new Date(dayjs(startDate).format('YYYY-MM-DD')) : undefined,
+    //             end: dayjs(endDate).format('YYYY-MM-DD') ? new Date(dayjs(endDate).format('YYYY-MM-DD')) : undefined,
+    //           };  
+    //     }else{
+    //         const endDate = dayjs(changes.end._date).format('YYYY-MM_DD') 
+    //         const newSchedule: ISchedule = {
+    //             id: currentSchedule?.id || String(Math.random()),
+    //             end: dayjs(endDate).format('YYYY-MM-DD') ? new Date(dayjs(endDate).format('YYYY-MM-DD')) : undefined,
+    //           };
+    //     }
+    //     //날짜만 업데이트
+
+
+    //       await axios.put(`http://localhost:3001/api/schedules/${currentSchedule?.id}`, newSchedule);
+
+    //     setNewStart(changes.start ? new Date(changes.start) : new Date(schedule.start));
+    //     setNewEnd(changes.end ? new Date(changes.end) : new Date(schedule.end));
+
+    // }, []);
