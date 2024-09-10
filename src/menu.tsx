@@ -22,7 +22,7 @@ const Menu: React.FC = () => {
       case '/schedules/Schedule':
         return '스케쥴 관리';
       case '/provider/provider':
-        return '거래처 관리';
+        return '고객 관리';
       case '/cs/cs':
         return 'CS 관리';
       case '/estimate':
@@ -31,8 +31,6 @@ const Menu: React.FC = () => {
         return '환경 설정';
       case '/setup/setup_bussiness_info':
         return '사업 정보 설정';
-      case '/newSchedule':
-        return '뉴스케쥴 관리';
       case '/schedules/test':
         return '테스트';
       default:
@@ -57,7 +55,7 @@ const Menu: React.FC = () => {
             <Link to="/schedules/Schedule" onClick={onClose}>스케쥴관리</Link>
           </AntdMenu.Item>
           <AntdMenu.Item key="2">
-            <Link to="/provider/provider" onClick={onClose}>거래처관리</Link>
+            <Link to="/provider/provider" onClick={onClose}>고객관리</Link>
           </AntdMenu.Item>
           <AntdMenu.Item key="3">
             <Link to="/cs/cs" onClick={onClose}>CS관리</Link>
@@ -69,9 +67,6 @@ const Menu: React.FC = () => {
             <Link to="/setup/setup_field" onClick={onClose}>환경설정</Link>
           </AntdMenu.Item>
           <AntdMenu.Item key="6">
-            <Link to="/newSchedule" onClick={onClose}>뉴스케쥴관리</Link>
-          </AntdMenu.Item>
-          <AntdMenu.Item key="7">
             <Link to="/schedules/test" onClick={onClose}>테스트</Link>
           </AntdMenu.Item>
         </AntdMenu>

@@ -1,17 +1,17 @@
 import React, { useCallback, useState, useEffect } from 'react';
 import axios from 'axios';
-
+const apiUrl = process.env.REACT_APP_API_URL;
 
 
 interface GetCsKindProps {
   onValueChange: (value:number) => void;
-  // cskind: (value: string) => void;
+  csKind: (value: number) => void;
 }
 
 
 
 
-const GetCsKind: React.FC<GetCsKindProps> = ({ onValueChange }) => {
+const GetCsKind: React.FC<GetCsKindProps> = ({ onValueChange,csKind }) => {
 
   const [options, setOptions] = useState([]); // 서버에서 가져올 옵션 리스트
   const [selectedOption, setSelectedOption] = useState(''); // 선택한 옵션 상태
@@ -20,7 +20,7 @@ const GetCsKind: React.FC<GetCsKindProps> = ({ onValueChange }) => {
   const fetchOptions = async () => {
     try {
       axios
-        .get(`http://localhost:3001/api/setup/csKind`)
+        .get(`${apiUrl}/api/setup/csKind`)
         .then((res) => {
           const fetchedData = res.data.map(
             (cskindsetup: { id: number; title: string; calView: boolean }) => [
@@ -43,14 +43,23 @@ const GetCsKind: React.FC<GetCsKindProps> = ({ onValueChange }) => {
     console.log('options',options)
   }, []); // 빈 배열을 넣어서 컴포넌트가 처음 렌더링될 때만 호출
 
-  useEffect(() => {
-    // 기본값을 '단순 문의'로 설정
-    const defaultOption = options.find((option) => option[1] === '단순문의');
-    if (defaultOption) {
-      setSelectedOption(defaultOption[1]);
-      // onValueChange({key:'1',title:'단순문의'})
-    }
-  }, [options]); // 옵션이 업데이트될 때 실행
+  // useEffect(() => {
+  //   // 기본값을 '단순 문의'로 설정
+  //   const defaultOption = options.find((option) => option[1] === '단순문의');
+  //   if (defaultOption) {
+  //     setSelectedOption(defaultOption[1]);
+  //     // onValueChange({key:'1',title:'단순문의'})
+  //   }
+  // }, [options]); // 옵션이 업데이트될 때 실행
+
+useEffect(()=>{
+ console.log('csKind',csKind) 
+ if(csKind){
+  setSelectedOption(csKind)
+ }
+})
+
+
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedValue = e.target.value // JSON 문자열을 객체로 변환

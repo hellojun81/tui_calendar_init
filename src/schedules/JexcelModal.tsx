@@ -2,9 +2,13 @@ import React, { useEffect, useState } from "react";
 import jspreadsheet from 'jspreadsheet-ce';
 import 'jspreadsheet-ce/dist/jspreadsheet.css';
 import axios from 'axios';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
 import CustomerDialog from '../provider/CustomerDialog'; // Import the CustomerDialog component
-import { Customer } from '../provider/Customer'
+import { Customer } from '../provider/Customer';
 import dayjs from 'dayjs';
+
+const apiUrl = process.env.REACT_APP_API_URL;
+
 interface JexcelModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -16,19 +20,36 @@ const JexcelModal: React.FC<JexcelModalProps> = ({ isOpen, onClose, onSelect, se
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [data, setData] = useState<string[][]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | undefined>(undefined);
-  const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false); // State to control the CustomerDialog visibility
   const [dialogOpen, setDialogOpen] = useState(false);
-
+  const [searchName, setSearchName] = useState('');
 
   useEffect(() => {
-    // console.log('searchQuery', searchQuery)
-    SearchCusTomerName(searchQuery)
-  }, [isOpen, searchQuery]);
+    // 최초 로딩 시 기본값 설정
+    const spreadsheetElement = document.getElementById('spreadsheet');
+    if (spreadsheetElement) {
+      const initialData = [
+        ['', '', ''],
+      ]; // 기본 데이터
+
+      jspreadsheet(spreadsheetElement, {
+        data: initialData,
+        columns: [
+          { type: 'numeric', title: 'id', width: 30 },
+          { type: 'text', title: '고객명', width: 100 },
+          { type: 'text', title: '연락처', width: 100 }
+        ],
+        onselection: (instance, cell, y, x) => {
+          x = 1;
+          const selectedCustomerName = instance.jexcel.getValueFromCoords(x, y); // 선택된 셀의 데이터를 가져옵니다.
+          setSelectedCustomer(selectedCustomerName);
+        }
+      });
+    }
+  }, []); // 첫 렌더링 시에만 실행
 
   const SearchCusTomerName = (customerName: string) => {
-    // console.log('SearchCustomerName',customerName)
     if (isOpen) {
-      axios.get(`http://localhost:3001/api/customers/customerName?customerName=${searchQuery}`)
+      axios.get(`${apiUrl}/api/customers/customerName?customerName=${customerName}`)
         .then(res => {
           const fetchedData = res.data.map((customer: { id: number, customerName: string; phone: string; }) =>
             [customer.id, customer.customerName, customer.phone]);
@@ -45,10 +66,8 @@ const JexcelModal: React.FC<JexcelModalProps> = ({ isOpen, onClose, onSelect, se
                 { type: 'text', title: '연락처', width: 100 }
               ],
               onselection: (instance, cell, y, x) => {
-                x = 1
-                console.log(x, y)
+                x = 1;
                 const selectedCustomerName = instance.jexcel.getValueFromCoords(x, y); // 선택된 셀의 데이터를 가져옵니다.
-                console.log(selectedCustomerName)
                 setSelectedCustomer(selectedCustomerName);
               }
             });
@@ -56,63 +75,59 @@ const JexcelModal: React.FC<JexcelModalProps> = ({ isOpen, onClose, onSelect, se
         })
         .catch(err => console.error('Error fetching customers:', err));
     }
-
   }
 
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      SearchCusTomerName(searchName);  // 엔터 키를 눌렀을 때 함수 실행
+    }
+  };
+
   const handleApply = () => {
-    console.log('selectedCustomer', selectedCustomer);
     onSelect(selectedCustomer); // 선택된 고객명 부모 컴포넌트로 전달
     onClose(); // 모달 닫기
   };
 
   const openCustomerDialog = () => {
-    console.log('openCustomerDialog', searchQuery);
-
-
-    // If selectedCustomer is undefined, create a new customer with the searchQuery as the customerName
-    const newCustomer: Customer = selectedCustomer ? { ...selectedCustomer } : { id: 0, customerName: searchQuery, phone: '', inboundDate: new Date() };
-
-    // If selectedCustomer is already defined, update its customerName to match searchQuery
+    const newCustomer: Customer = selectedCustomer ? { ...selectedCustomer } : {};
     newCustomer.customerName = searchQuery;
-    console.log('newCustomer', newCustomer);
-    // Update the state with the new or modified customer
     setSelectedCustomer(newCustomer);
-
-    // Open the dialog
     setDialogOpen(true);
-};
-
-  const closeCustomerDialog = () => {
-    setIsCustomerDialogOpen(false);
   };
+
   const handleSaveCustomer = async (customer: Customer) => {
-    console.log('handleSaveCustomer', customer)
-    const customerName=customer.customerName
-    customer.inboundDate = dayjs(customer.inboundDate).format('YYYY-MM-DD')
+    customer.inboundDate = dayjs(customer.inboundDate).format('YYYY-MM-DD');
     if (customer.id !== 0) {
-      await axios.put(`http://localhost:3001/api/customers/${customer.id}`, customer);
+      await axios.put(`${apiUrl}/api/customers/${customer.id}`, customer);
       setCustomers(customers.map((c) => (c.id === customer.id ? customer : c)));
     } else {
       customer.id = new Date().getTime();
-      await axios.post('http://localhost:3001/api/customers', customer);
+      await axios.post(`${apiUrl}/api/customers`, customer);
       setCustomers([...customers, customer]);
     }
     setDialogOpen(false);
-    SearchCusTomerName(customerName)
   };
 
-
-  if (!isOpen) return null;
-
   return (
-    <div className="modal">
-      <h2>고객명 검색</h2>
-      <button onClick={openCustomerDialog}>신규추가</button> {/* 신규차가 버튼 추가 */}
-
-      <div id="spreadsheet"></div>
-      <button onClick={handleApply}>적용</button>
-      <button onClick={onClose}>닫기</button>
-
+    <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle>고객명 검색</DialogTitle>
+      <DialogContent>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '10px' }}>
+          <Button variant="outlined" onClick={openCustomerDialog}>신규 추가</Button>
+          <TextField
+            value={searchName}
+            onChange={(e) => setSearchName(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="검색"
+            fullWidth
+          />
+        </div>
+        <div id="spreadsheet" style={{ width: '100%', height: '150px', overflow: 'auto' }}></div>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleApply} color="primary">적용</Button>
+        <Button onClick={onClose} color="secondary">닫기</Button>
+      </DialogActions>
 
       <CustomerDialog
         open={dialogOpen}
@@ -120,7 +135,7 @@ const JexcelModal: React.FC<JexcelModalProps> = ({ isOpen, onClose, onSelect, se
         onSave={handleSaveCustomer}
         customer={selectedCustomer}
       />
-    </div>
+    </Dialog>
   );
 };
 

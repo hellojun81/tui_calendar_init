@@ -10,7 +10,7 @@ interface CrudButtonsProps {
 
 const CrudButtons: React.FC<CrudButtonsProps> = ({ onAdd, onEdit, onDelete }) => {
     return (
-        <Box sx={{ display: 'flex', gap: '10px' }} className='crud-buttons-container'>
+        <Box sx={{ display: 'flex', gap: '16px' ,maxHeight:'30px'}} className='crud-buttons-container'>
             <Button variant="contained" className='crud-button add-button'  onClick={onAdd}>
                 추가
             </Button>

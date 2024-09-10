@@ -10,7 +10,6 @@ import axios from 'axios';
 import { Box, Button, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import CrudButtons from '../common/CrudButtons';
 import JexcelModal from "../schedules/JexcelModal";
-import SearchFields from '../provider/SearchFields';
 import './cs.css'
 const apiUrl = process.env.REACT_APP_API_URL;
 
@@ -237,11 +236,56 @@ const Cs: React.FC = () => {
                     borderRadius: '8px',
                 }}
             >
-                <Box sx={{ display: 'flex', gap: '2x', marginBottom: '20px' }}>
-            
-                    <SearchFields formData={formData} handleChange={handleChange} handleSearch={handleSearch} />
+                <Box sx={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                    <FormControl fullWidth>
+                        <InputLabel id="filter-label">검색 옵션</InputLabel>
+                        <Select
+                            labelId="filter-label"
+                            name="filterOption"
+                            value={formData.filterOption}
+                            onChange={handleChange}
+                            label="검색 옵션"
+                        >
+                            <MenuItem value="등록일" selected>등록일</MenuItem>
+                            <MenuItem value="대관시작일">대관시작일</MenuItem>
+                            <MenuItem value="대관종료일">대관종료일</MenuItem>
+                            <MenuItem value="수정일">수정일</MenuItem>
+                        </Select>
+                    </FormControl>
+                    <TextField
+                        label="시작일"
+                        name="endDate"
+                        type="date"
+                        value={formData.startDate}
+                        onChange={handleChange}
+                        InputLabelProps={{ shrink: true }}
+                        fullWidth
+                    />
+                    <TextField
+                        label="종료일"
+                        name="startDate"
+                        type="date"
+                        value={formData.endDate}
+                        onChange={handleChange}
+                        InputLabelProps={{ shrink: true }}
+                        fullWidth
+                    />
+                    <TextField
+                        label="고객명"
+                        name="customerName"
+                        value={formData.customerName}
+                        onChange={handleChange}
+                        fullWidth
+                    />
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleSearch}
+                        sx={{ padding: '12px 16px' }}
+                    >
+                        검색
+                    </Button>
                 </Box>
-               
                 <CrudButtons
                     onAdd={handleaddCs}
                     onEdit={() =>  handleEditCustomer(id)}

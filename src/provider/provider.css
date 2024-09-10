@@ -77,35 +77,3 @@
     background-color: #f9f9f9;
     border-bottom: 2px solid #ddd;
 }
-
-.customer-dialog-fields {
-    display: flex;
-    flex-direction: column;
-    gap: 1.2rem;
-}
-
-.customer-dialog-field {
-    /* background-color: #f9f9f9; */
-    /* border-radius: 9px; */
-    width: 100%;
-}
-
-.customer-dialog-field .MuiInputBase-root {
-    font-size: 0.7rem;
-    padding: 1px;
-}
-
-.customer-dialog-field .MuiInputLabel-root {
-    padding:0px !important;
-    margin:0px !important;
-    font-size: 0.6rem;
-    /* background-color: #0056b3; */
-    position: absolute;
-}
-
-.customer-dialog-field .MuiOutlinedInput-root {
-    height: 30px;
-}
-.MuiInputBase-multiline{
-    height:60px!important;
-}

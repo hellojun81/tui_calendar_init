@@ -10,6 +10,7 @@ import { Customer, JSpreadsheetInstance } from './Customer';
 import './provider.css';
 import axios, { Axios } from 'axios';
 import { getCurrentDate } from '../utils/scheduleUtils';
+const apiUrl = process.env.REACT_APP_API_URL;
 
 const Provider: React.FC = () => {
     const [customers, setCustomers] = useState<Customer[]>([]);
@@ -47,36 +48,55 @@ const Provider: React.FC = () => {
         setDialogOpen(true);
     };
     const handleEditCustomer = () => {
-        const selectedCustomers = [];
-        for (let rowIndex = activeRow; rowIndex <= activeRow; rowIndex++) {
-            if (tableData[rowIndex]) {
+        const data = jexcelInstance.current.getData();
+        const lastRowWithData = data.reduce((maxRow, row, index) => {
+            // 각 행에서 모든 셀이 비어있지 않으면 그 행이 마지막 행이 될 수 있음
+            const hasData = row.some(cell => cell !== null && cell !== '');
+            return hasData ? index : maxRow;
+        }, -1);
+        console.log(lastRowWithData)
+        if (lastRowWithData >= 0) {
+            const selectedCustomers = [];
+            for (let rowIndex = activeRow; rowIndex <= activeRow; rowIndex++) {
+                if (tableData[rowIndex]) {
                 const selectedRow = tableData[rowIndex];
-                selectedCustomers.push(formatCustomerData(selectedRow));
+                    selectedCustomers.push(formatCustomerData(selectedRow));
+                }
+            }
+            selectedCustomers[0].inboundDate = dayjs(selectedCustomers[0].inboundDate).format('YYYY-MM-DD');
+            console.log('selectedCustomers', selectedCustomers);
+            setSelectedCustomer(selectedCustomers[0]);
+            setDialogOpen(true);
+        }
+    };
+    const handleDeleteCustomer = async (activeRow: number) => {
+        const id = tableData[activeRow][0]
+        const customerName = tableData[activeRow][1]
+        // console.log({ id: id, customerName: customerName })
+        const confirmDelete = window.confirm(`${customerName} 정말 삭제하시겠습니까?`);
+        if (confirmDelete) {
+
+
+            const id = tableData[activeRow as number][0];
+            if (id !== undefined) {
+                await axios.delete(`${apiUrl}/api/customers/${id}`);
+                handleSearch()
             }
         }
-        selectedCustomers[0].inboundDate = dayjs(selectedCustomers[0].inboundDate).format('YYYY-MM-DD');
-        console.log('selectedCustomers', selectedCustomers);
-        setSelectedCustomer(selectedCustomers[0]);
-        setDialogOpen(true);
-    };
-    const handleDeleteCustomer = async (activeRow: Number) => {
-        // const id=tableData[activeRow][0]
-        const id = tableData[activeRow as number][0];
-        if (id !== undefined) {
-            await axios.delete(`http://localhost:3001/api/customers/${id}`);
-            handleSearch()
-        }
+
+
+
     };
 
     const handleSaveCustomer = async (customer: Customer) => {
         // console.log('handleSaveCustomer', customer)
         if (customer.id !== 0) {
-            await axios.put(`http://localhost:3001/api/customers/${customer.id}`, customer);
+            await axios.put(`${apiUrl}/api/customers/${customer.id}`, customer);
             setCustomers(customers.map((c) => (c.id === customer.id ? customer : c)));
         } else {
             console.log('New SaveCustomer', customer)
             customer.inboundDate = dayjs(customer.inboundDate).format('YYYY-MM-DD')
-            await axios.post('http://localhost:3001/api/customers', customer);
+            await axios.post(`${apiUrl}/api/customers`, customer);
             setCustomers([...customers, customer]);
         }
         setDialogOpen(false);
@@ -129,7 +149,7 @@ const Provider: React.FC = () => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
-    
+
     const handleSearch = async () => {
         try {
             const queryParams = new URLSearchParams({
@@ -138,8 +158,7 @@ const Provider: React.FC = () => {
                 ...(formData.customerName && { customerName: formData.customerName }),
             });
 
-            // const res = await axios.get(`http://localhost:3001/api/customers`);
-            const res = await axios.get(`http://localhost:3001/api/customers/coustomerName?${queryParams.toString()}`);
+            const res = await axios.get(`${apiUrl}/api/customers/coustomerName?${queryParams.toString()}`);
             setTableData(res.data.map((customer: Customer) => [
                 customer.id.toString(),
                 customer.customerName,
@@ -164,8 +183,8 @@ const Provider: React.FC = () => {
             <Box sx={{ padding: 2 }}>
                 <CrudButtons
                     onAdd={handleAddCustomer}
-                    onEdit={() => activeRow && handleEditCustomer()}
-                    onDelete={() => activeRow && handleDeleteCustomer(activeRow)}
+                    onEdit={() => handleEditCustomer()}
+                    onDelete={() => handleDeleteCustomer(activeRow)}
                 />
                 <div ref={tableRef} />
                 <CustomerDialog

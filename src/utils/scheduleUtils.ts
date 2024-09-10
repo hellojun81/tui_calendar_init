@@ -1,7 +1,7 @@
 import axios from 'axios';
 import dayjs from 'dayjs';
-import timezone from 'dayjs/plugin/timezone';
-import utc from 'dayjs/plugin/utc';
+const apiUrl = process.env.REACT_APP_API_URL;
+
 export interface ISchedule {
   id?: string;
   calendarId?: string;
@@ -31,10 +31,11 @@ export interface ISchedule {
   userInt?: string;
   estPrice?: number;
   etc?: string;
-  csKind:number;
+  csKind?:number;
   // created_at: Date;
-  startTime:number;
-  endTime:number;
+  startTime?:number;
+  endTime?:number;
+  created_at?:Date;
 }
 
 export interface ScheduleModalProps {
@@ -86,7 +87,7 @@ export const openModalUtil = (
   setGubun: (gubun: string) => void,
   setUserInt: (userInt: string) => void,
   setEstprice: (price: number) => void,
-  setId: (id: string) => void,
+  setId: (id: number) => void,
   setEtc: (etc: string) => void,
   setIsModalOpen: (isOpen: boolean) => void,
   setCsKind: (csKind: number) => void,
@@ -107,7 +108,7 @@ export const openModalUtil = (
     setGubun("사진");
     setUserInt("10인이하");
     setEstprice(0);
-    setId("");
+    setId(0);
     setEtc("");
     setCsKind(1)
   } else if (mode === "edit" && scheduleData) {
@@ -124,11 +125,12 @@ export const openModalUtil = (
     setGubun(scheduleData.gubun || "");
     setUserInt(scheduleData.userInt || "");
     setEstprice(scheduleData.estPrice || 0);
-    setId(scheduleData.id || "");
+    setId(scheduleData.id || 0);
     setEtc(scheduleData.etc || "");
     setCsKind(scheduleData.csKind || 1);
   }
-
+  // console.log('scheduleData.csKind',scheduleData?.csKind)
+  console.log({'scheduleData':scheduleData})
   setIsModalOpen(true);
 };
 
@@ -186,16 +188,21 @@ export const saveSchedule = async (
     etc,
     csKind,
   };
-  newSchedule.start = dayjs(dayjs(newSchedule.start).format('YYYY-MM-DD')).toDate();  
-  newSchedule.end = dayjs(dayjs(newSchedule.end).format('YYYY-MM-DD')).toDate();  
+
+  console.log('csKind',csKind)
+
+  newSchedule.start = dayjs(newSchedule.start).format('YYYY-MM-DD');  
+  newSchedule.end = dayjs(newSchedule.end).format('YYYY-MM-DD');  
+  // newSchedule.start = dayjs(dayjs(newSchedule.start).format('YYYY-MM-DD')).toDate();  
+  // newSchedule.end = dayjs(dayjs(newSchedule.end).format('YYYY-MM-DD')).toDate();  
  
   console.log({'save newSchedule':newSchedule});
   try {
     if (modalMode === "create") {
-      await axios.post('http://localhost:3001/api/schedules', newSchedule);
+      await axios.post(`${apiUrl}/api/schedules`, newSchedule);
     } else {
       // console.log({'EditMode newSchedule':newSchedule});
-      await axios.put(`http://localhost:3001/api/schedules/${currentSchedule?.id}`, newSchedule);
+      await axios.put(`${apiUrl}/api/schedules/${currentSchedule?.id}`, newSchedule);
     }
 
     setSchedules((prev: ISchedule[]) => (
@@ -229,7 +236,7 @@ export const getSchedulesUtil = async (
   const fetchSchedules = async () => {
     try {
       const newMonth = `${year}-${formatMonth(month)}`;
-      const res = await axios.get<ISchedule[]>(`http://localhost:3001/api/schedules/schedules?SearchMonth=${newMonth}`);
+      const res = await axios.get<ISchedule[]>(`${apiUrl}/api/schedules/schedules?SearchMonth=${newMonth}`);
       console.log(res.data)
       const updatedSchedules = res.data.map(schedule => ({
         ...schedule,

@@ -77,8 +77,13 @@ const CustomerDialog: React.FC<CustomerDialogProps> = ({ open, onClose, onSave, 
     };
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-            <DialogTitle>{customer ? '고객 수정' : '고객 추가'}</DialogTitle>
+        // <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
+        <Dialog
+  open={open}
+  onClose={onClose}
+  sx={{ '& .MuiDialog-paper': { width: '300px', maxWidth: '300px' } }} // 원하는 크기로 설정
+>
+            <DialogTitle>{customer?.customerName ? '고객 수정' : '고객 추가'}</DialogTitle>
             <DialogContent>
                 <CustomerDialogFields formData={formData} handleChange={handleChange} handleDateChange={handleDateChange} />
             </DialogContent>

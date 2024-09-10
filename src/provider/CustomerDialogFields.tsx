@@ -1,10 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { TextField, Box } from '@mui/material';
-import './provider.css';
-import { LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-// import { Customer } from './Customer';
 import dayjs from 'dayjs';
 
 interface Customer {
@@ -22,17 +17,13 @@ interface Customer {
     notes: string;
 }
 
-
-
 interface CustomerDialogFieldsProps {
     formData: Customer;
     handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    handleDateChange: (name: string, date: Date | null) => void; // 추가: DatePicker의 날짜 변경 핸들러
 }
 
-const CustomerDialogFields: React.FC<CustomerDialogFieldsProps> = ({ formData, handleChange, handleDateChange }) => {
+const CustomerDialogFields: React.FC<CustomerDialogFieldsProps> = ({ formData, handleChange }) => {
     const fields = [
-        { label: 'ID', name: 'id' },
         { label: '고객명', name: 'customerName' },
         { label: '담당자', name: 'contactPerson' },
         { label: '직책', name: 'position' },
@@ -43,59 +34,52 @@ const CustomerDialogFields: React.FC<CustomerDialogFieldsProps> = ({ formData, h
         { label: '사업자 등록번호', name: 'businessNumber' },
         { label: '대표자', name: 'representative' },
         { label: '소재지', name: 'location' },
-        { label: '메모', name: 'notes', multiline: true, rows: 3 },
+        { label: '메모', name: 'notes', multiline: true, rows: 3 },  // 멀티라인 필드 설정
     ];
-    // console.log('fields', fields)
-    const getValue = (name: string) => {
-    //    console.log('formData:', formData); // 필드 이름 출력
 
+    const getValue = (name: string) => {
         if (name === 'inboundDate') {
-            const newDate = new Date();
-            const newFormatDate = dayjs(newDate).format('YYYY-MM-DD');
-            const value = dayjs(formData.inboundDate).format('YYYY-MM-DD') || newFormatDate; // inboundDate가 없으면 오늘 날짜를 반환
-            // console.log('Returning value for inboundDate:', value);
-            return value;
+            return dayjs(formData.inboundDate).format('YYYY-MM-DD') || dayjs().format('YYYY-MM-DD');
         }
-        
-        const value = formData[name as keyof Customer];
-        // console.log(`Returning value for ${name}:`, value);
-        // console.log('value',value)
-        return value;
+        return formData[name as keyof Customer];
     };
 
-
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }} className="customer-dialog-field">
-            {fields.map((field) => {
-                // console.log(field)
-                return field.name === 'inboundDate' ? (
-                    <TextField
-                        key={field.name}
-                        label={field.label}
-                        name={field.name}
-                        value={getValue(field.name)}
-                        onChange={handleChange}
-                        type={field.type || 'date'}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }} className="customer-dialog-field">
+        {fields.map((field) => {
+            console.log(`Field: ${field.label}, Rows: ${field.rows}`);
 
-                    />
-                ) : (
-                    <TextField
-                        key={field.name}
-                        label={field.label}
-                        name={field.name}
-                        value={getValue(field.name) as string}
-                        onChange={(e) => {
-                            handleChange(e);
-                        }}
-                        type={field.type || 'text'}
-                        multiline={field.multiline || false}
-                        rows={field.rows || 1}
-                        fullWidth
-                    />
-                );
-            })}
-        </Box>
-
+            return (
+                <TextField
+                    key={field.name}
+                    label={field.label}
+                    name={field.name}
+                    value={getValue(field.name) as string}
+                    onChange={handleChange}
+                    type={field.type || 'text'}
+                    multiline={field.multiline || false}  // 멀티라인 적용 여부
+                    rows={field.rows || 1}  // 줄 수
+                    fullWidth
+                    InputLabelProps={{
+                        style: { fontSize: '0.5rem' },  // 라벨 크기 조정
+                    }}
+                    sx={{
+                        '& .MuiInputBase-root': {
+                            height: field.multiline ? 'auto' : '15px',  // 멀티라인 필드는 자동 높이
+                            fontSize: '0.6rem',
+                        },  
+                        '& .MuiInputLabel-root': { fontSize: '0.9rem' },  // 라벨의 폰트 크기
+                        '& .MuiInputBase-inputMultiline': {
+                            height: field.rows ? `${field.rows * 10 + 10}px` : '10px',  // 멀티라인 필드의 줄 맞춤
+                            paddingTop: '10px',
+                        },
+                        marginBottom: '1px',  // TextField들 사이의 간격을 추가로 조정 (필요한 경우)
+                    }}
+                    variant="standard" 
+                />
+            );
+        })}
+    </Box>
     );
 };
 

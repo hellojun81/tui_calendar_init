@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Table, Button, Modal, Form, Input, Select, message } from 'antd';
 import { ColumnsType } from 'antd/es/table';
+const apiUrl = process.env.REACT_APP_API_URL;
 
 interface ColumnData {
     displayName: string;
@@ -33,7 +34,7 @@ const ColumnTable: React.FC<ColumnTableProps> = ({
     // 컬럼 목록 가져오기
     const fetchColumns = async () => {
         try {
-            const response = await axios.get<ColumnData[]>(`http://localhost:3001/api/columns`, {
+            const response = await axios.get<ColumnData[]>(`${apiUrl}/api/columns`, {
                 params: { tableName: tableName }
             });
             setColumns(response.data);
@@ -52,7 +53,7 @@ const ColumnTable: React.FC<ColumnTableProps> = ({
     const handleAddColumn = (column: ColumnData) => {
         form.validateFields().then(async (values) => {
             try {
-                const response = await axios.post<ColumnData>(`http://localhost:3001/api/columns`, {
+                const response = await axios.post<ColumnData>(`${apiUrl}/api/columns`, {
                     tableName: tableName,
                     displayName: values.displayName,
                     type: values.type,
@@ -74,7 +75,7 @@ const ColumnTable: React.FC<ColumnTableProps> = ({
     const handleEditColumn = async (column: ColumnData) => {
         form.validateFields().then(async (values) => {
             try {
-                const response = await axios.put<ColumnData>(`http://localhost:3001/api/columns`, {
+                const response = await axios.put<ColumnData>(`${apiUrl}/api/columns`, {
                     tableName: tableName,
                     id: values.id,
                     newName: values.displayName,
@@ -95,7 +96,7 @@ const ColumnTable: React.FC<ColumnTableProps> = ({
     // 컬럼 삭제
     const handleDeleteColumn = async (column: ColumnData) => {
         try {
-            await axios.delete(`http://localhost:3001/api/columns/${tableName}?id=${column.id}`);
+            await axios.delete(`${apiUrl}/api/columns/${tableName}?id=${column.id}`);
             await fetchColumns();
             message.success('Column deleted successfully');
         } catch (err) {

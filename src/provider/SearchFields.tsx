@@ -1,5 +1,5 @@
 import React from 'react';
-import { TextField, Box, Button } from '@mui/material';
+import { Box, Button, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 
 // Fields configuration
 const fields = [
@@ -10,7 +10,39 @@ const fields = [
 
 const SearchFields: React.FC<{ formData: any; handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void; handleSearch: () => void }> = ({ formData, handleChange, handleSearch }) => {
     return (
-        <Box sx={{ display: 'flex', gap: '20px', marginBottom: '20px' }} className='search-fields-container'>
+        <Box
+            sx={{
+                display: 'flex',
+                gap: '4px',   // 간격 조정
+                marginBottom: '20px',
+                maxWidth: '500px',  // 박스 최대 크기 설정
+                width: '100%',      // 박스가 부모 요소의 100%만 차지하도록 설정
+                justifyContent: 'space-between',  // 자식 요소 사이의 간격 균등 분배
+                alignItems: 'center',      // 수직 중앙 정렬
+                margin: '0 auto'           // 박스 자체를 부모 안에서 중앙으로 정렬
+            }}
+            className='search-fields-container'
+        >
+            <FormControl fullWidth
+             sx={{ maxHeight: '30px',height:'30px'}} 
+            >
+                <InputLabel id="filter-label">검색 옵션</InputLabel>
+                <Select
+                    labelId="filter-label"
+                    name="filterOption"
+                    value={formData.filterOption || '등록일'}  // 초기값을 '등록일'로 설정
+                    onChange={handleChange}
+                    label="검색 옵션"
+                    sx={{ maxHeight: '30px',height:'30px',fontSize:'0.6em'}} 
+                >
+                    <MenuItem value="등록일" selected>등록일</MenuItem>
+                    <MenuItem value="대관시작일">대관시작일</MenuItem>
+                    <MenuItem value="대관종료일">대관종료일</MenuItem>
+                    <MenuItem value="수정일">수정일</MenuItem>
+                </Select>
+            </FormControl>
+
+
             {fields.map((field) => (
                 <TextField
                     key={field.name}
@@ -22,13 +54,26 @@ const SearchFields: React.FC<{ formData: any; handleChange: (e: React.ChangeEven
                     InputLabelProps={{ shrink: true }}
                     fullWidth
                     className='customer-dialog-field'
+                    sx={{
+                        '& .MuiInputBase-root': {
+                            height: field.multiline ? 'auto' : '30px',  // 멀티라인 필드는 자동 높이
+                            fontSize: '0.6rem',
+                        },
+                        '& .MuiInputLabel-root': { fontSize: '0.9rem' },  // 라벨의 폰트 크기
+                        '& .MuiInputBase-inputMultiline': {
+                            height: field.rows ? `${field.rows * 10 + 10}px` : '10px',  // 멀티라인 필드의 줄 맞춤
+                            paddingTop: '10px',
+                        },
+                        marginBottom: '1px',  // TextField들 사이의 간격을 추가로 조정 (필요한 경우)
+                    }}
+
                 />
             ))}
             <Button
                 variant="contained"
                 color="primary"
                 onClick={handleSearch}
-                sx={{ padding: '12px 16px' }}
+                sx={{ padding: '12px 16px', whiteSpace: 'nowrap', height: '40px' }}  // 버튼 크기 줄이기
             >
                 검색
             </Button>
