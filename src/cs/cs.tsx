@@ -3,9 +3,10 @@ import jspreadsheet from 'jspreadsheet-ce';
 // import 'jspreadsheet-ce/dist/jspreadsheet.css';
 import dayjs from 'dayjs';
 import ScheduleModal from "../schedules/ScheduleModal";
-import {ISchedule, saveSchedule, closeModalUtil, openModalUtil,openJexcelModalUtil, getCurrentDate, getSchedulesUtil
+import {
+    ISchedule, saveSchedule, closeModalUtil, openModalUtil, openJexcelModalUtil, getCurrentDate, getSchedulesUtil
 } from '../utils/scheduleUtils';
-import { JSpreadsheetInstance} from '../provider/Customer';
+import { JSpreadsheetInstance } from '../provider/Customer';
 import axios from 'axios';
 import { Box, Button, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import CrudButtons from '../common/CrudButtons';
@@ -16,7 +17,7 @@ const apiUrl = process.env.REACT_APP_API_URL;
 
 
 const Cs: React.FC = () => {
-   
+
     const calendarRef = useRef<any>(null);
     const [schedules, setSchedules] = useState<ISchedule[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -69,13 +70,10 @@ const Cs: React.FC = () => {
                         { type: 'text', title: '대관장소', width: 80 },
                         { type: 'text', title: '인원', width: 50 },
                         { type: 'text', title: '견적가', width: 50 },
-                        { type: 'calendar', title: '등록일', width: 70, options: {format: 'YYYY-MM-DD',},},
-                        { type: 'calendar', title: '시작일', width: 70, options: {format: 'YYYY-MM-DD',},},
-                        { type: 'calendar', title: '종료일', width: 70, options: {format: 'YYYY-MM-DD',},},
+                        { type: 'calendar', title: '등록일', width: 70, options: { format: 'YYYY-MM-DD', }, },
+                        { type: 'calendar', title: '시작일', width: 70, options: { format: 'YYYY-MM-DD', }, },
+                        { type: 'calendar', title: '종료일', width: 70, options: { format: 'YYYY-MM-DD', }, },
                         { type: 'text', title: '비고', width: 30 },
-                        // { type: 'text', title: '대표자', width: 30 },
-                        // { type: 'text', title: '소재지', width: 30 },
-                        // { type: 'text', title: '메모', width: 30 },
                     ],
                 });
             } else {
@@ -91,18 +89,9 @@ const Cs: React.FC = () => {
                     SetactiveRow(y1);
                     setId(parseInt(tableData[y1][0])) /////ID값세팅
                     setCustomerName(tableData[y1][2])
-                    console.log({id:tableData[y1][0],customerName:tableData[y1][2]})
+                    console.log({ id: tableData[y1][0], customerName: tableData[y1][2] })
                 };
             }
-            // const handleContextMenu = (e: MouseEvent) => {
-            //     e.preventDefault(); // 우클릭 시 기본 메뉴 방지
-            // };
-            // tableRef.current.addEventListener('contextmenu', handleContextMenu);
-
-            // // 컴포넌트 언마운트 시 이벤트 리스너 제거
-            // return () => {
-            //     tableRef.current?.removeEventListener('contextmenu', handleContextMenu);
-            // };
 
         } else {
             console.error("tableRef.current가 null입니다.");
@@ -120,9 +109,10 @@ const Cs: React.FC = () => {
                 });
                 // 서버로부터 데이터를 가져오는 비동기 호출
                 const res = await axios.get(`${apiUrl}/api/schedules/cs?${queryParams.toString()}`);
+                console.log(res.data)
                 setTableData(res.data.map((schedule: ISchedule) => [
                     schedule.id,
-                    schedule.csKind,
+                    schedule.cskindTitle,
                     schedule.customerName,
                     schedule.gubun,
                     schedule.rentPlace,
@@ -155,7 +145,7 @@ const Cs: React.FC = () => {
         console.log('MODE', modalMode)
         saveSchedule(csKind, newTitle, newStart, newEnd, startTime, endTime, customerName, rentPlace, modalMode, currentSchedule, gubun, userInt, estPrice, etc, setSchedules, closeModal);
         handleSearch()
-    
+
     };
 
     const closeJexcelModal = useCallback(() => {
@@ -178,9 +168,10 @@ const Cs: React.FC = () => {
 
     const handleEditCustomer = useCallback(async (id: number) => {
         try {
-            console.log('handleEditCustomer id=', id)
+            // console.log('handleEditCustomer id=', id)
             const res = await axios.get(`${apiUrl}/api/schedules/${id}`);
             const scheduleData = res.data;
+            console.log('res.data', res.data)
             openModal("edit", scheduleData);
         } catch (err) {
             console.error('Error fetching schedule by ID:', err);
@@ -209,8 +200,8 @@ const Cs: React.FC = () => {
     }, [openModal]);
 
 
-    const handleDeleteCustomer = useCallback(async (id: Number ,customerName:string ) => {
-        const confirmDelete = window.confirm(`${customerName} 정말 삭제하시겠습니까?`); 
+    const handleDeleteCustomer = useCallback(async (id: Number, customerName: string) => {
+        const confirmDelete = window.confirm(`${customerName} 정말 삭제하시겠습니까?`);
         if (confirmDelete) {
             try {
                 const res = await axios.delete(`${apiUrl}/api/schedules/${id}`);
@@ -238,56 +229,56 @@ const Cs: React.FC = () => {
                 }}
             >
                 <Box sx={{ display: 'flex', gap: '2x', marginBottom: '20px' }}>
-            
+
                     <SearchFields formData={formData} handleChange={handleChange} handleSearch={handleSearch} />
                 </Box>
-               
+
                 <CrudButtons
                     onAdd={handleaddCs}
-                    onEdit={() =>  handleEditCustomer(id)}
-                    onDelete={() =>  handleDeleteCustomer(id,customerName)}
+                    onEdit={() => handleEditCustomer(id)}
+                    onDelete={() => handleDeleteCustomer(id, customerName)}
                 />
                 <div ref={tableRef} />
 
                 <ScheduleModal
-                isOpen={isModalOpen}
-                modalMode={modalMode}
-                id={Number(id)}
-                newStart={newStart}
-                newEnd={newEnd}
-                startTime={startTime}
-                endTime={endTime}
-                newTitle={newTitle}
-                gubun={gubun}
-                userInt={userInt}
-                estPrice={estPrice}
-                customerName={customerName}
-                etc={etc}
-                rentPlace={rentPlace || ""}
-                setNewStart={setNewStart}
-                setNewEnd={setNewEnd}
-                setStartTime={setStartTime}
-                setEndTime={setEndTime}
-                setCustomerName={setCustomerName}
-                setRentPlace={setRentPlace}
-                setNewTitle={setNewTitle}
-                setGubun={setGubun}
-                setUserInt={setUserInt}
-                setEstprice={setEstprice}
-                setEtc={setEtc}
-                setCsKind={setCsKind}
-                // onDeleteSchedule={id => onDeleteSchedule(Number(id))}
-                onSaveSchedule={onSaveSchedule}
-                // onDeleteSchedule={() => setSchedules(prev => prev.filter(s => s.id !== currentSchedule?.id))}
-                closeModal={closeModal}
-                openJexcelModal={openJexcelModal}
-            />
-            <JexcelModal
-                isOpen={isJexcelModalOpen}
-                onClose={closeJexcelModal}
-                onSelect={onSelectCustomer}
-                searchQuery={searchQuery}
-            />
+                    isOpen={isModalOpen}
+                    modalMode={modalMode}
+                    id={Number(id)}
+                    newStart={newStart}
+                    newEnd={newEnd}
+                    startTime={startTime}
+                    endTime={endTime}
+                    newTitle={newTitle}
+                    gubun={gubun}
+                    userInt={userInt}
+                    estPrice={estPrice}
+                    customerName={customerName}
+                    etc={etc}
+                    rentPlace={rentPlace || ""}
+                    setNewStart={setNewStart}
+                    setNewEnd={setNewEnd}
+                    setStartTime={setStartTime}
+                    setEndTime={setEndTime}
+                    setCustomerName={setCustomerName}
+                    setRentPlace={setRentPlace}
+                    setNewTitle={setNewTitle}
+                    setGubun={setGubun}
+                    setUserInt={setUserInt}
+                    setEstprice={setEstprice}
+                    setEtc={setEtc}
+                    setCsKind={setCsKind}
+                    // onDeleteSchedule={id => onDeleteSchedule(Number(id))}
+                    onSaveSchedule={onSaveSchedule}
+                    // onDeleteSchedule={() => setSchedules(prev => prev.filter(s => s.id !== currentSchedule?.id))}
+                    closeModal={closeModal}
+                    openJexcelModal={openJexcelModal}
+                />
+                <JexcelModal
+                    isOpen={isJexcelModalOpen}
+                    onClose={closeJexcelModal}
+                    onSelect={onSelectCustomer}
+                    searchQuery={searchQuery}
+                />
             </Box>
         </div>
     );

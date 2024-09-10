@@ -109,7 +109,7 @@ const JexcelModal: React.FC<JexcelModalProps> = ({ isOpen, onClose, onSelect, se
   };
 
   return (
-    <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="sm" sx={{fontSize:'9px',maxWidth:'500px',margin:'0 auto'}}>
       <DialogTitle>고객명 검색</DialogTitle>
       <DialogContent>
         <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '10px' }}>

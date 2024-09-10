@@ -214,10 +214,13 @@ input {
     flex-wrap: wrap; /* 화면 너비가 400px 이하일 때 요소들이 두 줄로 배치 */
   }
 }
-
+.MuiDialogContent-root input,
+.MuiDialogContent-root select
+{font-size: 9px;}
 
 .date-time-item-row label {
-  margin-right: 5px;
+  /* margin-right: 5px; */
+  min-width: 30px;
 }
 
 .photoGubun select{

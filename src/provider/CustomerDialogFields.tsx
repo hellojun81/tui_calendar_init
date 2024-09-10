@@ -47,9 +47,7 @@ const CustomerDialogFields: React.FC<CustomerDialogFieldsProps> = ({ formData, h
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }} className="customer-dialog-field">
         {fields.map((field) => {
-            console.log(`Field: ${field.label}, Rows: ${field.rows}`);
-
-            return (
+               return (
                 <TextField
                     key={field.name}
                     label={field.label}

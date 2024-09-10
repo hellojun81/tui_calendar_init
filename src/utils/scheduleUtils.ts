@@ -36,6 +36,7 @@ export interface ISchedule {
   startTime?:number;
   endTime?:number;
   created_at?:Date;
+  cskindTitle?:string;
 }
 
 export interface ScheduleModalProps {
@@ -178,8 +179,6 @@ export const saveSchedule = async (
     end: dayjs(end).format('YYYY-MM-DD') ? new Date(dayjs(end).format('YYYY-MM-DD')) : undefined,
     startTime,
     endTime,
-    category: 'allday',
-    bgColor: 'red',
     customerName,
     rentPlace,
     estPrice: Number(estPrice),
