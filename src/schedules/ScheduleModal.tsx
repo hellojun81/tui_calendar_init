@@ -1,10 +1,23 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
-import "./Calendar";
+import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Box, Button, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+// import "./Calendar";
 import RentPlaceSelector from './RentPlaceSelector'; // RentPlaceSelector 컴포넌트 import
-import GetCsKind from './get_csKind'
 import { ScheduleModalProps, openJexcelModalUtil } from '../utils/scheduleUtils';
 import JexcelModal from "./JexcelModal";
+import GetCsKind from "./Get_CsKind";
+const TimePicker = ({ label, value, onChange, options }) => (
+  <FormControl fullWidth>
+    <InputLabel>{label}</InputLabel>
+    <Select value={value} onChange={(e) => onChange(e.target.value)}>
+      {options.map((option) => (
+        <MenuItem key={option} value={option}>
+          {option}
+        </MenuItem>
+      ))}
+    </Select>
+  </FormControl>
+);
 
 const ScheduleModal: React.FC<ScheduleModalProps> = ({
   isOpen,
@@ -12,8 +25,6 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   id,
   newStart,
   newEnd,
-  startTime,
-  endTime,
   customerName,
   gubun,
   userInt,
@@ -23,8 +34,6 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   csKind,
   setNewStart,
   setNewEnd,
-  setStartTime,
-  setEndTime,
   onSaveSchedule,
   onDeleteSchedule,
   closeModal,
@@ -40,6 +49,12 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const [isJexcelModalOpen, setIsJexcelModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState(""); // 검색어 상태 추가
+  const [customerEtc, setCustomerEtc] = useState<string>(""); // 검색어 상태 추가
+  const [customerName2, setCustomerName2] = useState<string>(""); // 검색어 상태 추가
+  const [startTime, setStartTime] = useState("00:00");
+  const [endTime, setEndTime] = useState("00:00");
+
+
   const openSelector = () => setIsSelectorOpen(true);
   const closeSelector = () => setIsSelectorOpen(false);
 
@@ -51,18 +66,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     return `${year}-${month}-${day}`;
   };
 
-  const handleHourChange = (hour: string, setDate: (time: number | null) => void) => {
-    setDate(parseInt(hour, 10));
-  };
 
-
-  const generateHourOptions = () => {
-    return Array.from({ length: 24 }, (_, i) => (
-      <option key={i} value={i}>
-        {i.toString().padStart(2, '0')}
-      </option>
-    ));
-  };
   const openJexcelModal = useCallback((customerName: string) => {
     openJexcelModalUtil(customerName, setSearchQuery, setIsJexcelModalOpen); // 유틸리티 함수 호출
   }, []);
@@ -116,164 +120,163 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       setEstprice(numericValue);
     }
   };
-  const onSelectCustomer = useCallback((selectedCustomer: string) => {
-    console.log('selectedCustomer', selectedCustomer)
+  const onSelectCustomer = useCallback((selectedCustomer: string, customerName2: string, etc: string) => {
+    console.log({ 'selectedCustomer': selectedCustomer, selectedCustomer2: customerName2, etc: etc })
     setCustomerName(selectedCustomer); // 선택된 고객명 설정
-    // closeJexcelModal(); // 모달 닫기
+    setCustomerName2(customerName2);
+    setEtc(etc);
   }, []);
+
 
 
   if (!isOpen) {
     return null;
   }
 
+  const generateHourOptions = () => {
+    const hours = [];
+    for (let i = 0; i < 24; i++) {
+      const hour = `${i < 10 ? "0" : ""}${i}:00`;
+      hours.push(hour);
+    }
+    return hours;
+  };
+
+  const hourOptions = generateHourOptions();
+
+
   return (
 
-      <Dialog open={isOpen} onClose={closeModal} maxWidth="md" fullWidth sx={{fontSize:'9px',maxWidth:'500px',margin:'0 auto'}}>
-        <DialogTitle>{modalMode === "edit" ? `수정 [ID:${id}]` : "추가"}</DialogTitle>
-        <DialogContent>
-          <div className="date-time-container">
-            <div className="date-time-item-row">
-              <GetCsKind onValueChange={setCsKind} csKind={csKind} />
-            </div>
-            <div className="date-time-item-row">
-              <label>고객명:</label>
-              <input
-                type="text"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                readOnly
-              />
-              <button onClick={() => openJexcelModal(customerName)} className="search-button">검색</button>
-            </div>
-            <div className="date-time-item-row">
-              <div className="date_box">
-                <label>시작일:</label>
-                <div>
-                  <input
-                    type="date"
-                    value={newStart ? formatToKoreanTimeString(newStart) : ""}
-                    onChange={(e) => setNewStart(new Date(e.target.value))}
-                    className="date-view"
-                  />
-
-                  <select
-                    value={startTime ? startTime : "00"}
-                    onChange={(e) => handleHourChange(e.target.value, setStartTime)} // setStartTime 함수 호출
-                    className="time-view"
-                  >
-                    {generateHourOptions()}
-                  </select>
-                </div>
-              </div>
-              <div className="date_box" >
-                <label>종료일:</label>
-                <div>
-                  <input
-                    type="date"
-                    value={newEnd ? formatToKoreanTimeString(newEnd) : ""}
-                    onChange={(e) => setNewEnd(new Date(e.target.value))}
-                    className="date-view"
-                  />
-                  <select
-                    value={endTime ? endTime : "00"}
-                    onChange={(e) => handleHourChange(e.target.value, setEndTime)}
-                    className="time-view"
-                  >
-                    {generateHourOptions()}
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="date-time-item-row photoGubun">
-            <div className="box">
-              <label>촬영구분:</label>
-              <select
-                value={gubun}
-                onChange={(e) => setGubun(e.target.value)}
-              >
-                <option value="사진">사진</option>
-                <option value="영상">영상</option>
-                <option value="행사">행사</option>
-                <option value="전시">전시</option>
-                <option value="비영리">비영리</option>
-                <option value="기타">기타</option>
-              </select>
-            </div>
-            <div className="box">
-              <label>인원:</label>
-              <select
-                value={userInt}
-                onChange={(e) => setUserInt(e.target.value)} >
-                <option value="10인이하">10인이하</option>
-                <option value="11~15인">11~15인</option>
-                <option value="16~20인">16~20인</option>
-                <option value="21~25인">21~25인</option>
-                <option value="26~30인">26~30인</option>
-                <option value="31인이상">31인이상</option>
-              </select>
-            </div>
-          </div>
+    <Dialog open={isOpen} onClose={closeModal} maxWidth="md" fullWidth sx={{ fontSize: '12px', maxWidth: '700px', margin: '0 auto' }}>
+      <DialogTitle>{modalMode === "edit" ? `수정 [ID:${id}]` : "추가"}</DialogTitle>
+      <DialogContent>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
 
 
-          <div className="date-time-item-row">
-            <label>대관장소:</label>
-            <input
-              type="text"
-              value={selrentPlace}
-              readOnly
-              onClick={openSelector}
-              className="selected-values-input"
+          <GetCsKind onValueChange={setCsKind} csKind={csKind} />
+
+          <FormControl fullWidth>
+            <InputLabel>촬영구분</InputLabel>
+            <Select value={gubun} onChange={(e) => setGubun(e.target.value)}>
+              <MenuItem value="사진">사진</MenuItem>
+              <MenuItem value="영상">영상</MenuItem>
+              <MenuItem value="행사">행사</MenuItem>
+              <MenuItem value="전시">전시</MenuItem>
+              <MenuItem value="비영리">비영리</MenuItem>
+              <MenuItem value="기타">기타</MenuItem>
+            </Select>
+          </FormControl>
+
+          <FormControl fullWidth>
+            <InputLabel>인원</InputLabel>
+            <Select value={userInt} onChange={(e) => setUserInt(e.target.value)}>
+              <MenuItem value="10인이하">10인이하</MenuItem>
+              <MenuItem value="11~15인">11~15인</MenuItem>
+              <MenuItem value="16~20인">16~20인</MenuItem>
+              <MenuItem value="21~25인">21~25인</MenuItem>
+              <MenuItem value="26~30인">26~30인</MenuItem>
+              <MenuItem value="31인이상">31인이상</MenuItem>
+            </Select>
+          </FormControl>
+
+          <TextField
+            label="고객명"
+            fullWidth
+            value={customerName}
+            required
+            onChange={(e) => setCustomerName(e.target.value)}
+            InputProps={{
+              readOnly: true,
+              endAdornment: (
+                <Button onClick={() => openJexcelModal(customerName)}>검색</Button>
+              ),
+            }}
+          />
+          <Box>{`담당자명:${customerName2} 비고:${etc}`}</Box>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <TextField
+              label="시작일"
+              type="date"
+              value={newStart ? formatToKoreanTimeString(newStart) : ""}
+              onChange={(e) => setNewStart(new Date(e.target.value))}
+              fullWidth
             />
-            {isSelectorOpen && (
-              <RentPlaceSelector
-                selectedPlaces={selrentPlace}
-                onChange={handleSelectorChange}
-                onClose={closeSelector}
-              />
-            )}
-          </div>
+            <TimePicker
+              label="시작 시간"
+              value={startTime}
+              onChange={setStartTime}
+              options={hourOptions}
+            />
+          </Box>
 
-          <div className="date-time-item-row">
-            <label>견적가:</label>
-            <input
-              type="text"
-              value={formatNumber(estPrice)}
-              onChange={handlePriceChange}
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <TextField
+              label="종료일"
+              type="date"
+              value={newEnd ? formatToKoreanTimeString(newEnd) : ""}
+              onChange={(e) => setNewEnd(new Date(e.target.value))}
+              fullWidth
             />
-          </div>
-          <div className="date-time-item-row">
-            <label>비고:</label>
-            <input
-              type="text"
-              value={etc}
-              onChange={(e) => {
-                setEtc(e.target.value);
-              }}
+            <TimePicker
+              label="종료 시간"
+              value={endTime}
+              onChange={setEndTime}
+              options={hourOptions}
             />
-          </div>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={onSaveSchedule} color="primary" variant="outlined">저장</Button>
-          {modalMode === "edit" && (
-            <Button onClick={() => onDeleteSchedule(Number(id))}  variant="outlined">
-              삭제
-            </Button>
+          </Box>
+
+          <TextField
+            label="대관장소"
+            fullWidth
+            value={selrentPlace}
+            onClick={openSelector}
+            InputProps={{
+              readOnly: true,
+            }}
+          />
+          {isSelectorOpen && (
+            <RentPlaceSelector
+              selectedPlaces={selrentPlace}
+              onChange={handleSelectorChange}
+              onClose={closeSelector}
+            />
           )}
-          <Button onClick={closeModal} color="primary" variant="contained">
-            취소
-          </Button>
-        </DialogActions>
 
-        <JexcelModal
-          isOpen={isJexcelModalOpen}
-          onClose={closeJexcelModal}
-          onSelect={onSelectCustomer}
-          searchQuery={searchQuery}
-        />
-      </Dialog>
+          <TextField
+            label="견적가"
+            fullWidth
+            value={formatNumber(estPrice)}
+            onChange={handlePriceChange}
+          />
+
+          <TextField
+            label="비고"
+            fullWidth
+            value={etc}
+            onChange={(e) => setEtc(e.target.value)}
+            multiline
+          />
+        </Box>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onSaveSchedule} color="primary" variant="outlined">저장</Button>
+        {modalMode === "edit" && (
+          <Button onClick={() => onDeleteSchedule(Number(id))} variant="outlined">
+            삭제
+          </Button>
+        )}
+        <Button onClick={closeModal} color="primary" variant="contained">
+          취소
+        </Button>
+      </DialogActions>
+
+      <JexcelModal
+        isOpen={isJexcelModalOpen}
+        onClose={closeJexcelModal}
+        onSelect={onSelectCustomer}
+        searchQuery={searchQuery}
+      />
+    </Dialog>
 
   );
 };

@@ -1,20 +1,3 @@
-.tui-full-calendar-weekday-schedule {
-  height: 10px !important;
-  /* 원하는 높이로 설정 */
-  line-height: 10px !important;
-  /* 원하는 높이로 설정 */
-}
-
-.tui-full-calendar-weekday-schedule {
-  margin: 0px !important;
-  /* 스케줄 사이의 간격 설정 */
-}
-
-.tui-full-calendar-weekday {
-  padding-bottom: 1px;
-  /* 전체적으로 아래쪽 간격 추가 */
-}
-
 
 .modal {
   position: fixed;
@@ -214,9 +197,15 @@ input {
     flex-wrap: wrap; /* 화면 너비가 400px 이하일 때 요소들이 두 줄로 배치 */
   }
 }
-.MuiDialogContent-root input,
+
+
+.MuiDialogContent-root > .MuiBox-root{
+  padding:20px!important;
+}
+
+/* .MuiDialogContent-root input,
 .MuiDialogContent-root select
-{font-size: 9px;}
+{font-size: 12px;} */
 
 .date-time-item-row label {
   /* margin-right: 5px; */
@@ -234,4 +223,47 @@ input {
 .time-view {
   flex: 1;
   /* select의 너비를 유동적으로 설정 */
+}
+.tui-full-calendar-weekday-grid-line .tui-full-calendar-weekday-grid-more-schedules{
+  color: #ad0000!important;
+  font-weight: normal!important;
+}
+.tui-full-calendar-weekday-schedule-block {
+  margin: 0px!important; /* 원하는 간격으로 조정 */
+  font-weight: normal!important;
+  position: relative!important;
+}
+
+
+.tui-full-calendar-weekday-schedule-title{
+  font-weight: normal!important;
+  font-size:12px;
+  color:#fff;
+}
+.tui-full-calendar-weekday-schedule-bullet{
+  /* top: 2px, im !important; */
+  display: none;
+}
+.tui-full-calendar-weekday-grid-line .tui-full-calendar-weekday-grid-more-schedules{
+  padding:0!important;
+  position: absolute;
+}
+.tui-full-calendar-weekday-resize-handle{
+  line-height: 20px!important;
+}
+.tui-full-calendar-weekday-schedule {
+  height: 20px !important;
+  /* 원하는 높이로 설정 */
+  line-height: 20px !important;
+  /* 원하는 높이로 설정 */
+}
+
+.tui-full-calendar-weekday-schedule {
+  margin: 0px !important;
+  /* 스케줄 사이의 간격 설정 */
+}
+
+.tui-full-calendar-weekday {
+  padding-bottom: 1px;
+  /* 전체적으로 아래쪽 간격 추가 */
 }

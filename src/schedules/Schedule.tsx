@@ -1,11 +1,14 @@
 import React, { useCallback, useState, useEffect, useRef } from "react";
+import { Box,Button } from '@mui/material';
 import ScheduleModal from "./ScheduleModal";
-// import JexcelModal from "./JexcelModal";
+import "./Calendar.css";
 import axios from 'axios';
 import dayjs from 'dayjs';
 import CheckView from "./CheckVIew";
 import { ISchedule, saveSchedule, closeModalUtil, openModalUtil, openJexcelModalUtil, getSchedulesUtil } from '../utils/scheduleUtils';
 import TUICalendar from "@toast-ui/react-calendar";
+import "tui-calendar/dist/tui-calendar.css";
+
 const apiUrl = process.env.REACT_APP_API_URL;
 
 const Schedule = () => {
@@ -158,11 +161,22 @@ const Schedule = () => {
         // console.log({ 'reloadSchedule': "", currentYear: currentYear, currentMonth: currentMonth, setSchedules: setSchedules, formatMonth: formatMonth })
         getSchedulesUtil(currentYear, currentMonth, setSchedules, formatMonth);
     }
+    const calendarOptions = {
+        defaultView: 'month',  // 기본 뷰 설정 (month)
+        month: {
+          visibleScheduleCount: 15,  // 하루에 보여줄 최대 스케줄 개수 설정
+          moreLayerSize: {
+            height: 'auto', // "더보기" 레이어 높이 자동 조정
+          },
+        },
+      };
     return (
         <div className="App">
-            <button onClick={onClickPrevButton}>이전 달</button>
-            {currentYear}년 {currentMonth}월
-            <button onClick={onClickNextButton}>다음 달</button>
+             <Box sx={{ margin: '0 auto', display: 'flex', justifyContent: 'center', alignItems: 'center',gap:'5' }}>
+             <Button onClick={onClickPrevButton} color="primary" variant="outlined">이전 달</Button>
+            <Box sx={{margin:'10px'}}>{currentYear}년 {currentMonth}월</Box>
+            <Button onClick={onClickNextButton} color="primary" variant="outlined">다음 달</Button>
+            </Box>
             <CheckView reloadSchedule={reloadSchedule} currentYear={currentYear} currentMonth={currentMonth} />
 
             <TUICalendar
@@ -170,6 +184,7 @@ const Schedule = () => {
                 height="1000px"
                 view="month"
                 schedules={schedules}
+                month={calendarOptions.month}
                 onClickSchedule={onClickSchedule}
                 onBeforeCreateSchedule={onBeforeCreateSchedule}
                 // onBeforeDeleteSchedule={onBeforeDeleteSchedule}

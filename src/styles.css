@@ -121,3 +121,6 @@ button.cancel-button {
 .ant-table {
   min-width: 300px; /* 적절한 최소 너비를 설정 */
 }
+
+.MuiDialogContent-root{padding:30px!important;}
+

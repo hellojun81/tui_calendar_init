@@ -7,7 +7,7 @@ import Cs from './cs/cs';
 import Estimate from './estimate';
 import Setup from './setup/setup_field';
 import SetupBusinessInfo from './setup/setup_bussiness_info';
-import NewSchedule from './newSchedule';
+
 // import Test from './schedules/test'; 
 
 const App: React.FC = () => {
@@ -21,7 +21,7 @@ const App: React.FC = () => {
         <Route path="/estimate" element={<Estimate />} />
         <Route path="/setup/setup_field" element={<Setup />} />
         <Route path="/setup/setup_bussiness_info" element={<SetupBusinessInfo />} />
-        <Route path="/newSchedule" element={<NewSchedule />} />
+      
         {/* <Route path="/schedules/test" element={<Test />} />  추가된 경로 */}
       </Routes>
     </Router>

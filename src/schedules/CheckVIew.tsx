@@ -79,7 +79,7 @@ const CheckView: React.FC<CheckViewProps> = ({
         style={{
           display: 'flex',
           verticalAlign: 'center',
-          fontSize: '0.6em',
+          fontSize: '0.9em',
           marginTop: '10px',
           gap: '10px'
         }}

@@ -1,4 +1,5 @@
 import React, { useCallback, useState, useEffect } from 'react';
+import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import axios from 'axios';
 const apiUrl = process.env.REACT_APP_API_URL;
 
@@ -43,14 +44,6 @@ const GetCsKind: React.FC<GetCsKindProps> = ({ onValueChange,csKind }) => {
     console.log('options',options)
   }, []); // 빈 배열을 넣어서 컴포넌트가 처음 렌더링될 때만 호출
 
-  // useEffect(() => {
-  //   // 기본값을 '단순 문의'로 설정
-  //   const defaultOption = options.find((option) => option[1] === '단순문의');
-  //   if (defaultOption) {
-  //     setSelectedOption(defaultOption[1]);
-  //     // onValueChange({key:'1',title:'단순문의'})
-  //   }
-  // }, [options]); // 옵션이 업데이트될 때 실행
 
 useEffect(()=>{
  console.log('csKind',csKind) 
@@ -69,17 +62,22 @@ useEffect(()=>{
   };
 
   return (
-    <div>
-      <label htmlFor="selectBox">CS유형:</label>
-      <select id="selectBox" value={selectedOption} onChange={handleSelectChange}>
-        {options.map((option) => (
-          // <option key={option[0]} value={JSON.stringify({ key: option[0], title: option[1] })}>
-          <option key={option[0]} value={option[0]}>
-            {option[1]}
-          </option>
-        ))}
-      </select>
-    </div>
+    <FormControl fullWidth>
+    <InputLabel id="selectBox-label">CS유형</InputLabel>
+    <Select
+      labelId="selectBox-label"
+      id="selectBox"
+      value={selectedOption}
+      label="CS유형"
+      onChange={handleSelectChange}
+    >
+      {options.map((option) => (
+        <MenuItem key={option[0]} value={option[0]}>
+          {option[1]}
+        </MenuItem>
+      ))}
+    </Select>
+  </FormControl>
   );
 };
 

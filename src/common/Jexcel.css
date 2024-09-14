@@ -1,12 +1,25 @@
-/* Jexcel 테이블의 기본 스타일 */
+.jexcel_container{
+    width:100%;
+}
+
 .jexcel_content {
     width: 100%;
     border: 1px solid #ddd;
     border-radius: 8px;
     font-family: Arial, sans-serif;
-    font-size: 9px;
+    font-size: 12px;
     background-color: #fff;
+    table-layout: auto;
 }
+.jexcel {
+    table-layout: auto;
+    width: 100%; /* 테이블 전체 너비를 100%로 설정 */
+  }
+
+  .jexcel td:nth-child(2) {
+    display: none;
+    /* width: 30%; 두 번째 열의 너비를 30%로 설정 */
+  }
 
 /* 테이블 셀 스타일 */
 .jexcel_content td {
@@ -76,4 +89,7 @@
 .jexcel_content .jexcel-fixed-top {
     background-color: #f9f9f9;
     border-bottom: 2px solid #ddd;
+}
+.jcontextmenu{
+    display: none;
 }

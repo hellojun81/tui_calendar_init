@@ -63,7 +63,7 @@ export interface ScheduleModalProps {
   setNewTitle: (title: string) => void;
   setCustomerName: (text: string) => void;
   setRentPlace: (text: string) => void;
-  openJexcelModal: (customerName: string) => void;
+  // openJexcelModal: (customerName: string) => void;
   setGubun: (text: string) => void;
   setUserInt: (text: string) => void;
   setEtc: (text: string) => void;
@@ -242,7 +242,8 @@ export const getSchedulesUtil = async (
         // start: dayjs(schedule.start).tz('Asia/Seoul').format(), // start 값을 변경
         //   end: dayjs(schedule.end).tz('Asia/Seoul').format(), // start 값을 변경
         start: dayjs(schedule.start).format('YYYY-MM-DD'), // start 값을 변경
-        end: dayjs(schedule.end).format('YYYY-MM-DD') // start 값을 변경
+        end: dayjs(schedule.end).format('YYYY-MM-DD'), // start 값을 변경
+        bgColor:'#e50000'
       }));
 
       // 업데이트된 스케줄 배열을 상태에 저장

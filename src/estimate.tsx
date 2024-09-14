@@ -191,14 +191,7 @@ const Home: React.FC = () => {
         if (useHour >= 9) {
             photoyypefee = 500000
         }
-        // if(UserCnt>=31){
-        //     photoyypefee=photoyypefee+500000
-        // }if(UserCnt>=51){
-        //     photoyypefee=photoyypefee+1000000
-        // }if(UserCnt>=100){
-        //     photoyypefee=photoyypefee+1500000
-        // }
-
+ 
         console.log({
             '오버타임': overTime, '오버타임사용료': totalMoney,
             '렌탈장소':floortype, '4시간_기본사용료': GetPlaceMoney, 사용시간: useHour,
@@ -225,8 +218,7 @@ const Home: React.FC = () => {
 
     return (
         <div style={{ padding: '20px', maxWidth: '400px', margin: 'auto' }}>
-            <h1>AUBESTUDIO PRICE</h1>
-            <div style={{ marginBottom: '20px' }}>
+                      <div>
                 <label htmlFor="photo-video-select">촬영구분</label>
                 <select
                     id="photo-video-select"

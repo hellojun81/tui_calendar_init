@@ -27,12 +27,12 @@ const Menu: React.FC = () => {
         return 'CS 관리';
       case '/estimate':
         return '견적서 관리';
-      case '/setup/setup_field':
-        return '환경 설정';
-      case '/setup/setup_bussiness_info':
-        return '사업 정보 설정';
-      case '/schedules/test':
-        return '테스트';
+      // case '/setup/setup_field':
+      //   return '환경 설정';
+      // case '/setup/setup_bussiness_info':
+      //   return '사업 정보 설정';
+      // case '/schedules/test':
+      //   return '테스트';
       default:
         return 'AUBE STUDIO CRM';
     }
@@ -63,12 +63,12 @@ const Menu: React.FC = () => {
           <AntdMenu.Item key="4">
             <Link to="/estimate" onClick={onClose}>견적서관리</Link>
           </AntdMenu.Item>
-          <AntdMenu.Item key="5">
+          {/* <AntdMenu.Item key="5">
             <Link to="/setup/setup_field" onClick={onClose}>환경설정</Link>
           </AntdMenu.Item>
           <AntdMenu.Item key="6">
             <Link to="/schedules/test" onClick={onClose}>테스트</Link>
-          </AntdMenu.Item>
+          </AntdMenu.Item> */}
         </AntdMenu>
       </Drawer>
     </div>

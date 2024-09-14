@@ -1,20 +1,17 @@
 import React, { useCallback, useState, useRef, useEffect } from 'react';
 import jspreadsheet from 'jspreadsheet-ce';
-// import 'jspreadsheet-ce/dist/jspreadsheet.css';
+import 'jspreadsheet-ce/dist/jspreadsheet.css';
 import dayjs from 'dayjs';
 import ScheduleModal from "../schedules/ScheduleModal";
-import {
-    ISchedule, saveSchedule, closeModalUtil, openModalUtil, openJexcelModalUtil, getCurrentDate, getSchedulesUtil
-} from '../utils/scheduleUtils';
+import { ISchedule, saveSchedule, closeModalUtil, openModalUtil, openJexcelModalUtil, getCurrentDate } from '../utils/scheduleUtils';
 import { JSpreadsheetInstance } from '../provider/Customer';
 import axios from 'axios';
-import { Box, Button, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { Box } from '@mui/material';
 import CrudButtons from '../common/CrudButtons';
 import JexcelModal from "../schedules/JexcelModal";
 import SearchFields from '../provider/SearchFields';
-import './cs.css'
+import '../common/Jexcel.css';
 const apiUrl = process.env.REACT_APP_API_URL;
-
 
 const Cs: React.FC = () => {
 
@@ -73,7 +70,7 @@ const Cs: React.FC = () => {
                         { type: 'calendar', title: '등록일', width: 70, options: { format: 'YYYY-MM-DD', }, },
                         { type: 'calendar', title: '시작일', width: 70, options: { format: 'YYYY-MM-DD', }, },
                         { type: 'calendar', title: '종료일', width: 70, options: { format: 'YYYY-MM-DD', }, },
-                        { type: 'text', title: '비고', width: 30 },
+                        { type: 'text', title: '비고', width: 180 },
                     ],
                 });
             } else {
@@ -85,19 +82,21 @@ const Cs: React.FC = () => {
                     x2: number,
                     y2: number
                 ) => {
-
-                    SetactiveRow(y1);
-                    setId(parseInt(tableData[y1][0])) /////ID값세팅
-                    setCustomerName(tableData[y1][2])
-                    console.log({ id: tableData[y1][0], customerName: tableData[y1][2] })
+                    if (tableData[y1]) {
+                        SetactiveRow(y1);
+                        setId(parseInt(tableData[y1][0])) /////ID값세팅
+                        setCustomerName(tableData[y1][2])
+                        console.log({ id: tableData[y1][0], customerName: tableData[y1][2] })
+                    }
                 };
             }
 
         } else {
             console.error("tableRef.current가 null입니다.");
         }
-
     }, [tableData]);
+
+
 
     const handleSearch = async () => {
         const fetchSchedules = async () => {
@@ -110,6 +109,10 @@ const Cs: React.FC = () => {
                 // 서버로부터 데이터를 가져오는 비동기 호출
                 const res = await axios.get(`${apiUrl}/api/schedules/cs?${queryParams.toString()}`);
                 console.log(res.data)
+                if(res.data.length==0){
+                    setTableData([' '])
+                    return
+                }
                 setTableData(res.data.map((schedule: ISchedule) => [
                     schedule.id,
                     schedule.cskindTitle,
@@ -173,6 +176,7 @@ const Cs: React.FC = () => {
             const scheduleData = res.data;
             console.log('res.data', res.data)
             openModal("edit", scheduleData);
+            handleSearch()
         } catch (err) {
             console.error('Error fetching schedule by ID:', err);
         }
@@ -201,7 +205,7 @@ const Cs: React.FC = () => {
 
 
     const handleDeleteCustomer = useCallback(async (id: Number, customerName: string) => {
-        const confirmDelete = window.confirm(`${customerName} 정말 삭제하시겠습니까?`);
+        const confirmDelete = window.confirm(`${customerName} 민원을 정말 삭제하시겠습니까?`);
         if (confirmDelete) {
             try {
                 const res = await axios.delete(`${apiUrl}/api/schedules/${id}`);
@@ -221,7 +225,7 @@ const Cs: React.FC = () => {
         <div>
             <Box
                 sx={{
-                    maxWidth: '800px',
+                    maxWidth: '1200px',
                     margin: '0 auto',
                     padding: '20px',
                     border: '1px solid #ddd',
@@ -244,6 +248,7 @@ const Cs: React.FC = () => {
                     isOpen={isModalOpen}
                     modalMode={modalMode}
                     id={Number(id)}
+                    csKind={csKind}
                     newStart={newStart}
                     newEnd={newEnd}
                     startTime={startTime}

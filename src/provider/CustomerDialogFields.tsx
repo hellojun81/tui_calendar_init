@@ -25,11 +25,11 @@ interface CustomerDialogFieldsProps {
 const CustomerDialogFields: React.FC<CustomerDialogFieldsProps> = ({ formData, handleChange }) => {
     const fields = [
         { label: '고객명', name: 'customerName' },
+        { label: '유입경로', name: 'leadSource' },
         { label: '담당자', name: 'contactPerson' },
         { label: '직책', name: 'position' },
         { label: '연락처', name: 'phone' },
         { label: '이메일', name: 'email' },
-        { label: '유입경로', name: 'leadSource' },
         { label: '등록일', name: 'inboundDate', type: 'date' },
         { label: '사업자 등록번호', name: 'businessNumber' },
         { label: '대표자', name: 'representative' },
@@ -58,22 +58,6 @@ const CustomerDialogFields: React.FC<CustomerDialogFieldsProps> = ({ formData, h
                     multiline={field.multiline || false}  // 멀티라인 적용 여부
                     rows={field.rows || 1}  // 줄 수
                     fullWidth
-                    InputLabelProps={{
-                        style: { fontSize: '0.5rem' },  // 라벨 크기 조정
-                    }}
-                    sx={{
-                        '& .MuiInputBase-root': {
-                            height: field.multiline ? 'auto' : '15px',  // 멀티라인 필드는 자동 높이
-                            fontSize: '0.6rem',
-                        },  
-                        '& .MuiInputLabel-root': { fontSize: '0.9rem' },  // 라벨의 폰트 크기
-                        '& .MuiInputBase-inputMultiline': {
-                            height: field.rows ? `${field.rows * 10 + 10}px` : '10px',  // 멀티라인 필드의 줄 맞춤
-                            paddingTop: '10px',
-                        },
-                        marginBottom: '1px',  // TextField들 사이의 간격을 추가로 조정 (필요한 경우)
-                    }}
-                    variant="standard" 
                 />
             );
         })}

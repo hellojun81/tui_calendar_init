@@ -7,7 +7,7 @@ import CustomerDialog from './CustomerDialog';
 import SearchFields from './SearchFields';
 import dayjs from 'dayjs';
 import { Customer, JSpreadsheetInstance } from './Customer';
-import './provider.css';
+import '../common/Jexcel.css';
 import axios, { Axios } from 'axios';
 import { getCurrentDate } from '../utils/scheduleUtils';
 const apiUrl = process.env.REACT_APP_API_URL;
@@ -26,6 +26,8 @@ const Provider: React.FC = () => {
     const [tableData, setTableData] = useState<string[][]>([]);
     const tableRef = useRef<HTMLDivElement>(null);
     const jexcelInstance = useRef<any>(null);
+    const parentName ='provider';
+
 
 
     // 고객 데이터 형식으로 변환하는 함수
@@ -49,31 +51,44 @@ const Provider: React.FC = () => {
     };
     const handleEditCustomer = () => {
         const data = jexcelInstance.current.getData();
-        const lastRowWithData = data.reduce((maxRow, row, index) => {
+        const lastRowWithData = data.reduce((maxRow: number, row: number, index: number) => {
             // 각 행에서 모든 셀이 비어있지 않으면 그 행이 마지막 행이 될 수 있음
             const hasData = row.some(cell => cell !== null && cell !== '');
             return hasData ? index : maxRow;
         }, -1);
-        console.log(lastRowWithData)
-        if (lastRowWithData >= 0) {
-            const selectedCustomers = [];
-            for (let rowIndex = activeRow; rowIndex <= activeRow; rowIndex++) {
-                if (tableData[rowIndex]) {
+        if (lastRowWithData < 0) { return }
+        const selectedCustomers = [];
+        for (let rowIndex = activeRow; rowIndex <= activeRow; rowIndex++) {
+            if (tableData[rowIndex]) {
                 const selectedRow = tableData[rowIndex];
-                    selectedCustomers.push(formatCustomerData(selectedRow));
-                }
+                selectedCustomers.push(formatCustomerData(selectedRow));
             }
-            selectedCustomers[0].inboundDate = dayjs(selectedCustomers[0].inboundDate).format('YYYY-MM-DD');
-            console.log('selectedCustomers', selectedCustomers);
-            setSelectedCustomer(selectedCustomers[0]);
-            setDialogOpen(true);
         }
+        selectedCustomers[0].inboundDate = dayjs(selectedCustomers[0].inboundDate).format('YYYY-MM-DD');
+        console.log('selectedCustomers', selectedCustomers);
+        setSelectedCustomer(selectedCustomers[0]);
+        setDialogOpen(true);
+
     };
     const handleDeleteCustomer = async (activeRow: number) => {
+        const data = jexcelInstance.current.getData();
+        const lastRowWithData = data.reduce((maxRow: number, row: number, index: number) => {
+            // 각 행에서 모든 셀이 비어있지 않으면 그 행이 마지막 행이 될 수 있음
+            const hasData = row.some(cell => cell !== null && cell !== '');
+            return hasData ? index : maxRow;
+        }, -1);
+        if (lastRowWithData < 0) { return }
+
         const id = tableData[activeRow][0]
         const customerName = tableData[activeRow][1]
-        // console.log({ id: id, customerName: customerName })
-        const confirmDelete = window.confirm(`${customerName} 정말 삭제하시겠습니까?`);
+        const checkSchedule = await axios.get(`${apiUrl}/api/schedules/customers?id=${id}`);
+        let confirmDelete
+        if (checkSchedule.data.length > 0) {
+            confirmDelete = window.confirm(`${customerName} 님에 민원 내역이 존재합니다 정말 삭제하시겠습니까?`);
+        } else {
+            confirmDelete = window.confirm(`${customerName} 님을 정말 삭제하시겠습니까?`);
+        }
+
         if (confirmDelete) {
 
 
@@ -89,18 +104,25 @@ const Provider: React.FC = () => {
     };
 
     const handleSaveCustomer = async (customer: Customer) => {
-        // console.log('handleSaveCustomer', customer)
-        if (customer.id !== 0) {
-            await axios.put(`${apiUrl}/api/customers/${customer.id}`, customer);
+        let result
+        if (customer.id !== 0) {///수정 저장
+            result = await axios.put(`${apiUrl}/api/customers/${customer.id}`, customer);
+            console.log('EDITcustomers', customers)
             setCustomers(customers.map((c) => (c.id === customer.id ? customer : c)));
-        } else {
-            console.log('New SaveCustomer', customer)
+        } else {///신규저장
+            if (customer.customerName === "") {
+                alert("고객명이 비어있습니다.")
+                return;
+            }
             customer.inboundDate = dayjs(customer.inboundDate).format('YYYY-MM-DD')
-            await axios.post(`${apiUrl}/api/customers`, customer);
+            result = await axios.post(`${apiUrl}/api/customers`, customer);
+            // console.log('New SaveCustomer', res)
             setCustomers([...customers, customer]);
         }
         setDialogOpen(false);
         handleSearch();
+        console.log(result.data.message)
+        alert(result.data.message)
     };
 
     useEffect(() => {
@@ -111,7 +133,7 @@ const Provider: React.FC = () => {
                     data: tableData.length ? tableData : [[]],
                     columns: [
                         { type: 'numeric', title: 'ID', width: 20 },
-                        { type: 'text', title: '고객명', width: 80 },
+                        { type: 'text', title: '고객명', width: 120 },
                         { type: 'text', title: '담당자', width: 80 },
                         { type: 'text', title: '직책', width: 50 },
                         { type: 'text', title: '연락처', width: 50 },
@@ -159,6 +181,10 @@ const Provider: React.FC = () => {
             });
 
             const res = await axios.get(`${apiUrl}/api/customers/coustomerName?${queryParams.toString()}`);
+            if (res.data.length == 0) {
+                setTableData([' '])
+                return
+            }
             setTableData(res.data.map((customer: Customer) => [
                 customer.id.toString(),
                 customer.customerName,
@@ -178,8 +204,8 @@ const Provider: React.FC = () => {
         }
     };
     return (
-        <Box sx={{ maxWidth: '800px', margin: '0 auto', padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
-            <SearchFields formData={formData} handleChange={handleChange} handleSearch={handleSearch} />
+        <Box sx={{ maxWidth: '1200px', margin: '0 auto', padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
+            <SearchFields prarentComponent={parentName} formData={formData} handleChange={handleChange} handleSearch={handleSearch} />
             <Box sx={{ padding: 2 }}>
                 <CrudButtons
                     onAdd={handleAddCustomer}
