@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-const apiUrl = process.env.REACT_APP_API_URL;
 
+const apiUrl =
+  process.env.NODE_ENV === 'production'
+    ? process.env.REACT_APP_API_URL_PRODUCTION
+    : process.env.REACT_APP_API_URL_LOCAL;
 // 데이터 구조를 정의
 interface CheckboxItem {
   id: string;
@@ -78,13 +81,14 @@ const CheckView: React.FC<CheckViewProps> = ({
       <div
         style={{
           display: 'flex',
+          flexWrap: 'wrap', // Flexbox가 줄 바꿈되도록 설정
           verticalAlign: 'center',
           fontSize: '0.9em',
           marginTop: '10px',
-          gap: '10px'
+          gap: '5px'
         }}
       >
-        <div>유형별 일정보기</div>
+        <div>유형별 일정</div>
         {checkboxes.map((checkbox) => (
           <div key={checkbox.id}>
             <label>

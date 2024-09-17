@@ -7,7 +7,10 @@ import CustomerDialog from '../provider/CustomerDialog'; // Import the CustomerD
 import { Customer } from '../provider/Customer';
 import dayjs from 'dayjs';
 
-const apiUrl = process.env.REACT_APP_API_URL;
+const apiUrl =
+  process.env.NODE_ENV === 'production'
+    ? process.env.REACT_APP_API_URL_PRODUCTION
+    : process.env.REACT_APP_API_URL_LOCAL;
 
 interface JexcelModalProps {
   isOpen: boolean;

@@ -10,6 +10,8 @@ import {
   TextField,
   Box
 } from '@mui/material';
+
+
 interface RentPlaceSelectorProps {
   selectedPlaces: string;
   onChange: (selected: string[]) => void;

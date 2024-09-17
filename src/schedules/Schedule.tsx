@@ -9,7 +9,14 @@ import { ISchedule, saveSchedule, closeModalUtil, openModalUtil, openJexcelModal
 import TUICalendar from "@toast-ui/react-calendar";
 import "tui-calendar/dist/tui-calendar.css";
 
-const apiUrl = process.env.REACT_APP_API_URL;
+// const apiUrl = process.env.REACT_APP_API_URL;
+const apiUrl =
+  process.env.NODE_ENV === 'production'
+    ? process.env.REACT_APP_API_URL_PRODUCTION
+    : process.env.REACT_APP_API_URL_LOCAL;
+
+
+
 
 const Schedule = () => {
     const calendarRef = useRef<any>(null);
@@ -31,7 +38,7 @@ const Schedule = () => {
     const [rentPlace, setRentPlace] = useState<string>("1floor");
     const [etc, setEtc] = useState("");
     const [csKind, setCsKind] = useState<number>(0);
-    const [id, setId] = useState(""); // ID값
+    const [id, setId] = useState<number>(0); // ID값
     const formatMonth = (month: number): string => {
         return month.toString().padStart(2, '0');
     };

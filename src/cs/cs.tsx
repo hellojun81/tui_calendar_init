@@ -11,7 +11,10 @@ import CrudButtons from '../common/CrudButtons';
 import JexcelModal from "../schedules/JexcelModal";
 import SearchFields from '../provider/SearchFields';
 import '../common/Jexcel.css';
-const apiUrl = process.env.REACT_APP_API_URL;
+const apiUrl =
+    process.env.NODE_ENV === 'production'
+        ? process.env.REACT_APP_API_URL_PRODUCTION
+        : process.env.REACT_APP_API_URL_LOCAL;
 
 const Cs: React.FC = () => {
 
@@ -22,8 +25,8 @@ const Cs: React.FC = () => {
     const [currentSchedule, setCurrentSchedule] = useState<ISchedule | null>(null);
     const [newStart, setNewStart] = useState<Date | undefined>(undefined);
     const [newEnd, setNewEnd] = useState<Date | undefined>(undefined);
-    const [startTime, setStartTime] = useState<number>(0);
-    const [endTime, setEndTime] = useState<number>(0);
+    const [startTime, setStartTime] = useState<string>('00:00');
+    const [endTime, setEndTime] = useState<string>('00:00');
     const [isJexcelModalOpen, setIsJexcelModalOpen] = useState(false);
     const [newTitle, setNewTitle] = useState("");
     const [estPrice, setEstprice] = useState<number>(0);
@@ -109,8 +112,8 @@ const Cs: React.FC = () => {
                 // 서버로부터 데이터를 가져오는 비동기 호출
                 const res = await axios.get(`${apiUrl}/api/schedules/cs?${queryParams.toString()}`);
                 console.log(res.data)
-                if(res.data.length==0){
-                    setTableData([' '])
+                if (res.data.length == 0) {
+                    setTableData([[' ']]);
                     return
                 }
                 setTableData(res.data.map((schedule: ISchedule) => [
@@ -135,7 +138,7 @@ const Cs: React.FC = () => {
 
 
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
@@ -145,7 +148,7 @@ const Cs: React.FC = () => {
             alert("모든 필수 입력란을 작성해 주세요.");
             return;
         }
-        console.log('MODE', modalMode)
+        console.log({'MODE':modalMode,startTime:startTime,endTime:endTime})
         saveSchedule(csKind, newTitle, newStart, newEnd, startTime, endTime, customerName, rentPlace, modalMode, currentSchedule, gubun, userInt, estPrice, etc, setSchedules, closeModal);
         handleSearch()
 
@@ -183,6 +186,7 @@ const Cs: React.FC = () => {
     }, [openModal]);
 
     const handleaddCs = useCallback((scheduleData: any) => {
+        console.log('handleaddCs')
         const schedule: ISchedule = {
             title: "",
             body: "",
@@ -234,14 +238,15 @@ const Cs: React.FC = () => {
             >
                 <Box sx={{ display: 'flex', gap: '2x', marginBottom: '20px' }}>
 
-                    <SearchFields formData={formData} handleChange={handleChange} handleSearch={handleSearch} />
+                    <SearchFields prarentComponent='cs' formData={formData} handleChange={handleChange} handleSearch={handleSearch} />
                 </Box>
 
                 <CrudButtons
-                    onAdd={handleaddCs}
-                    onEdit={() => handleEditCustomer(id)}
-                    onDelete={() => handleDeleteCustomer(id, customerName)}
+                    onAdd={()=>handleaddCs(schedules)}
+                    onEdit={() => handleEditCustomer(id)}  // 익명 함수로 감싸서 인수 전달
+                    onDelete={() => handleDeleteCustomer(id, customerName)}  // 마찬가지로 익명 함수로 감싸서 처리
                 />
+
                 <div ref={tableRef} />
 
                 <ScheduleModal
@@ -276,7 +281,7 @@ const Cs: React.FC = () => {
                     onSaveSchedule={onSaveSchedule}
                     // onDeleteSchedule={() => setSchedules(prev => prev.filter(s => s.id !== currentSchedule?.id))}
                     closeModal={closeModal}
-                    openJexcelModal={openJexcelModal}
+                    // openJexcelModal={openJexcelModal}
                 />
                 <JexcelModal
                     isOpen={isJexcelModalOpen}

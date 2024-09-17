@@ -32,6 +32,8 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   etc,
   rentPlace,
   csKind,
+  startTime,
+  endTime,
   setNewStart,
   setNewEnd,
   onSaveSchedule,
@@ -44,6 +46,8 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   setEstprice,
   setEtc,
   setCsKind,
+  setStartTime,
+  setEndTime,
 }) => {
   const [selrentPlace, setSelRentPlace] = useState<string[]>();
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
@@ -51,8 +55,8 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   const [searchQuery, setSearchQuery] = useState(""); // 검색어 상태 추가
   const [customerEtc, setCustomerEtc] = useState<string>(""); // 검색어 상태 추가
   const [customerName2, setCustomerName2] = useState<string>(""); // 검색어 상태 추가
-  const [startTime, setStartTime] = useState("00:00");
-  const [endTime, setEndTime] = useState("00:00");
+  // const [startTime, setStartTime] = useState("00:00");
+  // const [endTime, setEndTime] = useState("00:00");
 
 
   const openSelector = () => setIsSelectorOpen(true);

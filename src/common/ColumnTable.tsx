@@ -2,7 +2,10 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Table, Button, Modal, Form, Input, Select, message } from 'antd';
 import { ColumnsType } from 'antd/es/table';
-const apiUrl = process.env.REACT_APP_API_URL;
+const apiUrl =
+  process.env.NODE_ENV === 'production'
+    ? process.env.REACT_APP_API_URL_PRODUCTION
+    : process.env.REACT_APP_API_URL_LOCAL;
 
 interface ColumnData {
     displayName: string;

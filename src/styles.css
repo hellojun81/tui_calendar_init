@@ -2,28 +2,23 @@
   font-family: sans-serif;
 }
 
-.tui-full-calendar-holiday-sat {
-  text-align: center;
+.header-container {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background-color: #f5f5f5; /* 배경 색상 */
 }
 
-.tui-full-calendar-weekday {
-  text-align: center;
+
+.header-title {
+  margin-left: 10px;
+  font-size: 20px;
+  font-weight: bold;
 }
 
-.tui-full-calendar-month-dayname-item {
-  text-align: center;
-}
-
-.tui-full-calendar-weekday-grid-date {
-  color: #000000;
-}
-
-.tui-full-calendar-holiday-sun {
-  color: #000000;
-}
-
-.tui-full-calendar-weekday-schedule-title {
-  text-align: left;
+.MuiBox-root{
+  margin:0px!important;
+  padding:10px 10px 00px 5px!important;
 }
 
 /* ////////////// */
@@ -53,8 +48,6 @@
 }
 
 input, textarea {
-  /* margin-bottom: 15px;
-  padding: 5px; */
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 12px;
@@ -92,31 +85,13 @@ button.cancel-button {
   background-color: #6c757d;
   color: white;
 }
-/* .date-time-container {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-}
 
-.date-time-item {
-  flex: 0 0 48%; Each div takes up 48% of the width, with 4% margin in total for spacing 
-}
-
-.date-time-item label {
-  display: block;
-  margin-bottom: 8px; Space between label and input 
-}
-*/
 .date-time-item input {
   width: 100%;
   padding: 3px;
   font-size: 9px;
   letter-spacing: 0px; 
-  box-sizing: border-box; /* Include padding in the width 
-} 
-
-.ant-tabs-content-holder {
-  min-height: 100px; /* 적절한 최소 높이를 설정 */
+  box-sizing: border-box;
 }
 .ant-table {
   min-width: 300px; /* 적절한 최소 너비를 설정 */

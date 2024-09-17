@@ -1,6 +1,9 @@
 import axios from 'axios';
 import dayjs from 'dayjs';
-const apiUrl = process.env.REACT_APP_API_URL;
+const apiUrl =
+  process.env.NODE_ENV === 'production'
+    ? process.env.REACT_APP_API_URL_PRODUCTION
+    : process.env.REACT_APP_API_URL_LOCAL;
 
 export interface ISchedule {
   id?: string;
@@ -33,8 +36,8 @@ export interface ISchedule {
   etc?: string;
   csKind?:number;
   // created_at: Date;
-  startTime?:number;
-  endTime?:number;
+  startTime?:string;
+  endTime?:string;
   created_at?:Date;
   cskindTitle?:string;
 }
@@ -53,8 +56,8 @@ export interface ScheduleModalProps {
   userInt?: string;
   estPrice?: number;
   csKind?: number;
-  startTime?:number;
-  endTime?:number;
+  startTime?:string;
+  endTime?:string;
   setNewStart: (date: Date | undefined) => void;
   setNewEnd: (date: Date | undefined) => void;
   onSaveSchedule: () => void;
@@ -69,8 +72,8 @@ export interface ScheduleModalProps {
   setEtc: (text: string) => void;
   setEstprice: (text: number) => void;
   setCsKind: (text: number) => void;
-  setStartTime:(time: number) => void;
-  setEndTime:(time: number) => void;
+  setStartTime:(time: string) => void;
+  setEndTime:(time: string) => void;
 }
 
 export const openModalUtil = (
@@ -80,8 +83,8 @@ export const openModalUtil = (
   setCurrentSchedule: (schedule: ISchedule | null) => void,
   setNewStart: (date: Date | undefined) => void,
   setNewEnd: (date: Date | undefined) => void,
-  setStartTime: (time: number) => void,
-  setEndTime: (time: number) => void,
+  setStartTime: (time: string) => void,
+  setEndTime: (time: string) => void,
   setNewTitle: (title: string) => void,
   setCustomerName: (name: string) => void,
   setRentPlace: (place: string) => void,
@@ -101,8 +104,8 @@ export const openModalUtil = (
     setCurrentSchedule(null);
     setNewStart(scheduleData ? new Date(dayjs(scheduleData.start).format('YYYY-MM-DD')) : undefined);
     setNewEnd(scheduleData ? new Date(dayjs(scheduleData.end).format('YYYY-MM-DD')) : undefined);
-    setStartTime(0);
-    setEndTime(0);
+    setStartTime('00:00');
+    setEndTime('00:00');
     setNewTitle('');
     setCustomerName("");
     setRentPlace("");
@@ -117,8 +120,8 @@ export const openModalUtil = (
     setCurrentSchedule(scheduleData);
     setNewStart(new Date(dayjs(scheduleData.start).format('YYYY-MM-DD')));
     setNewEnd(new Date(dayjs(scheduleData.end).format('YYYY-MM-DD')));
-    setStartTime(scheduleData.startTime || 0);
-    setEndTime(scheduleData.endTime || 0);
+    setStartTime(scheduleData.startTime || '00:00');
+    setEndTime(scheduleData.endTime || '00:00');
     setNewTitle(scheduleData.title || "");
     setCustomerName(scheduleData.customerName || "");
     setRentPlace(scheduleData.rentPlace ? scheduleData.rentPlace : "");
@@ -126,7 +129,8 @@ export const openModalUtil = (
     setGubun(scheduleData.gubun || "");
     setUserInt(scheduleData.userInt || "");
     setEstprice(scheduleData.estPrice || 0);
-    setId(scheduleData.id || 0);
+    // setId(scheduleData.id || 0);
+    setId(Number(scheduleData.id) || 0);
     setEtc(scheduleData.etc || "");
     setCsKind(scheduleData.csKind || 1);
   }
@@ -158,8 +162,8 @@ export const saveSchedule = async (
   newTitle: string,
   Start: Date | undefined,
   end: Date | undefined,
-  startTime:number,
-  endTime:number,
+  startTime:string,
+  endTime:string,
   customerName: string,
   rentPlace: string,
   modalMode: string,
@@ -188,13 +192,13 @@ export const saveSchedule = async (
     csKind,
   };
 
-  console.log('csKind',csKind)
+  // console.log('csKind',csKind)
+  newSchedule.start = new Date(dayjs(newSchedule.start).format('YYYY-MM-DD'));  
+  newSchedule.end = new Date(dayjs(newSchedule.end).format('YYYY-MM-DD'));
+  
+  // newSchedule.start = dayjs(newSchedule.start).format('YYYY-MM-DD');  
+  // newSchedule.end = dayjs(newSchedule.end).format('YYYY-MM-DD');  
 
-  newSchedule.start = dayjs(newSchedule.start).format('YYYY-MM-DD');  
-  newSchedule.end = dayjs(newSchedule.end).format('YYYY-MM-DD');  
-  // newSchedule.start = dayjs(dayjs(newSchedule.start).format('YYYY-MM-DD')).toDate();  
-  // newSchedule.end = dayjs(dayjs(newSchedule.end).format('YYYY-MM-DD')).toDate();  
- 
   console.log({'save newSchedule':newSchedule});
   try {
     if (modalMode === "create") {
@@ -215,11 +219,10 @@ export const saveSchedule = async (
   }
 };
 
-export const getCurrentDate = (daysOffset: number = 14) => {
+export const getCurrentDate = (daysOffset: number = 365) => {
   const currentDate = new Date();
   const startDate = new Date();
   startDate.setDate(currentDate.getDate() - daysOffset);
-
   const str_Date = startDate.toISOString().split('T')[0];
   const end_Date = currentDate.toISOString().split('T')[0];
 
@@ -241,8 +244,8 @@ export const getSchedulesUtil = async (
         ...schedule,
         // start: dayjs(schedule.start).tz('Asia/Seoul').format(), // start 값을 변경
         //   end: dayjs(schedule.end).tz('Asia/Seoul').format(), // start 값을 변경
-        start: dayjs(schedule.start).format('YYYY-MM-DD'), // start 값을 변경
-        end: dayjs(schedule.end).format('YYYY-MM-DD'), // start 값을 변경
+        start: new Date(dayjs(schedule.start).format('YYYY-MM-DD')), // start 값을 변경
+        end: new Date(dayjs(schedule.end).format('YYYY-MM-DD')), // start 값을 변경
         bgColor:'#e50000'
       }));
 

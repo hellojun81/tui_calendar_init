@@ -10,7 +10,10 @@ import { Customer, JSpreadsheetInstance } from './Customer';
 import '../common/Jexcel.css';
 import axios, { Axios } from 'axios';
 import { getCurrentDate } from '../utils/scheduleUtils';
-const apiUrl = process.env.REACT_APP_API_URL;
+const apiUrl =
+  process.env.NODE_ENV === 'production'
+    ? process.env.REACT_APP_API_URL_PRODUCTION
+    : process.env.REACT_APP_API_URL_LOCAL;
 
 const Provider: React.FC = () => {
     const [customers, setCustomers] = useState<Customer[]>([]);
