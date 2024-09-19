@@ -34,11 +34,13 @@ const SearchFields: React.FC<{ prarentComponent: string, formData: any; handleCh
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '12px',
-                    marginBottom: '20px',
+                    marginBottom: '10px',
                     width: '100%',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    margin: '0 auto'
+                    // margin: '0 0 10px 0',
+                    // paddingBottom:'100px',
+                    // backgroundColor:'red'
                 }}
                 className='search-fields-container'
             >
@@ -67,7 +69,7 @@ const SearchFields: React.FC<{ prarentComponent: string, formData: any; handleCh
                 )}
 
                 {/* 고객명과 검색 버튼을 다음 줄에 배치 */}
-                <Box sx={{ display: 'flex', width: '100%', gap: '12px', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', width: '100%', gap: '12px', alignItems: 'center'}}>
                     <TextField
                         label="고객명"
                         name="customerName"

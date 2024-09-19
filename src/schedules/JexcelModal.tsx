@@ -6,7 +6,7 @@ import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, B
 import CustomerDialog from '../provider/CustomerDialog'; // Import the CustomerDialog component
 import { Customer } from '../provider/Customer';
 import dayjs from 'dayjs';
-
+import '../common/Jexcel.css';
 const apiUrl =
   process.env.NODE_ENV === 'production'
     ? process.env.REACT_APP_API_URL_PRODUCTION
@@ -20,7 +20,7 @@ interface JexcelModalProps {
 }
 
 const JexcelModal: React.FC<JexcelModalProps> = ({ isOpen, onClose, onSelect, searchQuery }) => {
-  const [selectedCustomer, setSelectedCustomer] = useState<string>('');
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer>();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchName, setSearchName] = useState('');
   const [tableData, setTableData] = useState<string[][]>([]);
@@ -100,7 +100,7 @@ const JexcelModal: React.FC<JexcelModalProps> = ({ isOpen, onClose, onSelect, se
   };
 
   const handleSaveCustomer = async (customer: Customer) => {
-    customer.inboundDate = dayjs(customer.inboundDate).format('YYYY-MM-DD');
+    customer.inboundDate = new Date(dayjs(customer.inboundDate).format('YYYY-MM-DD'));
     if (customer.id !== 0) {
       await axios.put(`${apiUrl}/api/customers/${customer.id}`, customer);
     } else {
@@ -152,7 +152,6 @@ const JexcelModal: React.FC<JexcelModalProps> = ({ isOpen, onClose, onSelect, se
         onClose={() => setDialogOpen(false)}
         onSave={handleSaveCustomer}
         customer={selectedCustomer}
-
       />
     </Dialog>
   );

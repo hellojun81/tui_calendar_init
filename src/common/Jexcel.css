@@ -1,11 +1,23 @@
+.jcontextmenu{
+    display: none;
+}
+.jexcel tbody td,.jexcel > thead > tr > td {
+    height: 40px; /* 원하는 높이로 설정 */
+    padding: 0px!important;
+}
+
+.jexcel tbody tr {
+    height: 40px; /* 행 높이를 지정 */
+}
 .jexcel_container{
-    width:100%;
+    display: block;
+    overflow: hidden!important;
 }
 
 .jexcel_content {
     width: 100%;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    /* border: 1px solid #ddd; */
+    /* border-radius: 8px; */
     font-family: Arial, sans-serif;
     font-size: 12px;
     background-color: #fff;
@@ -15,32 +27,17 @@
     table-layout: auto;
     width: 100%; /* 테이블 전체 너비를 100%로 설정 */
   }
-
-  .jexcel td:nth-child(2) {
-    display: none;
-    /* width: 30%; 두 번째 열의 너비를 30%로 설정 */
-  }
-
-/* 테이블 셀 스타일 */
-.jexcel_content td {
-    padding: 4px;
-    border: 1px solid #ccc;
-    text-align: left;
-    vertical-align: middle;
-}
-
-/* 테이블 헤더 스타일 */
-.jexcel_content th {
-    background-color: #f5f5f5;
-    border: 1px solid #ccc;
-    padding: 4px;
-    text-align: left;
-    font-weight: bold;
-}
-
-/* 테이블 행에 마우스를 올렸을 때의 효과 */
+  /* 테이블 행에 마우스를 올렸을 때의 효과 */
 .jexcel_content tr:hover {
     background-color: #f1f1f1;
+}
+
+.jexcel tbody td {
+    height: 40px; /* 원하는 높이로 설정 */
+}
+
+.jexcel tbody tr {
+    height: 40px; /* 행 높이를 지정 */
 }
 
 /* 선택된 셀 스타일 */
@@ -59,37 +56,9 @@
 .jexcel_content .highlight-selected-row td {
     border-color: #a6cce3 !important;
 }
-
-/* 첫 번째 열을 강조하는 경우 */
-.jexcel_content .highlight-selected-row td:first-child {
-    border-left-width: 2px;
-}
-
-/* 헤더 셀 스타일 */
-.jexcel_content .jexcel_header {
-    background-color: #007bff;
-    color: #fff;
-    text-align: center;
-    font-weight: bold;
-    padding: 4px;
-    border: 1px solid #ddd;
-}
-
-/* 헤더에 마우스를 올렸을 때 효과 */
-.jexcel_content .jexcel_header:hover {
-    background-color: #0056b3;
-}
-/* 고정된 열의 스타일 */
-.jexcel_content .jexcel-fixed-left {
-    background-color: #f9f9f9;
-    border-right: 2px solid #ddd;
-}
-
-/* 고정된 행의 스타일 */
-.jexcel_content .jexcel-fixed-top {
-    background-color: #f9f9f9;
-    border-bottom: 2px solid #ddd;
-}
-.jcontextmenu{
+/* .jexcel thead th:nth-child(2),
+.jexcel tbody td:nth-child(2) {
     display: none;
-}
+} */
+
+

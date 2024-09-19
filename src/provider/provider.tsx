@@ -10,11 +10,18 @@ import { Customer, JSpreadsheetInstance } from './Customer';
 import '../common/Jexcel.css';
 import axios, { Axios } from 'axios';
 import { getCurrentDate } from '../utils/scheduleUtils';
-const apiUrl =
-  process.env.NODE_ENV === 'production'
-    ? process.env.REACT_APP_API_URL_PRODUCTION
-    : process.env.REACT_APP_API_URL_LOCAL;
+// import AddIcon from '@mui/icons-material/Add';
+// import EditIcon from '@mui/icons-material/Edit';
+// import DeleteIcon from '@mui/icons-material/Delete';
+// import Backdrop from '@mui/material/Backdrop';
+// import SpeedDial from '@mui/material/SpeedDial';
+// import SpeedDialIcon from '@mui/material/SpeedDialIcon';
+// import SpeedDialAction from '@mui/material/SpeedDialAction';
 
+const apiUrl =
+    process.env.NODE_ENV === 'production'
+        ? process.env.REACT_APP_API_URL_PRODUCTION
+        : process.env.REACT_APP_API_URL_LOCAL;
 const Provider: React.FC = () => {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | undefined>(undefined);
@@ -27,9 +34,13 @@ const Provider: React.FC = () => {
     });
     const [activeRow, SetactiveRow] = useState<number>(0);
     const [tableData, setTableData] = useState<string[][]>([]);
+    const [open, setOpen] = React.useState(true);
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
+
     const tableRef = useRef<HTMLDivElement>(null);
     const jexcelInstance = useRef<any>(null);
-    const parentName ='provider';
+    const parentName = 'provider';
 
 
 
@@ -52,14 +63,18 @@ const Provider: React.FC = () => {
         setSelectedCustomer(undefined);
         setDialogOpen(true);
     };
+
     const handleEditCustomer = () => {
         const data = jexcelInstance.current.getData();
-        const lastRowWithData = data.reduce((maxRow: number, row: number, index: number) => {
-            // 각 행에서 모든 셀이 비어있지 않으면 그 행이 마지막 행이 될 수 있음
-            const hasData = row.some(cell => cell !== null && cell !== '');
+        // 데이터가 배열인지 확인하고 처리
+        const lastRowWithData = data.reduce((maxRow: number, row: any[], index: number) => {
+            // row가 배열인지 확인하고, 각 셀에 데이터가 있는지 확인
+            const hasData = Array.isArray(row) && row.some(cell => cell !== null && cell !== '');
             return hasData ? index : maxRow;
         }, -1);
-        if (lastRowWithData < 0) { return }
+        if (lastRowWithData < 0) {
+            return;
+        }
         const selectedCustomers = [];
         for (let rowIndex = activeRow; rowIndex <= activeRow; rowIndex++) {
             if (tableData[rowIndex]) {
@@ -67,44 +82,47 @@ const Provider: React.FC = () => {
                 selectedCustomers.push(formatCustomerData(selectedRow));
             }
         }
-        selectedCustomers[0].inboundDate = dayjs(selectedCustomers[0].inboundDate).format('YYYY-MM-DD');
+        selectedCustomers[0].inboundDate = new Date(dayjs(selectedCustomers[0].inboundDate).format('YYYY-MM-DD'));
         console.log('selectedCustomers', selectedCustomers);
         setSelectedCustomer(selectedCustomers[0]);
         setDialogOpen(true);
-
     };
-    const handleDeleteCustomer = async (activeRow: number) => {
+
+    const handleDeleteCustomer = async () => {
         const data = jexcelInstance.current.getData();
-        const lastRowWithData = data.reduce((maxRow: number, row: number, index: number) => {
+        // 데이터가 배열인지 확인하는 로직 추가
+        if (!Array.isArray(data) || data.length === 0) {
+            console.error("데이터가 올바르지 않습니다.");
+            return;
+        }
+        const lastRowWithData = data.reduce((maxRow: number, row: any[], index: number) => {
             // 각 행에서 모든 셀이 비어있지 않으면 그 행이 마지막 행이 될 수 있음
-            const hasData = row.some(cell => cell !== null && cell !== '');
+            const hasData = Array.isArray(row) && row.some(cell => cell !== null && cell !== '');
             return hasData ? index : maxRow;
         }, -1);
-        if (lastRowWithData < 0) { return }
 
-        const id = tableData[activeRow][0]
-        const customerName = tableData[activeRow][1]
+        if (lastRowWithData < 0) {
+            return;
+        }
+        const id = tableData[activeRow][0];
+        const customerName = tableData[activeRow][1];
+        // 스케줄 존재 여부 확인
         const checkSchedule = await axios.get(`${apiUrl}/api/schedules/customers?id=${id}`);
-        let confirmDelete
+        let confirmDelete;
         if (checkSchedule.data.length > 0) {
-            confirmDelete = window.confirm(`${customerName} 님에 민원 내역이 존재합니다 정말 삭제하시겠습니까?`);
+            confirmDelete = window.confirm(`${customerName} 님에 민원 내역이 존재합니다. 정말 삭제하시겠습니까?`);
         } else {
             confirmDelete = window.confirm(`${customerName} 님을 정말 삭제하시겠습니까?`);
         }
-
         if (confirmDelete) {
-
-
             const id = tableData[activeRow as number][0];
             if (id !== undefined) {
                 await axios.delete(`${apiUrl}/api/customers/${id}`);
-                handleSearch()
+                handleSearch(); // 데이터 갱신
             }
         }
-
-
-
     };
+
 
     const handleSaveCustomer = async (customer: Customer) => {
         let result
@@ -117,7 +135,7 @@ const Provider: React.FC = () => {
                 alert("고객명이 비어있습니다.")
                 return;
             }
-            customer.inboundDate = dayjs(customer.inboundDate).format('YYYY-MM-DD')
+            customer.inboundDate = new Date(dayjs(customer.inboundDate).format('YYYY-MM-DD'))
             result = await axios.post(`${apiUrl}/api/customers`, customer);
             // console.log('New SaveCustomer', res)
             setCustomers([...customers, customer]);
@@ -131,11 +149,11 @@ const Provider: React.FC = () => {
     useEffect(() => {
         if (tableRef.current) {
             if (!jexcelInstance.current) {
-                console.log("JSpreadsheet 초기화 시작");
+                // console.log("JSpreadsheet 초기화 시작");
                 jexcelInstance.current = jspreadsheet(tableRef.current, {
                     data: tableData.length ? tableData : [[]],
                     columns: [
-                        { type: 'numeric', title: 'ID', width: 20 },
+                        { type: 'numeric', title: 'ID', width: 0 },
                         { type: 'text', title: '고객명', width: 120 },
                         { type: 'text', title: '담당자', width: 80 },
                         { type: 'text', title: '직책', width: 50 },
@@ -161,7 +179,9 @@ const Provider: React.FC = () => {
                     y1: number,
                     x2: number,
                     y2: number
+
                 ) => {
+                    console.log({ x1: x1, y1: y1, x2: x2, y2: y2 })
                     SetactiveRow(y1);
                 };
             }
@@ -185,7 +205,7 @@ const Provider: React.FC = () => {
 
             const res = await axios.get(`${apiUrl}/api/customers/coustomerName?${queryParams.toString()}`);
             if (res.data.length == 0) {
-                setTableData([' '])
+                setTableData([[' ']])
                 return
             }
             setTableData(res.data.map((customer: Customer) => [
@@ -206,25 +226,61 @@ const Provider: React.FC = () => {
             console.error('There was a problem with the fetch operation:', error);
         }
     };
+
+    // const actions = [
+    //     { icon: <DeleteIcon />, name: '삭제' , onClick: handleDeleteCustomer},
+    //     { icon: <EditIcon />, name: '수정', onClick: handleEditCustomer },
+    //     { icon: <AddIcon />, name: '추가'  ,onClick: handleAddCustomer },    
+
+    // ];
+    const handleCloseModal = () => {
+        // if (jexcelInstance.current) {
+        //     jexcelInstance.current.closeEditor();
+        // }
+        setDialogOpen(false);
+    };
+
+
     return (
-        <Box sx={{ maxWidth: '1200px', margin: '0 auto', padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
-            <SearchFields prarentComponent={parentName} formData={formData} handleChange={handleChange} handleSearch={handleSearch} />
-            <Box sx={{ padding: 2 }}>
-                <CrudButtons
-                    onAdd={handleAddCustomer}
-                    onEdit={() => handleEditCustomer()}
-                    onDelete={() => handleDeleteCustomer(activeRow)}
-                />
-                <div ref={tableRef} />
-                <CustomerDialog
-                    open={dialogOpen}
-                    onClose={() => setDialogOpen(false)}
-                    onSave={handleSaveCustomer}
-                    customer={selectedCustomer}
-                />
+  <>
+            <Box sx={{ maxWidth: '1200px', margin: '0 auto', padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
+                <SearchFields prarentComponent={parentName} formData={formData} handleChange={handleChange} handleSearch={handleSearch} />
+                <Box sx={{ padding: 2 }}>
+                    <CrudButtons
+                        onAdd={handleAddCustomer}
+                        onEdit={() => handleEditCustomer()}
+                        onDelete={() => handleDeleteCustomer()}
+                    />
+                    <div ref={tableRef} />
+                    <CustomerDialog
+                        open={dialogOpen}
+                        onClose={handleCloseModal}
+                        onSave={handleSaveCustomer}
+                        customer={selectedCustomer}
+                    />
+                </Box>
             </Box>
-        </Box>
-    );
+            {/* <SpeedDial
+        ariaLabel="SpeedDial tooltip example"
+        sx={{ position: 'fixed', bottom: 16, right: 16 }}  // 화면 우측 하단에 고정
+        icon={<SpeedDialIcon />}
+        // onClose={handleClose}
+        onOpen={handleOpen}
+        open={open}
+      >
+        {actions.map((action) => (
+          <SpeedDialAction
+            key={action.name}
+            icon={action.icon}
+            tooltipTitle={action.name}
+            tooltipOpen
+            // onClick={handleClose}
+            onClick={action.onClick} // 
+          />
+        ))}
+      </SpeedDial> */}
+      </>
+            );
 };
 
-export default Provider;
+            export default Provider;

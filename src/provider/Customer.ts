@@ -7,7 +7,7 @@ export interface Customer {
     phone: string;
     email: string;
     leadSource: string;
-    inboundDate: string | Date;
+    inboundDate: Date;
     businessNumber: string;
     representative: string;
     location: string;

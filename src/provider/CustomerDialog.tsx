@@ -22,7 +22,7 @@ interface CustomerDialogProps {
     open: boolean;
     onClose: () => void;
     onSave: (customer: Customer) => void;
-    customer?: Customer;
+    customer: Customer;
 }
 
 const CustomerDialog: React.FC<CustomerDialogProps> = ({ open, onClose, onSave, customer }) => {

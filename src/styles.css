@@ -96,6 +96,13 @@ button.cancel-button {
 .ant-table {
   min-width: 300px; /* 적절한 최소 너비를 설정 */
 }
-
+#SpeedDialtooltipexample-action-0-label,
+#SpeedDialtooltipexample-action-1-label,
+#SpeedDialtooltipexample-action-2-label{
+  background-color: #007bff;
+  color:#fff;
+  cursor: pointer;
+}
+.MuiFab-sizeLarge {display: none!important;}
 .MuiDialogContent-root{padding:30px!important;}
 
