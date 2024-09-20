@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { HashRouter as Router, Route, Routes } from 'react-router-dom';
 import Menu from './Menu'; // Menu 컴포넌트를 임포트
 import Provider from './provider/provider';
 import Schedules from './schedules/Schedule';
@@ -19,6 +19,7 @@ const App: React.FC = () => {
 
 
   return (
+    <html lang="ko">
     <AuthProvider>
     <Router>
       <Menu />
@@ -34,6 +35,7 @@ const App: React.FC = () => {
       </Routes>
     </Router>
     </AuthProvider>
+    </html>
   );
 };
 
