@@ -1,5 +1,5 @@
 import React from 'react';
-import { TextField, Box } from '@mui/material';
+import { TextField, Box, MenuItem } from '@mui/material';
 import dayjs from 'dayjs';
 
 interface Customer {
@@ -23,10 +23,19 @@ interface CustomerDialogFieldsProps {
     handleDateChange: (name: string, date: Date | null) => void;
 }
 
-const CustomerDialogFields: React.FC<CustomerDialogFieldsProps> = ({ formData, handleChange,handleDateChange }) => {
+const leadSourceOptions = [
+    '인스타', 
+    '이메일', 
+    '전화', 
+    '카카오톡', 
+    '네이버광고', 
+    '기타'
+];
+
+const CustomerDialogFields: React.FC<CustomerDialogFieldsProps> = ({ formData, handleChange, handleDateChange }) => {
     const fields = [
         { label: '고객명', name: 'customerName' },
-        { label: '유입경로', name: 'leadSource' },
+        { label: '유입경로', name: 'leadSource', type: 'select' },  // Select box for leadSource
         { label: '담당자', name: 'contactPerson' },
         { label: '직책', name: 'position' },
         { label: '연락처', name: 'phone' },
@@ -47,22 +56,41 @@ const CustomerDialogFields: React.FC<CustomerDialogFieldsProps> = ({ formData, h
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }} className="customer-dialog-field">
-        {fields.map((field) => {
-               return (
-                <TextField
-                    key={field.name}
-                    label={field.label}
-                    name={field.name}
-                    value={getValue(field.name) as string}
-                    onChange={handleChange}
-                    type={field.type || 'text'}
-                    multiline={field.multiline || false}  // 멀티라인 적용 여부
-                    rows={field.rows || 1}  // 줄 수
-                    fullWidth
-                />
-            );
-        })}
-    </Box>
+            {fields.map((field) => {
+                if (field.name === 'leadSource') {
+                    return (
+                        <TextField
+                            key={field.name}
+                            label={field.label}
+                            name={field.name}
+                            value={formData.leadSource}
+                            onChange={handleChange}
+                            select
+                            fullWidth
+                        >
+                            {leadSourceOptions.map((option) => (
+                                <MenuItem key={option} value={option}>
+                                    {option}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+                    );
+                }
+                return (
+                    <TextField
+                        key={field.name}
+                        label={field.label}
+                        name={field.name}
+                        value={getValue(field.name) as string}
+                        onChange={handleChange}
+                        type={field.type || 'text'}
+                        multiline={field.multiline || false}
+                        rows={field.rows || 1}
+                        fullWidth
+                    />
+                );
+            })}
+        </Box>
     );
 };
 
