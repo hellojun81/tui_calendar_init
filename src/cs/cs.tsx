@@ -148,10 +148,8 @@ const Cs: React.FC = () => {
             alert("모든 필수 입력란을 작성해 주세요.");
             return;
         }
-        console.log({'MODE':modalMode,startTime:startTime,endTime:endTime})
         saveSchedule(csKind, newTitle, newStart, newEnd, startTime, endTime, customerName, rentPlace, modalMode, currentSchedule, gubun, userInt, estPrice, etc, setSchedules, closeModal);
         handleSearch()
-
     };
 
     const closeJexcelModal = useCallback(() => {
@@ -223,7 +221,18 @@ const Cs: React.FC = () => {
         }
     }, [closeJexcelModal]);
 
-
+    const handleDeleteSchedule = async (id: Number) => {
+        const confirmDelete = window.confirm(`스케쥴을 정말 삭제하시겠습니까?`);
+        if (confirmDelete) {
+            try {
+                const res = await axios.delete(`${apiUrl}/api/schedules/${id}`);
+                closeModal(); // 모달 닫기
+                handleSearch();
+            } catch (error) {
+                console.error("삭제 중 오류 발생:", error);
+            }
+        } 
+    };
 
     return (
         <div>
@@ -277,7 +286,7 @@ const Cs: React.FC = () => {
                     setEstprice={setEstprice}
                     setEtc={setEtc}
                     setCsKind={setCsKind}
-                    // onDeleteSchedule={id => onDeleteSchedule(Number(id))}
+                    onDeleteSchedule={(id) => handleDeleteSchedule(id)} // onDeleteSchedule 추가
                     onSaveSchedule={onSaveSchedule}
                     // onDeleteSchedule={() => setSchedules(prev => prev.filter(s => s.id !== currentSchedule?.id))}
                     closeModal={closeModal}

@@ -5,8 +5,16 @@ import { Box, Button, TextField, Select, MenuItem, FormControl, InputLabel } fro
 import RentPlaceSelector from './RentPlaceSelector'; // RentPlaceSelector 컴포넌트 import
 import { ScheduleModalProps, openJexcelModalUtil } from '../utils/scheduleUtils';
 import JexcelModal from "./JexcelModal";
-import GetCsKind from "./Get_CsKind";
-const TimePicker = ({ label, value, onChange, options }) => (
+import GetCsKind from "./Get_csKind";
+
+interface TimePickerProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: string[];
+}
+
+const TimePicker: React.FC<TimePickerProps> = ({ label, value, onChange, options }) => (
   <FormControl fullWidth>
     <InputLabel>{label}</InputLabel>
     <Select value={value} onChange={(e) => onChange(e.target.value)}>
@@ -18,6 +26,20 @@ const TimePicker = ({ label, value, onChange, options }) => (
     </Select>
   </FormControl>
 );
+
+
+// const TimePicker = ({ label, value, onChange, options }) => (
+//   <FormControl fullWidth>
+//     <InputLabel>{label}</InputLabel>
+//     <Select value={value} onChange={(e) => onChange(e.target.value)}>
+//       {options.map((option) => (
+//         <MenuItem key={option} value={option}>
+//           {option}
+//         </MenuItem>
+//       ))}
+//     </Select>
+//   </FormControl>
+// );
 
 const ScheduleModal: React.FC<ScheduleModalProps> = ({
   isOpen,
@@ -207,7 +229,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
             />
             <TimePicker
               label="시작 시간"
-              value={startTime}
+              value={startTime || "00:00"} // undefined일 경우 빈 문자열로 대체
               onChange={setStartTime}
               options={hourOptions}
             />
@@ -223,7 +245,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
             />
             <TimePicker
               label="종료 시간"
-              value={endTime}
+              value={endTime || "00:00"}
               onChange={setEndTime}
               options={hourOptions}
             />
@@ -240,7 +262,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
           />
           {isSelectorOpen && (
             <RentPlaceSelector
-              selectedPlaces={selrentPlace}
+              selectedPlaces={selrentPlace || []}
               onChange={handleSelectorChange}
               onClose={closeSelector}
             />
@@ -249,7 +271,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
           <TextField
             label="견적가"
             fullWidth
-            value={formatNumber(estPrice)}
+            value={formatNumber(estPrice || 0)}
             onChange={handlePriceChange}
           />
 

@@ -31,15 +31,6 @@ const App: React.FC = () => {
         <Route path="/estimate" element={<PrivateRoute><Estimate /></PrivateRoute>} />
         <Route path="/setup/setup_field" element={<PrivateRoute><Setup /></PrivateRoute>} />
         <Route path="/setup/setup_bussiness_info" element={<PrivateRoute><SetupBusinessInfo /></PrivateRoute>} />
-
-        {/* <Route path="/schedules/test" element={<Test />} />  추가된 경로 */}
-
-        {/* 메인 페이지 */}
-        {/* <Route path="/main" element={isAuthenticated ? <MainPage /> : <Navigate to="/login" />} /> */}
-
-        {/* 기본 라우트: 로그인 상태에 따라 메인 페이지 또는 로그인 페이지로 리다이렉트 */}
-        {/* <Route path="*" element={<Navigate to={isAuthenticated ? "/main" : "/login"} />} /> */}
-
       </Routes>
     </Router>
     </AuthProvider>

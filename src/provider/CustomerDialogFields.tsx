@@ -20,9 +20,10 @@ interface Customer {
 interface CustomerDialogFieldsProps {
     formData: Customer;
     handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    handleDateChange: (name: string, date: Date | null) => void;
 }
 
-const CustomerDialogFields: React.FC<CustomerDialogFieldsProps> = ({ formData, handleChange }) => {
+const CustomerDialogFields: React.FC<CustomerDialogFieldsProps> = ({ formData, handleChange,handleDateChange }) => {
     const fields = [
         { label: '고객명', name: 'customerName' },
         { label: '유입경로', name: 'leadSource' },

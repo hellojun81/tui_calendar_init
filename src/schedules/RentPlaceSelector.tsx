@@ -13,7 +13,7 @@ import {
 
 
 interface RentPlaceSelectorProps {
-  selectedPlaces: string;
+  selectedPlaces: string[];
   onChange: (selected: string[]) => void;
   onClose: () => void;
 }

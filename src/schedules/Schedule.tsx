@@ -28,8 +28,8 @@ const Schedule = () => {
     const [currentSchedule, setCurrentSchedule] = useState<ISchedule | null>(null);
     const [newStart, setNewStart] = useState<Date | undefined>(undefined);
     const [newEnd, setNewEnd] = useState<Date | undefined>(undefined);
-    const [startTime, setStartTime] = useState<number>(0);
-    const [endTime, setEndTime] = useState<number>(0);
+    const [startTime, setStartTime] = useState<string>("00:00");
+    const [endTime, setEndTime] = useState<string>("00:00");
     const [newTitle, setNewTitle] = useState("");
     const [estPrice, setEstprice] = useState<number>(0);
     const [userInt, setUserInt] = useState("");
@@ -107,8 +107,8 @@ const Schedule = () => {
         );
 
         // 날짜와 변경된 값이 있을 때 처리
-        const startDate = changes.start ? dayjs(changes.start).format('YYYY-MM-DD') : undefined;
-        const endDate = changes.end ? dayjs(changes.end).format('YYYY-MM-DD') : undefined;
+        const startDate = new Date(changes.start) ? new Date(dayjs(changes.start).format('YYYY-MM-DD')) : undefined;
+        const endDate = new Date(changes.end) ? new Date(dayjs(changes.end).format('YYYY-MM-DD')) : undefined;
 
         // 새로운 스케줄 객체 생성
         const newSchedule: ISchedule = {

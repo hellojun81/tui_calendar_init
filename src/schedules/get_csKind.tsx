@@ -1,5 +1,8 @@
 import React, { useCallback, useState, useEffect } from 'react';
-import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { FormControl, InputLabel, Select, MenuItem,SelectChangeEvent } from '@mui/material';
+// import { SelectChangeEvent } from '@mui/material';
+
+
 import axios from 'axios';
 const apiUrl =
   process.env.NODE_ENV === 'production'
@@ -9,7 +12,8 @@ const apiUrl =
 
 interface GetCsKindProps {
   onValueChange: (value:number) => void;
-  csKind: (value: number) => void;
+  // csKind: (value: number) => void;
+  csKind: number | undefined;
 }
 
 
@@ -51,18 +55,25 @@ const GetCsKind: React.FC<GetCsKindProps> = ({ onValueChange,csKind }) => {
 useEffect(()=>{
  console.log('csKind',csKind) 
  if(csKind){
-  setSelectedOption(csKind)
+  setSelectedOption(String(csKind))
  }
 })
 
+const handleSelectChange = (event: SelectChangeEvent<string>) => {
+  const selectedValue = event.target.value; // 선택된 값
+  setSelectedOption(selectedValue); // 상태 업데이트
+  onValueChange(parseInt(selectedValue)); // 선택된 값을 정수로 변환하여 전달
+  console.log('선택된 키 값:', selectedValue);
+};
 
 
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedValue = e.target.value // JSON 문자열을 객체로 변환
-    setSelectedOption(selectedValue); // 상태 업데이트
-    onValueChange(parseInt(selectedValue))
-    console.log('선택된 키 값:', selectedValue);
-  };
+  // const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  //   // const handleSelectChange = (event: SelectChangeEvent<string>) => {
+  //   const selectedValue = e.target.value // JSON 문자열을 객체로 변환
+  //   setSelectedOption(selectedValue); // 상태 업데이트
+  //   onValueChange(parseInt(selectedValue))
+  //   console.log('선택된 키 값:', selectedValue);
+  // };
 
   return (
     <FormControl fullWidth>

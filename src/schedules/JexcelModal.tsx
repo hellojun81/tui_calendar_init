@@ -15,7 +15,7 @@ const apiUrl =
 interface JexcelModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (selectedCustomer: string,customerName2:string,etc:string) => void;
+  onSelect: (selectedCustomer: string, customerName2: string, etc: string) => void;
   searchQuery: string;
 }
 
@@ -40,43 +40,51 @@ const JexcelModal: React.FC<JexcelModalProps> = ({ isOpen, onClose, onSelect, se
         jexcelInstance.current.destroy();
         jexcelInstance.current = null;
       }
-
+  
       // JSpreadsheet 초기화
       jexcelInstance.current = jspreadsheet(tableRef.current, {
         data: tableData.length ? tableData : [[]],
         columns: [
-          { type: 'numeric', title: 'id', width: 1},  
+          { type: 'numeric', title: 'id', width: 1 },
           { type: 'text', title: '거래처명', width: 80 },
           { type: 'text', title: '담당자', width: 80 },
           { type: 'text', title: '연락처', width: 80 },
           { type: 'text', title: '비고', width: 100 },
         ],
         onselection: (instance, x1, y1, x2, y2) => {
-          setId(parseInt(tableData[y1][0] || '0', 10));  // ID값 설정
-          setCustomerName(`${tableData[y1][1]}`); // 고객명 설정
-          setCustomerName2(tableData[y1][2] );
-          setEtc(tableData[y1][4] );
-          // setCustomerName(`${tableData[y1][1]}(${tableData[y1][2]})`); // 고객명 설정
+          console.log('tableData', tableData);
+          if (tableData[y1]) {
+            setId(parseInt(tableData[y1][0] || '0', 10));  // ID값 설정
+            setCustomerName(`${tableData[y1][1]}`); // 고객명 설정
+            setCustomerName2(tableData[y1][2]);
+            setEtc(tableData[y1][4]);
+          }
         },
       });
     } else {
       console.error("tableRef.current가 null입니다.");
     }
   };
-
+  
+  useEffect(() => {
+    if (tableRef.current && tableData.length > 0) {
+      initializeSpreadsheet(); // tableData가 준비된 후에만 초기화
+    }
+  }, [tableData]); // tableData가 업데이트될 때마다 초기화
   
 
   useEffect(() => {
-    console.log('jexcelModal customerName=',customerName)
-    initializeSpreadsheet();
-  }, [tableData]);
-
+    if (tableRef.current && tableData.length > 0) {
+      initializeSpreadsheet();
+    }
+  }, [tableData]); // 의존성 배열에서 tableRef.current 제외, tableData가 있을 때만 초기화
+  
   const SearchCusTomerName = (customerName: string) => {
     if (isOpen) {
       axios.get(`${apiUrl}/api/customers/customerName?customerName=${customerName}`)
         .then(res => {
           const fetchedData = res.data.map((customer: { id: number, customerName: string, contactPerson: string, phone: string, notes: string }) =>
-            [customer.id.toString(), customer.customerName,customer.contactPerson , customer.phone, customer.notes]);
+            [customer.id.toString(), customer.customerName, customer.contactPerson, customer.phone, customer.notes]);
           console.log(fetchedData);
           setTableData(fetchedData);
         })
@@ -91,7 +99,8 @@ const JexcelModal: React.FC<JexcelModalProps> = ({ isOpen, onClose, onSelect, se
   };
 
   const handleApply = () => {
-    onSelect(customerName,customerName2,etc); // 선택된 고객명 부모 컴포넌트로 전달
+    console.log({ customerName: customerName, customerName2: customerName2 })
+    onSelect(customerName, customerName2, etc); // 선택된 고객명 부모 컴포넌트로 전달
     onClose(); // 모달 닫기
   };
 
@@ -100,6 +109,10 @@ const JexcelModal: React.FC<JexcelModalProps> = ({ isOpen, onClose, onSelect, se
   };
 
   const handleSaveCustomer = async (customer: Customer) => {
+    if (!customer.inboundDate) {
+      console.error("Inbound date is required.");
+      return;
+    }
     customer.inboundDate = new Date(dayjs(customer.inboundDate).format('YYYY-MM-DD'));
     if (customer.id !== 0) {
       await axios.put(`${apiUrl}/api/customers/${customer.id}`, customer);
@@ -118,7 +131,7 @@ const JexcelModal: React.FC<JexcelModalProps> = ({ isOpen, onClose, onSelect, se
           <Button
             variant="outlined"
             onClick={openCustomerDialog}
-            sx={{ maxWidth: '100px',  padding: '0', height: '30px' }} // 높이 30px로 설정
+            sx={{ maxWidth: '100px', padding: '0', height: '30px' }} // 높이 30px로 설정
           >
             신규 추가
           </Button>

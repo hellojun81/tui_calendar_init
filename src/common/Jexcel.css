@@ -11,7 +11,8 @@
 }
 .jexcel_container{
     display: block;
-    overflow: hidden!important;
+    /* overflow: hidden!important; */
+    overflow-x: hidden
 }
 
 .jexcel_content {
@@ -42,8 +43,8 @@
 
 /* 선택된 셀 스타일 */
 .jexcel_content .highlight {
-    background-color: #d9edf7 !important;
-    color: #31708f;
+    background-color: #e8e8e8 !important;
+    color: #000000;
     font-weight: bold;
 }
 /* 선택된 행을 위한 스타일 */
@@ -56,9 +57,9 @@
 .jexcel_content .highlight-selected-row td {
     border-color: #a6cce3 !important;
 }
-/* .jexcel thead th:nth-child(2),
+.jexcel thead td:nth-child(2),
 .jexcel tbody td:nth-child(2) {
     display: none;
-} */
+}
 
 
