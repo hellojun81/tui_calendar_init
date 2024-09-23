@@ -35,6 +35,8 @@ export interface ISchedule {
   estPrice?: number;
   etc?: string;
   csKind?:number;
+  customerEtc?:string;
+  contactPerson?:string;
   // created_at: Date;
   startTime?:string;
   endTime?:string;
@@ -58,6 +60,8 @@ export interface ScheduleModalProps {
   csKind?: number;
   startTime?:string;
   endTime?:string;
+  customerEtc?:string;
+  contactPerson?:string;
   setNewStart: (date: Date | undefined) => void;
   setNewEnd: (date: Date | undefined) => void;
   onSaveSchedule: () => void;
@@ -74,6 +78,8 @@ export interface ScheduleModalProps {
   setCsKind: (text: number) => void;
   setStartTime:(time: string) => void;
   setEndTime:(time: string) => void;
+  setCustomerEtc:(text: string) => void;
+  setContactPerson:(text: string) => void;
 }
 
 export const openModalUtil = (
@@ -95,7 +101,8 @@ export const openModalUtil = (
   setEtc: (etc: string) => void,
   setIsModalOpen: (isOpen: boolean) => void,
   setCsKind: (csKind: number) => void,
-
+  setCustomerEtc: (CustomerEtc: string) => void,
+  setContactPerson: (ContactPerson: string) => void,
 ) => {
   setModalMode(mode);
 
@@ -115,6 +122,8 @@ export const openModalUtil = (
     setId(0);
     setEtc("");
     setCsKind(1)
+    setCustomerEtc("")
+    setContactPerson("")
   } else if (mode === "edit" && scheduleData) {
     // edit 모드일 경우 scheduleData 값을 사용
     setCurrentSchedule(scheduleData);
@@ -133,6 +142,8 @@ export const openModalUtil = (
     setId(Number(scheduleData.id) || 0);
     setEtc(scheduleData.etc || "");
     setCsKind(scheduleData.csKind || 1);
+    setCustomerEtc(scheduleData.customerEtc || "")
+    setContactPerson(scheduleData.contactPerson || "")
   }
   // console.log('scheduleData.csKind',scheduleData?.csKind)
   console.log({'scheduleData':scheduleData})
@@ -201,13 +212,14 @@ export const saveSchedule = async (
 
   console.log({'save newSchedule':newSchedule});
   try {
+    let result
     if (modalMode === "create") {
-      await axios.post(`${apiUrl}/api/schedules`, newSchedule);
+      result= await axios.post(`${apiUrl}/api/schedules`, newSchedule);
     } else {
       // console.log({'EditMode newSchedule':newSchedule});
-      await axios.put(`${apiUrl}/api/schedules/${currentSchedule?.id}`, newSchedule);
+      result= await axios.put(`${apiUrl}/api/schedules/${currentSchedule?.id}`, newSchedule);
     }
-
+    console.log('saveScheduleResult=',result)
     setSchedules((prev: ISchedule[]) => (
       modalMode === "edit" && currentSchedule
         ? prev.map(s => (s.id === currentSchedule.id ? newSchedule : s))
@@ -219,14 +231,41 @@ export const saveSchedule = async (
   }
 };
 
+// export const getCurrentDate = (daysOffset: number = 365) => {
+//   const currentDate = new Date();
+//   const startDate = new Date();
+//   startDate.setDate(currentDate.getDate() - daysOffset);
+//   const str_Date = startDate.toISOString().split('T')[0];
+//   const end_Date = currentDate.toISOString().split('T')[0];
+//   console.log({ startDate: str_Date, endDate: end_Date })
+//   return { startDate: str_Date, endDate: end_Date };
+// };  
 export const getCurrentDate = (daysOffset: number = 365) => {
   const currentDate = new Date();
   const startDate = new Date();
   startDate.setDate(currentDate.getDate() - daysOffset);
-  const str_Date = startDate.toISOString().split('T')[0];
-  const end_Date = currentDate.toISOString().split('T')[0];
 
-  return { startDate: str_Date, endDate: end_Date };
+  // Format the start date to YYYY-MM-DD format
+  const str_Date = startDate.toISOString().split('T')[0];
+
+  // Adjust the end date to Korean local time (UTC+9)
+  const koreanEndDate = new Intl.DateTimeFormat('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    timeZone: 'Asia/Seoul',
+  }).format(currentDate);
+
+  // Convert the formatted Korean end date to YYYY-MM-DD format
+  // const formattedEndDate = koreanEndDate.replace(/\./g, '-').replace(/\s/g, '').split('-').reverse().join('-');
+  const formattedEndDate = left(koreanEndDate.replace(/\./g, '-').replace(/\s+/g, ''),10);
+
+  console.log({ startDate: str_Date, endDate: formattedEndDate });
+  return { startDate: str_Date, endDate: formattedEndDate };
+};
+
+const left = (str: string, length: number) => {
+  return str.substring(0, length);
 };
 
 export const getSchedulesUtil = async (

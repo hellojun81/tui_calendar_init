@@ -36,6 +36,8 @@ const Schedule = () => {
     const [gubun, setGubun] = useState("");
     const [customerName, setCustomerName] = useState("");
     const [rentPlace, setRentPlace] = useState<string>("1floor");
+    const [customerEtc, setCustomerEtc] = useState<string>("1floor");
+    const [contactPerson, setContactPerson] = useState<string>("1floor");
     const [etc, setEtc] = useState("");
     const [csKind, setCsKind] = useState<number>(0);
     const [id, setId] = useState<number>(0); // ID값
@@ -66,8 +68,10 @@ const Schedule = () => {
     };
 
     const openModal = useCallback((mode: "create" | "edit", scheduleData: ISchedule | null = null) => {
+        console.log('customerEtc',customerEtc)
+        
         openModalUtil(mode, scheduleData, setModalMode, setCurrentSchedule, setNewStart, setNewEnd, setStartTime, setEndTime, setNewTitle, setCustomerName, setRentPlace,
-            setGubun, setUserInt, setEstprice, setId, setEtc, setIsModalOpen, setCsKind);
+            setGubun, setUserInt, setEstprice, setId, setEtc, setIsModalOpen, setCsKind ,setCustomerEtc,setContactPerson);
     }, []);
 
     const fetchScheduleById = useCallback(async (id: string) => {
@@ -76,6 +80,7 @@ const Schedule = () => {
             const res = await axios.get(`${apiUrl}/api/schedules/${id}`);
             const scheduleData = res.data;
             openModal("edit", scheduleData);
+            console.log('fetchScheduleById',scheduleData)
         } catch (err) {
             console.error('Error fetching schedule by ID:', err);
         }
@@ -212,6 +217,8 @@ const Schedule = () => {
                 estPrice={estPrice}
                 customerName={customerName}
                 etc={etc}
+                customerEtc={customerEtc}
+                contactPerson={contactPerson}
                 rentPlace={rentPlace || ""}
                 setNewStart={setNewStart}
                 setNewEnd={setNewEnd}
@@ -225,6 +232,8 @@ const Schedule = () => {
                 setEstprice={setEstprice}
                 setEtc={setEtc}
                 setCsKind={setCsKind}
+                setCustomerEtc={setCustomerEtc}
+                setContactPerson={setContactPerson}
                 onDeleteSchedule={id => onDeleteSchedule(Number(id))}
                 onSaveSchedule={onSaveSchedule}
                 // onDeleteSchedule={() => setSchedules(prev => prev.filter(s => s.id !== currentSchedule?.id))}

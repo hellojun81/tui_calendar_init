@@ -28,19 +28,6 @@ const TimePicker: React.FC<TimePickerProps> = ({ label, value, onChange, options
 );
 
 
-// const TimePicker = ({ label, value, onChange, options }) => (
-//   <FormControl fullWidth>
-//     <InputLabel>{label}</InputLabel>
-//     <Select value={value} onChange={(e) => onChange(e.target.value)}>
-//       {options.map((option) => (
-//         <MenuItem key={option} value={option}>
-//           {option}
-//         </MenuItem>
-//       ))}
-//     </Select>
-//   </FormControl>
-// );
-
 const ScheduleModal: React.FC<ScheduleModalProps> = ({
   isOpen,
   modalMode,
@@ -56,6 +43,8 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   csKind,
   startTime,
   endTime,
+  customerEtc,
+  contactPerson,
   setNewStart,
   setNewEnd,
   onSaveSchedule,
@@ -70,12 +59,14 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   setCsKind,
   setStartTime,
   setEndTime,
+  setCustomerEtc,
+  setContactPerson
 }) => {
   const [selrentPlace, setSelRentPlace] = useState<string[]>();
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const [isJexcelModalOpen, setIsJexcelModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState(""); // 검색어 상태 추가
-  const [customerEtc, setCustomerEtc] = useState<string>(""); // 검색어 상태 추가
+  // const [customerEtc, setCustomerEtc] = useState<string>(""); // 검색어 상태 추가
   const [customerName2, setCustomerName2] = useState<string>(""); // 검색어 상태 추가
   // const [startTime, setStartTime] = useState("00:00");
   // const [endTime, setEndTime] = useState("00:00");
@@ -146,11 +137,11 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       setEstprice(numericValue);
     }
   };
-  const onSelectCustomer = useCallback((selectedCustomer: string, customerName2: string, etc: string) => {
-    console.log({ 'selectedCustomer': selectedCustomer, selectedCustomer2: customerName2, etc: etc })
+  const onSelectCustomer = useCallback((selectedCustomer: string, customerName2: string, customeretc: string) => {
+    console.log({ 'selectedCustomer': selectedCustomer, selectedCustomer2: customerName2, customeretc: customeretc })
     setCustomerName(selectedCustomer); // 선택된 고객명 설정
     setCustomerName2(customerName2);
-    setEtc(etc);
+    setCustomerEtc(customeretc);
   }, []);
 
 
@@ -218,7 +209,9 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
               ),
             }}
           />
-          <Box>{`담당자명:${customerName2} 비고:${etc}`}</Box>
+
+          <Box>{`담당자명:${contactPerson || ""}`}</Box>
+          <Box>{`비고:${customerEtc || ""}`}</Box>
           <Box sx={{ display: 'flex', gap: 2 }}>
             <TextField
               label="시작일"
@@ -295,7 +288,6 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
           취소
         </Button>
       </DialogActions>
-
       <JexcelModal
         isOpen={isJexcelModalOpen}
         onClose={closeJexcelModal}

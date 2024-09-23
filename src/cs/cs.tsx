@@ -34,6 +34,8 @@ const Cs: React.FC = () => {
     const [gubun, setGubun] = useState("");
     const [customerName, setCustomerName] = useState("");
     const [rentPlace, setRentPlace] = useState<string>("1floor");
+    const [contactPerson, setContactPerson] = useState<string>("1floor");
+    const [customerEtc, setCustomerEtc] = useState<string>("1floor");
     const [etc, setEtc] = useState("");
     const [csKind, setCsKind] = useState<number>(0);
     const [searchQuery, setSearchQuery] = useState(""); // 검색어 상태 추가
@@ -53,7 +55,7 @@ const Cs: React.FC = () => {
 
     const openModal = useCallback((mode: "create" | "edit", scheduleData: ISchedule | null = null) => {
         openModalUtil(mode, scheduleData, setModalMode, setCurrentSchedule, setNewStart, setNewEnd, setStartTime, setEndTime, setNewTitle, setCustomerName, setRentPlace,
-            setGubun, setUserInt, setEstprice, setId, setEtc, setIsModalOpen, setCsKind);
+            setGubun, setUserInt, setEstprice, setId, setEtc, setIsModalOpen, setCsKind,setCustomerEtc,setContactPerson);
     }, []);
 
     useEffect(() => {
@@ -74,6 +76,8 @@ const Cs: React.FC = () => {
                         { type: 'calendar', title: '시작일', width: 70, options: { format: 'YYYY-MM-DD', }, },
                         { type: 'calendar', title: '종료일', width: 70, options: { format: 'YYYY-MM-DD', }, },
                         { type: 'text', title: '비고', width: 180 },
+                        { type: 'hidden', title: '담당자', width: 1},
+                        { type: 'hidden', title: '고객비고', width: 1},
                     ],
                 });
             } else {
@@ -127,7 +131,9 @@ const Cs: React.FC = () => {
                     dayjs(schedule.created_at).format('YYYY-MM-DD'),
                     dayjs(schedule.start).format('YYYY-MM-DD'),
                     dayjs(schedule.end).format('YYYY-MM-DD'),
-                    schedule.etc
+                    schedule.etc,
+                    schedule.customerEtc,
+                    schedule.contactPerson
                 ]));
             } catch (err) {
                 console.error('Error fetching schedules:', err);
@@ -143,13 +149,13 @@ const Cs: React.FC = () => {
         setFormData({ ...formData, [name]: value });
     };
 
-    const onSaveSchedule = () => {
+    const onSaveSchedule = async() => {
         if (!customerName.trim()) {
             alert("모든 필수 입력란을 작성해 주세요.");
             return;
         }
         saveSchedule(csKind, newTitle, newStart, newEnd, startTime, endTime, customerName, rentPlace, modalMode, currentSchedule, gubun, userInt, estPrice, etc, setSchedules, closeModal);
-        handleSearch()
+        await handleSearch()
     };
 
     const closeJexcelModal = useCallback(() => {
@@ -274,6 +280,8 @@ const Cs: React.FC = () => {
                     customerName={customerName}
                     etc={etc}
                     rentPlace={rentPlace || ""}
+                    customerEtc={customerEtc}
+                    contactPerson={contactPerson}
                     setNewStart={setNewStart}
                     setNewEnd={setNewEnd}
                     setStartTime={setStartTime}
@@ -286,6 +294,8 @@ const Cs: React.FC = () => {
                     setEstprice={setEstprice}
                     setEtc={setEtc}
                     setCsKind={setCsKind}
+                    setCustomerEtc={setCustomerEtc}
+                    setContactPerson={setContactPerson}
                     onDeleteSchedule={(id) => handleDeleteSchedule(id)} // onDeleteSchedule 추가
                     onSaveSchedule={onSaveSchedule}
                     // onDeleteSchedule={() => setSchedules(prev => prev.filter(s => s.id !== currentSchedule?.id))}

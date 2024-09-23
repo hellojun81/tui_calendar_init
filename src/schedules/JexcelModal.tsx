@@ -30,7 +30,7 @@ const JexcelModal: React.FC<JexcelModalProps> = ({ isOpen, onClose, onSelect, se
   const [id, setId] = useState<number>(0); // ID값
   const [customerName, setCustomerName] = useState("");
   const [customerName2, setCustomerName2] = useState("");
-  const [etc, setEtc] = useState("");
+  const [customeretc, setCustomerEtc] = useState("");
 
   // JSpreadsheet 초기화 또는 갱신
   const initializeSpreadsheet = () => {
@@ -57,7 +57,7 @@ const JexcelModal: React.FC<JexcelModalProps> = ({ isOpen, onClose, onSelect, se
             setId(parseInt(tableData[y1][0] || '0', 10));  // ID값 설정
             setCustomerName(`${tableData[y1][1]}`); // 고객명 설정
             setCustomerName2(tableData[y1][2]);
-            setEtc(tableData[y1][4]);
+            setCustomerEtc(tableData[y1][4]);
           }
         },
       });
@@ -100,7 +100,7 @@ const JexcelModal: React.FC<JexcelModalProps> = ({ isOpen, onClose, onSelect, se
 
   const handleApply = () => {
     console.log({ customerName: customerName, customerName2: customerName2 })
-    onSelect(customerName, customerName2, etc); // 선택된 고객명 부모 컴포넌트로 전달
+    onSelect(customerName, customerName2, customeretc); // 선택된 고객명 부모 컴포넌트로 전달
     onClose(); // 모달 닫기
   };
 

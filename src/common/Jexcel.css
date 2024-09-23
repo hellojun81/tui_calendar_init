@@ -36,6 +36,10 @@
 .jexcel tbody td {
     height: 40px; /* 원하는 높이로 설정 */
 }
+.jexcel tbody td:last-child {
+    /* height: 40px; 원하는 높이로 설정 */
+border-right: 1px solid #333;
+}
 
 .jexcel tbody tr {
     height: 40px; /* 행 높이를 지정 */
