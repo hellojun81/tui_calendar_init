@@ -1,19 +1,20 @@
 import React, { useCallback, useState, useEffect, useRef } from "react";
-import { Box,Button } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import ScheduleModal from "./ScheduleModal";
 import "./Calendar.css";
 import axios from 'axios';
 import dayjs from 'dayjs';
 import CheckView from "./CheckVIew";
+import Sales from "./Sales";
 import { ISchedule, saveSchedule, closeModalUtil, openModalUtil, openJexcelModalUtil, getSchedulesUtil } from '../utils/scheduleUtils';
 import TUICalendar from "@toast-ui/react-calendar";
 import "tui-calendar/dist/tui-calendar.css";
 
 // const apiUrl = process.env.REACT_APP_API_URL;
 const apiUrl =
-  process.env.NODE_ENV === 'production'
-    ? process.env.REACT_APP_API_URL_PRODUCTION
-    : process.env.REACT_APP_API_URL_LOCAL;
+    process.env.NODE_ENV === 'production'
+        ? process.env.REACT_APP_API_URL_PRODUCTION
+        : process.env.REACT_APP_API_URL_LOCAL;
 
 
 
@@ -68,10 +69,10 @@ const Schedule = () => {
     };
 
     const openModal = useCallback((mode: "create" | "edit", scheduleData: ISchedule | null = null) => {
-        console.log('customerEtc',customerEtc)
-        
+        console.log('customerEtc', customerEtc)
+
         openModalUtil(mode, scheduleData, setModalMode, setCurrentSchedule, setNewStart, setNewEnd, setStartTime, setEndTime, setNewTitle, setCustomerName, setRentPlace,
-            setGubun, setUserInt, setEstprice, setId, setEtc, setIsModalOpen, setCsKind ,setCustomerEtc,setContactPerson);
+            setGubun, setUserInt, setEstprice, setId, setEtc, setIsModalOpen, setCsKind, setCustomerEtc, setContactPerson);
     }, []);
 
     const fetchScheduleById = useCallback(async (id: string) => {
@@ -80,7 +81,7 @@ const Schedule = () => {
             const res = await axios.get(`${apiUrl}/api/schedules/${id}`);
             const scheduleData = res.data;
             openModal("edit", scheduleData);
-            console.log('fetchScheduleById',scheduleData)
+            console.log('fetchScheduleById', scheduleData)
         } catch (err) {
             console.error('Error fetching schedule by ID:', err);
         }
@@ -176,18 +177,20 @@ const Schedule = () => {
     const calendarOptions = {
         defaultView: 'month',  // 기본 뷰 설정 (month)
         month: {
-          visibleScheduleCount: 15,  // 하루에 보여줄 최대 스케줄 개수 설정
-          moreLayerSize: {
-            height: 'auto', // "더보기" 레이어 높이 자동 조정
-          },
+            visibleScheduleCount: 15,  // 하루에 보여줄 최대 스케줄 개수 설정
+            moreLayerSize: {
+                height: 'auto', // "더보기" 레이어 높이 자동 조정
+            },
         },
-      };
+    };
     return (
         <div className="App">
-             <Box sx={{ margin: '0 auto', display: 'flex', justifyContent: 'center', alignItems: 'center',gap:'5' }}>
-             <Button onClick={onClickPrevButton} color="primary" variant="outlined">이전 달</Button>
-            <Box sx={{margin:'10px'}}>{currentYear}년 {currentMonth}월</Box>
-            <Button onClick={onClickNextButton} color="primary" variant="outlined">다음 달</Button>
+            <Sales currentYear={currentYear} currentMonth={currentMonth} />
+
+            <Box sx={{ margin: '0 auto', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5' }}>
+                <Button onClick={onClickPrevButton} color="primary" variant="outlined">이전 달</Button>
+                <Box sx={{ margin: '10px' }}>{currentYear}년 {currentMonth}월</Box>
+                <Button onClick={onClickNextButton} color="primary" variant="outlined">다음 달</Button>
             </Box>
             <CheckView reloadSchedule={reloadSchedule} currentYear={currentYear} currentMonth={currentMonth} />
 

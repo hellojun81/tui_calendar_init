@@ -23,11 +23,12 @@ const CheckView: React.FC<CheckViewProps> = ({
   currentMonth,
   currentYear
 }) => {
-
+  const currentMonthFormatted = String(currentMonth).padStart(2, '0');
   const [checkboxes, setCheckboxes] = useState<CheckboxItem[]>([]); // CheckboxItem[] 타입으로 지정
   const [selectedCheckboxes, setSelectedCheckboxes] = useState<string[]>([]);
   const [isInitialRender, setIsInitialRender] = useState(true);
   let i=0
+
   useEffect(() => {
     i++
     console.log(i)
@@ -48,7 +49,7 @@ const CheckView: React.FC<CheckViewProps> = ({
 
     const GetCsKind = async () => {
       try {
-        const res = await axios.get(`${apiUrl}/api/schedules/getCsKind`);
+        const res = await axios.get(`${apiUrl}/api/schedules/getCsKind?SearchMonth=${currentYear}-${currentMonthFormatted}`);
         const data: CheckboxItem[] = res.data; // res.data의 타입을 지정
         setCheckboxes(data);
         // calView 값이 1인 항목들을 자동으로 선택
@@ -64,7 +65,7 @@ const CheckView: React.FC<CheckViewProps> = ({
     };
 
     GetCsKind();
-  }, []); // 첫 렌더링 시에만 실행
+  }, [currentMonth]); // 첫 렌더링 시에만 실행
 
   // 체크박스 변경 처리 함수
   const handleCheckboxChange = (id: string) => {
