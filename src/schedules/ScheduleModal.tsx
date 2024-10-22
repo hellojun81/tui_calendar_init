@@ -138,9 +138,9 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     }
   };
   const onSelectCustomer = useCallback((selectedCustomer: string, customerName2: string, customeretc: string) => {
-    console.log({ 'selectedCustomer': selectedCustomer, selectedCustomer2: customerName2, customeretc: customeretc })
+    // console.log({ 'selectedCustomer': selectedCustomer, selectedCustomer2: customerName2, customeretc: customeretc })
     setCustomerName(selectedCustomer); // 선택된 고객명 설정
-    setCustomerName2(customerName2);
+    setContactPerson(customerName2);
     setCustomerEtc(customeretc);
   }, []);
 
@@ -168,8 +168,6 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       <DialogTitle>{modalMode === "edit" ? `수정 [ID:${id}]` : "추가"}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-
-
           <GetCsKind onValueChange={setCsKind} csKind={csKind} />
 
           <FormControl fullWidth>
@@ -295,7 +293,6 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
         searchQuery={searchQuery}
       />
     </Dialog>
-
   );
 };
 

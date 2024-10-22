@@ -11,6 +11,7 @@ import CrudButtons from '../common/CrudButtons';
 import JexcelModal from "../schedules/JexcelModal";
 import SearchFields from '../provider/SearchFields';
 import '../common/Jexcel.css';
+
 const apiUrl =
     process.env.NODE_ENV === 'production'
         ? process.env.REACT_APP_API_URL_PRODUCTION
@@ -50,7 +51,8 @@ const Cs: React.FC = () => {
         startDate: startDate,
         endDate: endDate,
         customerName: '',
-        filterOption: '등록일'
+        filterOption: '등록일',
+        csKind:0
     });
 
     const openModal = useCallback((mode: "create" | "edit", scheduleData: ISchedule | null = null) => {
@@ -108,9 +110,11 @@ const Cs: React.FC = () => {
     const handleSearch = async () => {
         const fetchSchedules = async () => {
             try {
+                // console.log('CS_csKind',formData.csKind)
                 const queryParams = new URLSearchParams({
                     startDate: formData.startDate,
                     endDate: formData.endDate,
+                    csKind:formData.csKind.toString(),
                     ...(formData.customerName && { customerName: formData.customerName }),
                 });
                 // 서버로부터 데이터를 가져오는 비동기 호출
@@ -146,6 +150,7 @@ const Cs: React.FC = () => {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
+        // console.log('handleChange',e.target)
         setFormData({ ...formData, [name]: value });
     };
 
@@ -239,6 +244,13 @@ const Cs: React.FC = () => {
             }
         } 
     };
+    const handleCsKindChange = (value: number) => {
+        console.log('handleCsKindChange',value)
+        setFormData({
+            ...formData,
+            csKind: value
+        });
+    };
 
     return (
         <div>
@@ -253,7 +265,12 @@ const Cs: React.FC = () => {
             >
                 <Box sx={{ display: 'flex', gap: '2x', marginBottom: '20px' }}>
 
-                    <SearchFields prarentComponent='cs' formData={formData} handleChange={handleChange} handleSearch={handleSearch} />
+                    <SearchFields prarentComponent='cs' 
+                    formData={formData} 
+                    handleChange={handleChange} 
+                    handleSearch={handleSearch} 
+                    onCsKindChange={handleCsKindChange}  // csKind 값을 부모에서 처리
+                    />
                 </Box>
 
                 <CrudButtons

@@ -52,7 +52,7 @@ const JexcelModal: React.FC<JexcelModalProps> = ({ isOpen, onClose, onSelect, se
           { type: 'text', title: '비고', width: 100 },
         ],
         onselection: (instance, x1, y1, x2, y2) => {
-          console.log('tableData', tableData);
+          console.log({'tableData': tableData,'y1':y1});
           if (tableData[y1]) {
             setId(parseInt(tableData[y1][0] || '0', 10));  // ID값 설정
             setCustomerName(`${tableData[y1][1]}`); // 고객명 설정
@@ -74,10 +74,8 @@ const JexcelModal: React.FC<JexcelModalProps> = ({ isOpen, onClose, onSelect, se
   
 
   useEffect(() => {
-    if (tableRef.current && tableData.length > 0) {
-      initializeSpreadsheet();
-    }
-  }, [tableData]); // 의존성 배열에서 tableRef.current 제외, tableData가 있을 때만 초기화
+   console.log('customerName',customerName)
+  }, [customerName]); // 의존성 배열에서 tableRef.current 제외, tableData가 있을 때만 초기화
   
   const SearchCusTomerName = (customerName: string) => {
     if (isOpen) {

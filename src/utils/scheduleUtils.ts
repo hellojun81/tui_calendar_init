@@ -23,7 +23,7 @@ export interface ISchedule {
   isReadOnly?: boolean;
   isPrivate?: boolean;
   color?: string;
-  bgColor?: string;
+  bgcolor?: string;
   dragBgColor?: string;
   borderColor?: string;
   customStyle?: string;
@@ -34,14 +34,14 @@ export interface ISchedule {
   userInt?: string;
   estPrice?: number;
   etc?: string;
-  csKind?:number;
-  customerEtc?:string;
-  contactPerson?:string;
+  csKind?: number;
+  customerEtc?: string;
+  contactPerson?: string;
   // created_at: Date;
-  startTime?:string;
-  endTime?:string;
-  created_at?:Date;
-  cskindTitle?:string;
+  startTime?: string;
+  endTime?: string;
+  created_at?: Date;
+  cskindTitle?: string;
 }
 
 export interface ScheduleModalProps {
@@ -58,10 +58,10 @@ export interface ScheduleModalProps {
   userInt?: string;
   estPrice?: number;
   csKind?: number;
-  startTime?:string;
-  endTime?:string;
-  customerEtc?:string;
-  contactPerson?:string;
+  startTime?: string;
+  endTime?: string;
+  customerEtc?: string;
+  contactPerson?: string;
   setNewStart: (date: Date | undefined) => void;
   setNewEnd: (date: Date | undefined) => void;
   onSaveSchedule: () => void;
@@ -76,10 +76,10 @@ export interface ScheduleModalProps {
   setEtc: (text: string) => void;
   setEstprice: (text: number) => void;
   setCsKind: (text: number) => void;
-  setStartTime:(time: string) => void;
-  setEndTime:(time: string) => void;
-  setCustomerEtc:(text: string) => void;
-  setContactPerson:(text: string) => void;
+  setStartTime: (time: string) => void;
+  setEndTime: (time: string) => void;
+  setCustomerEtc: (text: string) => void;
+  setContactPerson: (text: string) => void;
 }
 
 export const openModalUtil = (
@@ -146,7 +146,7 @@ export const openModalUtil = (
     setContactPerson(scheduleData.contactPerson || "")
   }
   // console.log('scheduleData.csKind',scheduleData?.csKind)
-  console.log({'scheduleData':scheduleData})
+  // console.log({'scheduleData':scheduleData})
   setIsModalOpen(true);
 };
 
@@ -173,8 +173,8 @@ export const saveSchedule = async (
   newTitle: string,
   Start: Date | undefined,
   end: Date | undefined,
-  startTime:string,
-  endTime:string,
+  startTime: string,
+  endTime: string,
   customerName: string,
   rentPlace: string,
   modalMode: string,
@@ -204,30 +204,43 @@ export const saveSchedule = async (
   };
 
   // console.log('csKind',csKind)
-  newSchedule.start = new Date(dayjs(newSchedule.start).format('YYYY-MM-DD'));  
+  newSchedule.start = new Date(dayjs(newSchedule.start).format('YYYY-MM-DD'));
   newSchedule.end = new Date(dayjs(newSchedule.end).format('YYYY-MM-DD'));
-  
+
   // newSchedule.start = dayjs(newSchedule.start).format('YYYY-MM-DD');  
   // newSchedule.end = dayjs(newSchedule.end).format('YYYY-MM-DD');  
 
-  console.log({'save newSchedule':newSchedule});
+  console.log({ 'save newSchedule': newSchedule });
   try {
     let result
     if (modalMode === "create") {
-      result= await axios.post(`${apiUrl}/api/schedules`, newSchedule);
+      console.log('NEW SCHEDULE CREATE')
+      result = await axios.post(`${apiUrl}/api/schedules`, newSchedule);
+
     } else {
+      console.log('SCHEDULE EDIT')
       // console.log({'EditMode newSchedule':newSchedule});
-      result= await axios.put(`${apiUrl}/api/schedules/${currentSchedule?.id}`, newSchedule);
+      result = await axios.put(`${apiUrl}/api/schedules/${currentSchedule?.id}`, newSchedule);
     }
-    console.log('saveScheduleResult=',result)
+    console.log('saveScheduleResult=', result)
+
     setSchedules((prev: ISchedule[]) => (
       modalMode === "edit" && currentSchedule
         ? prev.map(s => (s.id === currentSchedule.id ? newSchedule : s))
         : [...prev, newSchedule]
     ));
     closeModal();
+
   } catch (err) {
-    console.error('Error saving schedule:', err);
+    if (axios.isAxiosError(err)) {
+      if (err.response && err.response.status === 409) {
+        // 409 Conflict 처리
+        alert(err.response.data.message);  // 사용자에게 메시지 표시
+      }
+    } else {
+      // Axios 에러가 아닌 경우 처리
+      console.error('예상치 못한 에러:', err);
+    }
   }
 };
 
@@ -258,7 +271,7 @@ export const getCurrentDate = (daysOffset: number = 365) => {
 
   // Convert the formatted Korean end date to YYYY-MM-DD format
   // const formattedEndDate = koreanEndDate.replace(/\./g, '-').replace(/\s/g, '').split('-').reverse().join('-');
-  const formattedEndDate = left(koreanEndDate.replace(/\./g, '-').replace(/\s+/g, ''),10);
+  const formattedEndDate = left(koreanEndDate.replace(/\./g, '-').replace(/\s+/g, ''), 10);
 
   console.log({ startDate: str_Date, endDate: formattedEndDate });
   return { startDate: str_Date, endDate: formattedEndDate };
@@ -271,21 +284,23 @@ const left = (str: string, length: number) => {
 export const getSchedulesUtil = async (
   year: number,
   month: number,
+  sort: string,
   setSchedules: React.Dispatch<React.SetStateAction<ISchedule[]>>,
   formatMonth: (month: number) => string
 ) => {
   const fetchSchedules = async () => {
     try {
+      // console.log('getSchedulesUtil')
       const newMonth = `${year}-${formatMonth(month)}`;
-      const res = await axios.get<ISchedule[]>(`${apiUrl}/api/schedules/schedules?SearchMonth=${newMonth}`);
-      console.log(res.data)
+      const res = await axios.get<ISchedule[]>(`${apiUrl}/api/schedules/schedules?SearchMonth=${newMonth}&sort=${sort}`);
+      console.log('scheduleUtils.ts getSchedules=', res.data)
       const updatedSchedules = res.data.map(schedule => ({
         ...schedule,
         // start: dayjs(schedule.start).tz('Asia/Seoul').format(), // start 값을 변경
         //   end: dayjs(schedule.end).tz('Asia/Seoul').format(), // start 값을 변경
         start: new Date(dayjs(schedule.start).format('YYYY-MM-DD')), // start 값을 변경
         end: new Date(dayjs(schedule.end).format('YYYY-MM-DD')), // start 값을 변경
-        bgColor:'#e50000'
+        bgColor: schedule.bgcolor
       }));
 
       // 업데이트된 스케줄 배열을 상태에 저장

@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useEffect, useRef } from "react";
-import { Box, Button } from '@mui/material';
+import { Box, Button, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import ScheduleModal from "./ScheduleModal";
 import "./Calendar.css";
 import axios from 'axios';
@@ -9,7 +9,7 @@ import Sales from "./Sales";
 import { ISchedule, saveSchedule, closeModalUtil, openModalUtil, openJexcelModalUtil, getSchedulesUtil } from '../utils/scheduleUtils';
 import TUICalendar from "@toast-ui/react-calendar";
 import "tui-calendar/dist/tui-calendar.css";
-
+// import { Box, Button, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 // const apiUrl = process.env.REACT_APP_API_URL;
 const apiUrl =
     process.env.NODE_ENV === 'production'
@@ -33,6 +33,7 @@ const Schedule = () => {
     const [endTime, setEndTime] = useState<string>("00:00");
     const [newTitle, setNewTitle] = useState("");
     const [estPrice, setEstprice] = useState<number>(0);
+    const [sort, setSort] = useState<string>('START');
     const [userInt, setUserInt] = useState("");
     const [gubun, setGubun] = useState("");
     const [customerName, setCustomerName] = useState("");
@@ -48,9 +49,9 @@ const Schedule = () => {
     const start = new Date();
 
     useEffect(() => {
-        getSchedulesUtil(currentYear, currentMonth, setSchedules, formatMonth);
+        getSchedulesUtil(currentYear, currentMonth, sort, setSchedules, formatMonth);
 
-    }, [currentYear, currentMonth]);
+    }, [currentYear, currentMonth, sort]);
 
     const closeModal = useCallback(() => {
         closeModalUtil(setIsModalOpen, setCurrentSchedule); // 유틸리티 함수 호출
@@ -62,10 +63,10 @@ const Schedule = () => {
             return;
         }
         console.log('MODE', modalMode)
-        await saveSchedule(csKind, newTitle, newStart, newEnd, startTime, endTime, customerName, rentPlace, modalMode, currentSchedule, gubun, userInt, estPrice, etc, setSchedules, closeModal);
-        console.log('currentMonth', currentMonth)
-        getSchedulesUtil(currentYear, currentMonth, setSchedules, formatMonth);
-        // getSchedulesUtil(currentYear, currentMonth, setSchedules, formatMonth);
+         await saveSchedule(csKind, newTitle, newStart, newEnd, startTime, endTime, customerName, rentPlace, modalMode, currentSchedule, gubun, userInt, estPrice, etc, setSchedules, closeModal);
+
+        getSchedulesUtil(currentYear, currentMonth, sort, setSchedules, formatMonth);
+
     };
 
     const openModal = useCallback((mode: "create" | "edit", scheduleData: ISchedule | null = null) => {
@@ -106,6 +107,7 @@ const Schedule = () => {
     const onBeforeUpdateSchedule = useCallback(async (e: any) => {
         const { schedule, changes } = e;
         // 스케줄 업데이트 처리
+        // console.log('onBeforeUpdateSchedule',schedule)
         calendarRef.current.calendarInst.updateSchedule(
             schedule.id,
             schedule.calendarId,
@@ -121,9 +123,11 @@ const Schedule = () => {
             id: schedule?.id || String(Math.random()),
             start: startDate ? startDate : undefined,
             end: endDate ? endDate : undefined,
+            customerName: schedule?.customerName ? customerName : undefined,
         };
 
         // 서버에 업데이트 요청
+        // console.log({'UpdateSchedule':newSchedule,'changes':changes})
         try {
             await axios.put(`${apiUrl}/api/schedules/${schedule?.id}`, newSchedule);
         } catch (error) {
@@ -152,14 +156,14 @@ const Schedule = () => {
     const onDeleteSchedule = async (id: Number) => {
         console.log('onDeleteSchedule', id)
         const res = await axios.delete(`${apiUrl}/api/schedules/${id}`);
-        getSchedulesUtil(currentYear, currentMonth, setSchedules, formatMonth);
+        getSchedulesUtil(currentYear, currentMonth, sort, setSchedules, formatMonth);
         closeModal(); // 모달 닫기
     };
 
     const onMonthChange = useCallback((year: number, month: number) => {
         setCurrentYear(year);
         setCurrentMonth(month);
-        getSchedulesUtil(year, month, setSchedules, formatMonth)
+        getSchedulesUtil(year, month, sort, setSchedules, formatMonth)
         console.log(schedules)
     }, []);
     const onClickNextButton = () => {
@@ -172,12 +176,12 @@ const Schedule = () => {
     };
     const reloadSchedule = async () => {
         // console.log({ 'reloadSchedule': "", currentYear: currentYear, currentMonth: currentMonth, setSchedules: setSchedules, formatMonth: formatMonth })
-        getSchedulesUtil(currentYear, currentMonth, setSchedules, formatMonth);
+        getSchedulesUtil(currentYear, currentMonth, sort, setSchedules, formatMonth);
     }
     const calendarOptions = {
         defaultView: 'month',  // 기본 뷰 설정 (month)
         month: {
-            visibleScheduleCount: 15,  // 하루에 보여줄 최대 스케줄 개수 설정
+            visibleScheduleCount: 8,  // 하루에 보여줄 최대 스케줄 개수 설정
             moreLayerSize: {
                 height: 'auto', // "더보기" 레이어 높이 자동 조정
             },
@@ -185,15 +189,26 @@ const Schedule = () => {
     };
     return (
         <div className="App">
-            <Sales currentYear={currentYear} currentMonth={currentMonth} />
+
 
             <Box sx={{ margin: '0 auto', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5' }}>
                 <Button onClick={onClickPrevButton} color="primary" variant="outlined">이전 달</Button>
                 <Box sx={{ margin: '10px' }}>{currentYear}년 {currentMonth}월</Box>
                 <Button onClick={onClickNextButton} color="primary" variant="outlined">다음 달</Button>
             </Box>
-            <CheckView reloadSchedule={reloadSchedule} currentYear={currentYear} currentMonth={currentMonth} />
 
+
+
+            <Sales currentYear={currentYear} currentMonth={currentMonth} />
+            <CheckView reloadSchedule={reloadSchedule} currentYear={currentYear} currentMonth={currentMonth} />
+            <FormControl fullWidth>
+                {/* <InputLabel>기준</InputLabel> */}
+                <Select value={sort} onChange={(e) => setSort(e.target.value)}>
+                    <MenuItem value="CREATE">생성일</MenuItem>
+                    <MenuItem value="START">시작일</MenuItem>
+                    <MenuItem value="END">종료일</MenuItem>
+                </Select>
+            </FormControl>
             <TUICalendar
                 ref={calendarRef}
                 height="1000px"

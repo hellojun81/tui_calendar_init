@@ -16,9 +16,6 @@ interface GetCsKindProps {
   csKind: number | undefined;
 }
 
-
-
-
 const GetCsKind: React.FC<GetCsKindProps> = ({ onValueChange,csKind }) => {
 
   const [options, setOptions] = useState([]); // 서버에서 가져올 옵션 리스트
@@ -37,6 +34,7 @@ const GetCsKind: React.FC<GetCsKindProps> = ({ onValueChange,csKind }) => {
               cskindsetup.calView,
             ]
           );
+          console.log('fetchedData',fetchedData)
           setOptions(fetchedData); // 서버에서 받은 데이터를 상태에 저장
         })
         .catch((err) => console.error('Error fetching customers:', err));
@@ -67,13 +65,6 @@ const handleSelectChange = (event: SelectChangeEvent<string>) => {
 };
 
 
-  // const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-  //   // const handleSelectChange = (event: SelectChangeEvent<string>) => {
-  //   const selectedValue = e.target.value // JSON 문자열을 객체로 변환
-  //   setSelectedOption(selectedValue); // 상태 업데이트
-  //   onValueChange(parseInt(selectedValue))
-  //   console.log('선택된 키 값:', selectedValue);
-  // };
 
   return (
     <FormControl fullWidth>

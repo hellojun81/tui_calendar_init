@@ -48,7 +48,7 @@ const RentPlaceSelector: React.FC<RentPlaceSelectorProps> = ({
   
 
 
-  const filteredPlaces = ['1층', '2층', '3층', '별채'].filter((place) =>
+  const filteredPlaces = ['전체','1층', '2층', '3층'].filter((place) =>
     place.trim().includes(searchTerm.trim()) // 공백 제거
   );
   

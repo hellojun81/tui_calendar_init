@@ -18,7 +18,7 @@
 
 .MuiBox-root{
   margin:0px!important;
-  padding:10px 10px 00px 5px!important;
+  /* padding:10px 10px 00px 5px!important; */
 }
 
 /* ////////////// */
@@ -104,5 +104,11 @@ button.cancel-button {
   cursor: pointer;
 }
 .MuiFab-sizeLarge {display: none!important;}
-.MuiDialogContent-root{padding:30px!important;}
+.MuiDialogContent-root{padding:10px!important;}
+.MuiInputBase-root input,
+.MuiInputBase-root div{padding: 10px!important;}
+/* .MuiFormControl-root{padding: 10px!important;} */
 
+
+
+.jexcel_container{margin-top: 10px;}

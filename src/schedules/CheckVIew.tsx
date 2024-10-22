@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Row } from 'antd';
 
 const apiUrl =
   process.env.NODE_ENV === 'production'
@@ -89,7 +90,7 @@ const CheckView: React.FC<CheckViewProps> = ({
           gap: '5px'
         }}
       >
-        <div>유형별 일정</div>
+   
         {checkboxes.map((checkbox) => (
           <div key={checkbox.id}>
             <label>

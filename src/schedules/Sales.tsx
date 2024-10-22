@@ -34,8 +34,8 @@ const TotalSales: React.FC<CheckViewProps> = ({
     // 체크박스 렌더링
     return (
         <div>
-            <div>
-                매출:{sales}0000만원
+            <div style={{padding:'10px',textAlign:'center'}}>
+                매출:{sales}만원
             </div>
         </div>
     );
