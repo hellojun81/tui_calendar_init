@@ -30,13 +30,7 @@ const Home: React.FC = () => {
     floor_fee_half[1] = 300000
     floor_fee_half[2] = 200000
     floor_fee_half[3] = 200000
-    // useEffect(() => {
-    //     console.log('disCountMoney', disCountMoney);
-    //     setTmoney(tmoney-disCountMoney)
-    // }, [disCountMoney]);
-
-
-
+ 
     const handleChange = (index: number) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const newValues = [...inputValues];
         newValues[index] = e.target.value;
@@ -80,16 +74,25 @@ const Home: React.FC = () => {
         if (usersCnt > 25 && usersCnt <= 30) {
             UsersFee = 1000000
         }
-        if (usersCnt >= 31) {
+        if (usersCnt > 30 && usersCnt <= 35) {
+            UsersFee = 1250000
+        }
+        if (usersCnt > 35 && usersCnt <= 40) {
             UsersFee = 1500000
         }
-        if (usersCnt >= 51) {
+        if (usersCnt > 40 && usersCnt <= 45) {
             UsersFee = 1750000
         }
-        if (usersCnt >= 100) {
-            UsersFee = 2500000
+        if (usersCnt > 45 && usersCnt <= 50) {
+            UsersFee = 2000000
         }
-        console.log('GetUserFee', UsersFee)
+        if (usersCnt >= 51) {
+            UsersFee = 2250000
+        }
+        if (usersCnt >= 100) {
+            UsersFee = 3000000
+        }
+        console.log({'GetUserFee': UsersFee,'userCnt':userCnt})
         return UsersFee;
     }
 
@@ -186,12 +189,12 @@ const Home: React.FC = () => {
         totalMoney = (totalMoney + (GetPlaceMoney * (useHour - overTime)) + usersfee)
 
 
-
         let photoyypefee=300000
         if (useHour >= 9) {
             photoyypefee = 500000
         }
- 
+      
+
         console.log({
             '오버타임': overTime, '오버타임사용료': totalMoney,
             '렌탈장소':floortype, '4시간_기본사용료': GetPlaceMoney, 사용시간: useHour,
@@ -218,7 +221,8 @@ const Home: React.FC = () => {
 
     return (
         <div style={{ padding: '20px', maxWidth: '400px', margin: 'auto' }}>
-                      <div>
+            <h1>AUBESTUDIO PRICE</h1>
+            <div style={{ marginBottom: '20px' }}>
                 <label htmlFor="photo-video-select">촬영구분</label>
                 <select
                     id="photo-video-select"
@@ -264,7 +268,11 @@ const Home: React.FC = () => {
                     <option value='6' data-description='6'>6시간</option>
                     <option value='7' data-description='7'>7시간</option>
                     <option value='8' data-description='8'>8시간</option>
-                    <option value='9' data-description='9'>9시간(ALL)</option>
+                    <option value='9' data-description='9'>9시간</option>
+                    <option value='10' data-description='10'>10시간</option>
+                    <option value='11' data-description='11'>11시간</option>
+                    <option value='12' data-description='12'>12시간</option>
+
                 </select>
             </div>
             <div style={{ marginBottom: '20px' }}>
@@ -280,7 +288,12 @@ const Home: React.FC = () => {
                     <option value={16}>16~20인</option>
                     <option value={21}>21~25인</option>
                     <option value={26}>26~30인</option>
-                    <option value={31}>31인 이상</option>
+                    <option value={31}>31~35인</option>
+                    <option value={36}>36~40인</option>
+                    <option value={41}>41~45인</option>
+                    <option value={46}>46~50인</option>
+                    <option value={51}>51인 이상</option>
+                    <option value={100}>100인 이상</option>
                     {/* <option value={51}>50~80인</option>
                     <option value={100}>100이상</option> */}
            

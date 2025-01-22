@@ -243,7 +243,6 @@ export const saveSchedule = async (
     }
   }
 };
-
 // export const getCurrentDate = (daysOffset: number = 365) => {
 //   const currentDate = new Date();
 //   const startDate = new Date();
