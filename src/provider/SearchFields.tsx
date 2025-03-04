@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Button, TextField } from '@mui/material';
-import GetCsKind from "../schedules/Get_csKind";
+import GetCsKind from "../schedules/get_csKind";
 interface FieldsOption {
     label: string;
     name: string;

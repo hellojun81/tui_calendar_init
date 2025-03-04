@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { HashRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
-import Menu from './Menu';
+import Menu from './menu';
 import Provider from './provider/provider';
 import Schedules from './schedules/Schedule';
 import Cs from './cs/cs';

@@ -5,7 +5,7 @@ import { Box, Button, TextField, Select, MenuItem, FormControl, InputLabel } fro
 import RentPlaceSelector from './RentPlaceSelector'; // RentPlaceSelector 컴포넌트 import
 import { ScheduleModalProps, openJexcelModalUtil } from '../utils/scheduleUtils';
 import JexcelModal from "./JexcelModal";
-import GetCsKind from "./Get_csKind";
+import GetCsKind from "./get_csKind";
 
 interface TimePickerProps {
   label: string;

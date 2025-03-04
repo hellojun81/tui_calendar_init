@@ -177,10 +177,10 @@ select {
   background-color: #0056b3;
 }
 
-input {
+/* input {
   flex: 1;
   /* input의 너비를 유동적으로 설정 */
-}
+
 
 .date-time-item-row {
   display: flex;

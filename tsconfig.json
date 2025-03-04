@@ -15,6 +15,7 @@
     "forceConsistentCasingInFileNames": true,  // 파일 이름의 대소문자 일관성 강제
     "resolveJsonModule": true,  // JSON 모듈 지원
     "isolatedModules": true,  // 개별 모듈 트랜스파일 지원
-    "noEmit": true  // 트랜스파일된 파일을 생성하지 않음
+    "noEmit": true , // 트랜스파일된 파일을 생성하지 않음
+     "types": ["react", "react-dom"]
   }
 }
