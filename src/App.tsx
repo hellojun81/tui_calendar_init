@@ -5,6 +5,7 @@ import Provider from './provider/provider';
 import Schedules from './schedules/Schedule';
 import Cs from './cs/cs';
 import Estimate from './estimate';
+import OldEstimate from './oldestimate';
 import Setup from './setup/setup_field';
 import SetupBusinessInfo from './setup/setup_bussiness_info';
 import LoginPage from './login';
@@ -75,6 +76,16 @@ const App: React.FC = () => {
                 <PrivateRoute>
                   <PageWithTitle title="[AUBE]견적 관리">
                     <Estimate />
+                  </PageWithTitle>
+                </PrivateRoute>
+              }
+            />
+               <Route
+              path="/oldestimate"
+              element={
+                <PrivateRoute>
+                  <PageWithTitle title="(구)[AUBE]견적 관리">
+                    <OldEstimate />
                   </PageWithTitle>
                 </PrivateRoute>
               }

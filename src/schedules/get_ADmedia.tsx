@@ -1,5 +1,6 @@
 import React, { useCallback, useState, useEffect } from 'react';
 import { FormControl, InputLabel, Select, MenuItem,SelectChangeEvent } from '@mui/material';
+// import { SelectChangeEvent } from '@mui/material';
 
 
 import axios from 'axios';
@@ -9,12 +10,12 @@ const apiUrl =
     : process.env.REACT_APP_API_URL_LOCAL;
 
 
-interface GetCsKindProps {
+interface GetADmediaProps {
   onValueChange: (value:number) => void;
-  csKind: number | undefined;
+  ADmedia: number | undefined;
 }
 
-const GetCsKind: React.FC<GetCsKindProps> = ({ onValueChange,csKind }) => {
+const GetADmedia: React.FC<GetADmediaProps> = ({ onValueChange,ADmedia }) => {
 
   const [options, setOptions] = useState([]); // 서버에서 가져올 옵션 리스트
   const [selectedOption, setSelectedOption] = useState(''); // 선택한 옵션 상태
@@ -23,13 +24,13 @@ const GetCsKind: React.FC<GetCsKindProps> = ({ onValueChange,csKind }) => {
   const fetchOptions = async () => {
     try {
       axios
-        .get(`${apiUrl}/api/setup/csKind`)
+        .get(`${apiUrl}/api/setup/ADmedia`)
         .then((res) => {
           const fetchedData = res.data.map(
-            (cskindsetup: { id: number; title: string; calView: boolean }) => [
-              cskindsetup.id,
-              cskindsetup.title,
-              cskindsetup.calView,
+            (ADmediasetup: { keycode: number; name: string; etc: boolean }) => [
+              ADmediasetup.keycode,
+              ADmediasetup.name,
+              ADmediasetup.etc,
             ]
           );
           console.log('fetchedData',fetchedData)
@@ -49,9 +50,9 @@ const GetCsKind: React.FC<GetCsKindProps> = ({ onValueChange,csKind }) => {
 
 
 useEffect(()=>{
- console.log('csKind useEffect',csKind) 
- if(csKind){
-  setSelectedOption(String(csKind))
+ console.log('ADmedia',ADmedia) 
+ if(ADmedia){
+  setSelectedOption(String(ADmedia))
  }
 })
 
@@ -66,12 +67,12 @@ const handleSelectChange = (event: SelectChangeEvent<string>) => {
 
   return (
     <FormControl fullWidth>
-    <InputLabel id="selectBox-label">CS유형</InputLabel>
+    <InputLabel id="selectBox-label">유입경로</InputLabel>
     <Select
       labelId="selectBox-label"
       id="selectBox"
       value={selectedOption}
-      label="CS유형"
+      label="방문경로"
       onChange={handleSelectChange}
     >
       {options.map((option) => (
@@ -84,4 +85,4 @@ const handleSelectChange = (event: SelectChangeEvent<string>) => {
   );
 };
 
-export default GetCsKind;
+export default GetADmedia;

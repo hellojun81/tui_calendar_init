@@ -42,6 +42,7 @@ const Schedule = () => {
     const [contactPerson, setContactPerson] = useState<string>("1floor");
     const [etc, setEtc] = useState("");
     const [csKind, setCsKind] = useState<number>(0);
+    const [ADmedia, setADmedia] = useState<number>(7);
     const [id, setId] = useState<number>(0); // ID값
     const formatMonth = (month: number): string => {
         return month.toString().padStart(2, '0');
@@ -63,17 +64,19 @@ const Schedule = () => {
             return;
         }
         console.log('MODE', modalMode)
-         await saveSchedule(csKind, newTitle, newStart, newEnd, startTime, endTime, customerName, rentPlace, modalMode, currentSchedule, gubun, userInt, estPrice, etc, setSchedules, closeModal);
+         await saveSchedule(csKind, ADmedia,newTitle, newStart, newEnd, startTime, endTime, customerName, rentPlace, modalMode, currentSchedule, gubun, userInt, estPrice, etc, setSchedules, closeModal);
 
         getSchedulesUtil(currentYear, currentMonth, sort, setSchedules, formatMonth);
 
     };
 
     const openModal = useCallback((mode: "create" | "edit", scheduleData: ISchedule | null = null) => {
-        console.log('customerEtc', customerEtc)
+        console.log({'customerEtc': customerEtc,'setCsKind':csKind,'ADmedia':ADmedia})
 
-        openModalUtil(mode, scheduleData, setModalMode, setCurrentSchedule, setNewStart, setNewEnd, setStartTime, setEndTime, setNewTitle, setCustomerName, setRentPlace,
-            setGubun, setUserInt, setEstprice, setId, setEtc, setIsModalOpen, setCsKind, setCustomerEtc, setContactPerson);
+        openModalUtil(mode, scheduleData, setModalMode, setCurrentSchedule, setNewStart, setNewEnd, 
+            setStartTime, setEndTime, setNewTitle, setCustomerName, setRentPlace,
+            setGubun, setUserInt, setEstprice, setId, setEtc, setIsModalOpen, setCsKind,
+            setADmedia, setCustomerEtc, setContactPerson);
     }, []);
 
     const fetchScheduleById = useCallback(async (id: string) => {
@@ -141,6 +144,7 @@ const Schedule = () => {
     }, [calendarRef, currentSchedule]);
 
 
+
     const updateCurrentMonthYear = useCallback(() => {
         if (calendarRef.current) {
             const calendarInstance = calendarRef.current.getInstance();
@@ -189,21 +193,17 @@ const Schedule = () => {
     };
     return (
         <div className="App">
-
-
             <Box sx={{ margin: '0 auto', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5' }}>
                 <Button onClick={onClickPrevButton} color="primary" variant="outlined">이전 달</Button>
                 <Box sx={{ margin: '10px' }}>{currentYear}년 {currentMonth}월</Box>
                 <Button onClick={onClickNextButton} color="primary" variant="outlined">다음 달</Button>
             </Box>
-
-
-
             <Sales currentYear={currentYear} currentMonth={currentMonth} />
             <CheckView reloadSchedule={reloadSchedule} currentYear={currentYear} currentMonth={currentMonth} />
             <FormControl fullWidth>
                 {/* <InputLabel>기준</InputLabel> */}
                 <Select value={sort} onChange={(e) => setSort(e.target.value)}>
+                <MenuItem value="CREATECNT">생성일(건수)</MenuItem>
                     <MenuItem value="CREATE">생성일</MenuItem>
                     <MenuItem value="START">시작일</MenuItem>
                     <MenuItem value="END">종료일</MenuItem>
@@ -225,6 +225,7 @@ const Schedule = () => {
                 modalMode={modalMode}
                 id={Number(id)}
                 csKind={Number(csKind)}
+                ADmedia={Number(ADmedia)}
                 newStart={newStart}
                 newEnd={newEnd}
                 startTime={startTime}
@@ -250,6 +251,7 @@ const Schedule = () => {
                 setEstprice={setEstprice}
                 setEtc={setEtc}
                 setCsKind={setCsKind}
+                setADmedia={setADmedia}
                 setCustomerEtc={setCustomerEtc}
                 setContactPerson={setContactPerson}
                 onDeleteSchedule={id => onDeleteSchedule(Number(id))}

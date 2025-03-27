@@ -6,6 +6,7 @@ import RentPlaceSelector from './RentPlaceSelector'; // RentPlaceSelector 컴포
 import { ScheduleModalProps, openJexcelModalUtil } from '../utils/scheduleUtils';
 import JexcelModal from "./JexcelModal";
 import GetCsKind from "./get_csKind";
+import GetADmedia from "./get_ADmedia";
 
 interface TimePickerProps {
   label: string;
@@ -41,6 +42,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   etc,
   rentPlace,
   csKind,
+  ADmedia,
   startTime,
   endTime,
   customerEtc,
@@ -57,6 +59,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   setEstprice,
   setEtc,
   setCsKind,
+  setADmedia,
   setStartTime,
   setEndTime,
   setCustomerEtc,
@@ -169,7 +172,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <GetCsKind onValueChange={setCsKind} csKind={csKind} />
-
+          <GetADmedia onValueChange={setADmedia} ADmedia={ADmedia} />
           <FormControl fullWidth>
             <InputLabel>촬영구분</InputLabel>
             <Select value={gubun} onChange={(e) => setGubun(e.target.value)}>

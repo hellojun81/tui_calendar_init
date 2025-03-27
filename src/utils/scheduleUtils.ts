@@ -35,13 +35,14 @@ export interface ISchedule {
   estPrice?: number;
   etc?: string;
   csKind?: number;
+  ADmedia?: number;
   customerEtc?: string;
   contactPerson?: string;
   // created_at: Date;
   startTime?: string;
   endTime?: string;
   created_at?: Date;
-  cskindTitle?: string;
+  // cskindTitle?: string;
 }
 
 export interface ScheduleModalProps {
@@ -58,6 +59,7 @@ export interface ScheduleModalProps {
   userInt?: string;
   estPrice?: number;
   csKind?: number;
+  ADmedia?: number;
   startTime?: string;
   endTime?: string;
   customerEtc?: string;
@@ -76,6 +78,7 @@ export interface ScheduleModalProps {
   setEtc: (text: string) => void;
   setEstprice: (text: number) => void;
   setCsKind: (text: number) => void;
+  setADmedia: (text: number) => void;
   setStartTime: (time: string) => void;
   setEndTime: (time: string) => void;
   setCustomerEtc: (text: string) => void;
@@ -101,6 +104,7 @@ export const openModalUtil = (
   setEtc: (etc: string) => void,
   setIsModalOpen: (isOpen: boolean) => void,
   setCsKind: (csKind: number) => void,
+  setADmedia: (ADmedia: number) => void,
   setCustomerEtc: (CustomerEtc: string) => void,
   setContactPerson: (ContactPerson: string) => void,
 ) => {
@@ -122,10 +126,12 @@ export const openModalUtil = (
     setId(0);
     setEtc("");
     setCsKind(1)
+    setADmedia(7)
     setCustomerEtc("")
     setContactPerson("")
   } else if (mode === "edit" && scheduleData) {
     // edit 모드일 경우 scheduleData 값을 사용
+    console.log('scheduleData.ADmedia',scheduleData.ADmedia)
     setCurrentSchedule(scheduleData);
     setNewStart(new Date(dayjs(scheduleData.start).format('YYYY-MM-DD')));
     setNewEnd(new Date(dayjs(scheduleData.end).format('YYYY-MM-DD')));
@@ -134,19 +140,16 @@ export const openModalUtil = (
     setNewTitle(scheduleData.title || "");
     setCustomerName(scheduleData.customerName || "");
     setRentPlace(scheduleData.rentPlace ? scheduleData.rentPlace : "");
-    // setRentPlace(scheduleData.rentPlace ? scheduleData.rentPlace : "");
     setGubun(scheduleData.gubun || "");
     setUserInt(scheduleData.userInt || "");
     setEstprice(scheduleData.estPrice || 0);
-    // setId(scheduleData.id || 0);
     setId(Number(scheduleData.id) || 0);
     setEtc(scheduleData.etc || "");
     setCsKind(scheduleData.csKind || 1);
+    setADmedia(scheduleData.ADmedia || 7);
     setCustomerEtc(scheduleData.customerEtc || "")
     setContactPerson(scheduleData.contactPerson || "")
   }
-  // console.log('scheduleData.csKind',scheduleData?.csKind)
-  // console.log({'scheduleData':scheduleData})
   setIsModalOpen(true);
 };
 
@@ -170,6 +173,7 @@ export const closeModalUtil = (
 
 export const saveSchedule = async (
   csKind: number,
+  ADmedia: number,
   newTitle: string,
   Start: Date | undefined,
   end: Date | undefined,
@@ -201,16 +205,11 @@ export const saveSchedule = async (
     gubun,
     etc,
     csKind,
+    ADmedia,
   };
-
-  // console.log('csKind',csKind)
+  console.log({ 'modalMode': modalMode ,'rentPlace':rentPlace})
   newSchedule.start = new Date(dayjs(newSchedule.start).format('YYYY-MM-DD'));
   newSchedule.end = new Date(dayjs(newSchedule.end).format('YYYY-MM-DD'));
-
-  // newSchedule.start = dayjs(newSchedule.start).format('YYYY-MM-DD');  
-  // newSchedule.end = dayjs(newSchedule.end).format('YYYY-MM-DD');  
-
-  console.log({ 'save newSchedule': newSchedule });
   try {
     let result
     if (modalMode === "create") {
