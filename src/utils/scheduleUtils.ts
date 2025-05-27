@@ -242,15 +242,7 @@ export const saveSchedule = async (
     }
   }
 };
-// export const getCurrentDate = (daysOffset: number = 365) => {
-//   const currentDate = new Date();
-//   const startDate = new Date();
-//   startDate.setDate(currentDate.getDate() - daysOffset);
-//   const str_Date = startDate.toISOString().split('T')[0];
-//   const end_Date = currentDate.toISOString().split('T')[0];
-//   console.log({ startDate: str_Date, endDate: end_Date })
-//   return { startDate: str_Date, endDate: end_Date };
-// };  
+
 export const getCurrentDate = (daysOffset: number = 365) => {
   const currentDate = new Date();
   const startDate = new Date();
@@ -291,7 +283,8 @@ export const getSchedulesUtil = async (
       // console.log('getSchedulesUtil')
       const newMonth = `${year}-${formatMonth(month)}`;
       const res = await axios.get<ISchedule[]>(`${apiUrl}/api/schedules/schedules?SearchMonth=${newMonth}&sort=${sort}`);
-      console.log('scheduleUtils.ts getSchedules=', res.data)
+      
+      // console.log('scheduleUtils.ts getSchedules=', res.data)
       const updatedSchedules = res.data.map(schedule => ({
         ...schedule,
         // start: dayjs(schedule.start).tz('Asia/Seoul').format(), // start 값을 변경

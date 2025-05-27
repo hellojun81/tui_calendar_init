@@ -16,9 +16,6 @@ const apiUrl =
         ? process.env.REACT_APP_API_URL_PRODUCTION
         : process.env.REACT_APP_API_URL_LOCAL;
 
-
-
-
 const Schedule = () => {
     const calendarRef = useRef<any>(null);
     const [schedules, setSchedules] = useState<ISchedule[]>([]);
@@ -207,6 +204,7 @@ const Schedule = () => {
                     <MenuItem value="CREATE">생성일</MenuItem>
                     <MenuItem value="START">시작일</MenuItem>
                     <MenuItem value="END">종료일</MenuItem>
+                    <MenuItem value="ADSPEND">광고집행</MenuItem> 
                 </Select>
             </FormControl>
             <TUICalendar
