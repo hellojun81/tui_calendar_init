@@ -20,7 +20,12 @@ const Home: React.FC = () => {
     const [tmoney, setTmoney] = useState<number>(0);
 
     const [userCnt, setUserCnt] = useState<number>(5);
-
+    const eventPricing = {
+        168: { total: 4000, "1": 3400, "2": 300, "3": 300 },   // 1주 (7일 × 24시간)
+        336: { total: 6000, "1": 5100, "2": 450, "3": 450 },   // 2주
+        504: { total: 7000, "1": 5950, "2": 525, "3": 525 },   // 3주
+        720: { total: 8000, "1": 6800, "2": 600, "3": 600 },   // 한달
+    };
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         if (value === "" || /^[0-9]+$/.test(value)) {
@@ -45,10 +50,19 @@ const Home: React.FC = () => {
         );
     };
 
-
-    const handleSelectChange1 = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setphototype(e.target.value);
-    };
+const handleSelectChange1 = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setphototype(e.target.value);
+    setresultMsg(''); // 결과 메시지 초기화
+     if (e.target.value === '3') {
+        setuseHour(168);
+    }else {
+        setuseHour(4); // 사진/영상은 기본 4시간
+    }
+};
+    // const handleSelectChange1 = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    //     setphototype(e.target.value);
+        
+    // };
 
 
     const handleSelectChange3 = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -62,6 +76,19 @@ const Home: React.FC = () => {
 
     const GetplaceMoney = (phototype: string, floor: string):
         GetplaceMoneyResult => {
+
+        if (phototype === "3") {
+        const pricing = eventPricing[useHour as keyof typeof eventPricing];
+        const price = pricing?.[floor] ?? 0;
+        console.log({'행사:':price,'시간':useHour})
+        return {
+            place: parseInt(floor),
+            placeOriginfee: price * 1000, // 만 원 단위 → 원 단위로 변환
+            overfee: 0
+        };
+    }
+
+
         let placeOriginfee = 0
         let place = 0
         let basicUser = 0
@@ -102,16 +129,34 @@ const Home: React.FC = () => {
     const handleButtonClick = () => {
         let totalMoney = 0;
         let totalMsg = "";
-    
-        for (let i = 0; i < selectedFloors.length; i++) {
-            let info = GetplaceMoney(phototype, selectedFloors[i]);
-    
-            let floortotalMoney = info.placeOriginfee * useHour + info.overfee;
-            let result = `<p>${info.place}층 <span style="font-weight: bold;">정상가: ${formatMoney(floortotalMoney)}</span></p>`;
-            
-            totalMsg += result;
-            totalMoney += floortotalMoney;
-        }
+        let floortotalMoney=0;
+
+                        for (let i = 0; i < selectedFloors.length; i++) {
+                        let info = GetplaceMoney(phototype, selectedFloors[i]);
+                        console.log('계산하기', phototype);
+
+                        let floortotalMoney = 0;
+
+                        switch (phototype) {
+                        case "3":
+                            // 행사일 경우 이미 총액이므로 곱하기 필요 없음
+                            floortotalMoney = info.placeOriginfee * 10;
+                            break;
+                         case "2":
+                            // 행사일 경우 이미 총액이므로 곱하기 필요 없음
+                            floortotalMoney = (info.placeOriginfee * useHour + info.overfee)*1.1;
+                            break;
+
+                        default:
+                            // 사진/영상 등은 시간당 요금 + 초과요금
+                            floortotalMoney = info.placeOriginfee * useHour + info.overfee;
+                            break;
+                        }
+
+                        let result = `<p>${info.place}층 <span style="font-weight: bold;">정상가: ${formatMoney(floortotalMoney)}</span></p>`;
+                        totalMsg += result;
+                        totalMoney += floortotalMoney;
+                    }
     
         let discount10 = totalMoney * 0.9;
         let discount15 = totalMoney * 0.85;
@@ -142,7 +187,7 @@ const Home: React.FC = () => {
         <div style={{ padding: '20px', maxWidth: '400px', margin: 'auto' }}>
             <h1>AUBESTUDIO NEW PRICE</h1>
             <div style={{ marginBottom: '20px' }}>
-                <label htmlFor="photo-video-select">촬영구분</label>
+                <label htmlFor="photo-video-select">구분</label>
                 <select
                     id="photo-video-select"
                     value={phototype}
@@ -151,6 +196,7 @@ const Home: React.FC = () => {
                 >
                     <option value="1">사진</option>
                     <option value="2">영상</option>
+                    <option value="3">행사</option>
                 </select>
             </div>
             <div style={{ marginBottom: '20px' }}>
@@ -173,25 +219,41 @@ const Home: React.FC = () => {
                 </div>
             </div>
             <div style={{ marginBottom: '20px' }}>
-                <label htmlFor="location-select">이용시간</label>
-                <select
-                    id="location-select"
-                    value={useHour}
-                    onChange={handleSelectChange3}
-                    style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-                >
-                    <option value='4' data-description='4'>4시간(BASIC)</option>
-                    <option value='5' data-description='5'>5시간</option>
-                    <option value='6' data-description='6'>6시간</option>
-                    <option value='7' data-description='7'>7시간</option>
-                    <option value='8' data-description='8'>8시간</option>
-                    <option value='9' data-description='9'>9시간</option>
-                    <option value='10' data-description='10'>10시간</option>
-                    <option value='11' data-description='11'>11시간</option>
-                    <option value='12' data-description='12'>12시간</option>
+    <label htmlFor="location-select">
+        {phototype === '3' ? '이용기간' : '이용시간'}
+    </label>
+    {phototype === '3' ? (
+        <select
+        id="location-select"
+        value={useHour}
+        onChange={(e) => setuseHour(parseInt(e.target.value))}
+        style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+    >
+        <option value="168">1주일</option>
+        <option value="336">2주일</option>
+        <option value="504">3주일</option>
+        <option value="720">한달</option>
+    </select>
 
-                </select>
-            </div>
+    ) : (
+        <select
+            id="location-select"
+            value={useHour}
+            onChange={handleSelectChange3}
+            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+        >
+            <option value='4'>4시간(BASIC)</option>
+            <option value='5'>5시간</option>
+            <option value='6'>6시간</option>
+            <option value='7'>7시간</option>
+            <option value='8'>8시간</option>
+            <option value='9'>9시간</option>
+            <option value='10'>10시간</option>
+            <option value='11'>11시간</option>
+            <option value='12'>12시간</option>
+        </select>
+    )}
+</div>
             <div style={{ marginBottom: "20px" }}>
                 <label htmlFor="user-count-input">총인원수</label>
                 <input

@@ -142,7 +142,7 @@ const Home: React.FC = () => {
         <div style={{ padding: '20px', maxWidth: '400px', margin: 'auto' }}>
             <h1>AUBESTUDIO NEW PRICE</h1>
             <div style={{ marginBottom: '20px' }}>
-                <label htmlFor="photo-video-select">촬영구분</label>
+                <label htmlFor="photo-video-select">구분</label>
                 <select
                     id="photo-video-select"
                     value={phototype}
@@ -151,6 +151,7 @@ const Home: React.FC = () => {
                 >
                     <option value="1">사진</option>
                     <option value="2">영상</option>
+                    <option value="3">행사</option>
                 </select>
             </div>
             <div style={{ marginBottom: '20px' }}>
