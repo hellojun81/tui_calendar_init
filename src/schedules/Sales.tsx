@@ -20,6 +20,8 @@ const TotalSales: React.FC<CheckViewProps> = ({
     const currentMonthFormatted = String(currentMonth).padStart(2, '0');
     const [sales, setSales] = useState<number>(0);
     const [ADsales, setADSales] = useState<number>(0);
+    const [RentCnt, setRentCnt] = useState<number>(0);
+    const [ARPC, setARPC] = useState<number>(0); //객단가
 const formatMillionCut = (num: number) => {
   return Math.floor(num / 10_000);
 };
@@ -31,6 +33,8 @@ const formatMillionCut = (num: number) => {
                 console.log('resdata',res)
                 setSales(res.data.TOTALSALES); // res.data의 타입을 지정
                 setADSales(formatMillionCut(res.data.TOTALADCOST)); // res.data의 타입을 지정
+                setRentCnt(formatMillionCut(res.data.TOTALRENTCNT)); // res.data의 타입을 지정
+                setARPC(res.data.TOTALSALES/res.data.TOTALRENTCNT)
             } catch { }
         }
         GetSales()
@@ -40,7 +44,7 @@ const formatMillionCut = (num: number) => {
     return (
         <div>
             <div style={{padding:'10px',textAlign:'center'}}>
-                매출:{sales}만원 / 광고비{ADsales}만원
+                매출:{sales}만원 / 광고비{ADsales}만원 /객단가{Math.floor(ARPC)}만원
             </div>
         </div>
     );
