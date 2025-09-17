@@ -35,8 +35,9 @@ const Schedule = () => {
     const [gubun, setGubun] = useState("");
     const [customerName, setCustomerName] = useState("");
     const [rentPlace, setRentPlace] = useState<string>("1floor");
-    const [customerEtc, setCustomerEtc] = useState<string>("1floor");
-    const [contactPerson, setContactPerson] = useState<string>("1floor");
+    const [customerEtc, setCustomerEtc] = useState<string>("");
+    const [contactPerson, setContactPerson] = useState<string>("");
+    const [contactTel, setContactTel] = useState<string>("");
     const [etc, setEtc] = useState("");
     const [csKind, setCsKind] = useState<number>(0);
     const [ADmedia, setADmedia] = useState<number>(7);
@@ -73,7 +74,7 @@ const Schedule = () => {
         openModalUtil(mode, scheduleData, setModalMode, setCurrentSchedule, setNewStart, setNewEnd, 
             setStartTime, setEndTime, setNewTitle, setCustomerName, setRentPlace,
             setGubun, setUserInt, setEstprice, setId, setEtc, setIsModalOpen, setCsKind,
-            setADmedia, setCustomerEtc, setContactPerson);
+            setADmedia, setCustomerEtc, setContactPerson,setContactTel);
     }, []);
 
     const fetchScheduleById = useCallback(async (id: string) => {
@@ -236,6 +237,7 @@ const Schedule = () => {
                 etc={etc}
                 customerEtc={customerEtc}
                 contactPerson={contactPerson}
+                contactTel={contactTel}
                 rentPlace={rentPlace || ""}
                 setNewStart={setNewStart}
                 setNewEnd={setNewEnd}
@@ -252,6 +254,7 @@ const Schedule = () => {
                 setADmedia={setADmedia}
                 setCustomerEtc={setCustomerEtc}
                 setContactPerson={setContactPerson}
+                setContactTel={setContactTel}
                 onDeleteSchedule={id => onDeleteSchedule(Number(id))}
                 onSaveSchedule={onSaveSchedule}
                 // onDeleteSchedule={() => setSchedules(prev => prev.filter(s => s.id !== currentSchedule?.id))}

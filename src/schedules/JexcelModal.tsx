@@ -15,7 +15,7 @@ const apiUrl =
 interface JexcelModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (selectedCustomer: string, customerName2: string, etc: string) => void;
+  onSelect: (selectedCustomer: string, customerName2: string, etc: string, tel: string) => void;
   searchQuery: string;
 }
 
@@ -31,6 +31,7 @@ const JexcelModal: React.FC<JexcelModalProps> = ({ isOpen, onClose, onSelect, se
   const [customerName, setCustomerName] = useState("");
   const [customerName2, setCustomerName2] = useState("");
   const [customeretc, setCustomerEtc] = useState("");
+  const [customerTel, setCustomerTel] = useState("");
 
   // JSpreadsheet 초기화 또는 갱신
   const initializeSpreadsheet = () => {
@@ -98,7 +99,7 @@ const JexcelModal: React.FC<JexcelModalProps> = ({ isOpen, onClose, onSelect, se
 
   const handleApply = () => {
     console.log({ customerName: customerName, customerName2: customerName2 })
-    onSelect(customerName, customerName2, customeretc); // 선택된 고객명 부모 컴포넌트로 전달
+    onSelect(customerName, customerName2, customeretc,customerTel); // 선택된 고객명 부모 컴포넌트로 전달
     onClose(); // 모달 닫기
   };
 

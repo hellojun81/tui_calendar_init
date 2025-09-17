@@ -38,6 +38,7 @@ export interface ISchedule {
   ADmedia?: number;
   customerEtc?: string;
   contactPerson?: string;
+  contactTel?: string;
   // created_at: Date;
   startTime?: string;
   endTime?: string;
@@ -64,6 +65,7 @@ export interface ScheduleModalProps {
   endTime?: string;
   customerEtc?: string;
   contactPerson?: string;
+  contactTel?: string;
   setNewStart: (date: Date | undefined) => void;
   setNewEnd: (date: Date | undefined) => void;
   onSaveSchedule: () => void;
@@ -83,6 +85,7 @@ export interface ScheduleModalProps {
   setEndTime: (time: string) => void;
   setCustomerEtc: (text: string) => void;
   setContactPerson: (text: string) => void;
+  setContactTel: (text: string) => void;
 }
 
 export const openModalUtil = (
@@ -107,6 +110,7 @@ export const openModalUtil = (
   setADmedia: (ADmedia: number) => void,
   setCustomerEtc: (CustomerEtc: string) => void,
   setContactPerson: (ContactPerson: string) => void,
+  setContactTel: (ContactTel: string) => void,
 ) => {
   setModalMode(mode);
 
@@ -129,6 +133,7 @@ export const openModalUtil = (
     setADmedia(7)
     setCustomerEtc("")
     setContactPerson("")
+    setContactTel("")
   } else if (mode === "edit" && scheduleData) {
     // edit 모드일 경우 scheduleData 값을 사용
     console.log('scheduleData.ADmedia',scheduleData.ADmedia)
@@ -149,6 +154,7 @@ export const openModalUtil = (
     setADmedia(scheduleData.ADmedia || 7);
     setCustomerEtc(scheduleData.customerEtc || "")
     setContactPerson(scheduleData.contactPerson || "")
+    setContactTel(scheduleData.contactTel || "")
   }
   setIsModalOpen(true);
 };
