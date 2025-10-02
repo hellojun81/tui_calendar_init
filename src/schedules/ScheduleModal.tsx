@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -19,7 +19,7 @@ import {
   TableCell,
   CircularProgress,
 } from "@mui/material";
-
+import Cs from "../cs/cs";
 import RentPlaceSelector from "./RentPlaceSelector";
 import {
   ScheduleModalProps,
@@ -30,6 +30,11 @@ import GetCsKind from "./get_csKind";
 import GetADmedia from "./get_ADmedia";
 import DepositJspreadModal from "../common/DepositJspreadModal";
 import type { GetPlaceMoneyResult } from "../types/pricing";
+import {
+  formatMoney,
+  formatDate,
+} from "../../../tui_calendar_init/src/utils/util";
+import InvoiceIssueModal from "../components/InvoiceIssueModal";
 
 const API_URL =
   process.env.NODE_ENV === "production"
@@ -137,6 +142,11 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   // 문자 템플릿 상태
   type SmsTemplate = { id: number; title: string; body: string };
 
+  // CS 모달 상태
+  const [csOpen, setCsOpen] = useState(false);
+
+  const [vatOpen, setVatOpen] = useState(false);
+
   const [tpls, setTpls] = useState<SmsTemplate[]>([]);
   const [tplLoading, setTplLoading] = useState(false);
   const [tplErr, setTplErr] = useState<string | null>(null);
@@ -153,6 +163,20 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     { value: "2", label: "2층" },
     { value: "3", label: "3층" },
   ];
+
+  // ▼ 우리(공급자) 정보 — 고정 기본값(원하면 .env나 설정 파일에서 가져오세요)
+  const supplier = {
+    corpNum: "1498802941", // 하이픈 없는 10자리
+    corpName: "오브넌트 스튜디오",
+    ceoName: "대표자 성명",
+    addr: "서울시 ○○구 ○○로 00",
+    bizClass: "스튜디오대관",
+    bizType: "서비스",
+    contactName: "정산담당",
+    tel: "02-000-0000",
+    hp: "010-0000-0000",
+    email: "billing@aube.studio",
+  };
 
   /* ── 유틸 ──────────────────────────────────────────────────────────────── */
   const openSelector = () => setIsSelectorOpen(true);
@@ -302,7 +326,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       setDepositErr("");
       try {
         const resp = await fetch(
-          `/api/bank/deposits?customer=${encodeURIComponent(customerName)}`,
+          `/api/bank/deposits?keyword=${encodeURIComponent(customerName)}`,
           {
             credentials: "include",
           }
@@ -320,10 +344,12 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     loadDeposits();
   }, [depositOpen, customerName]);
 
-  /* ── 액션 핸들러 ───────────────────────────────────────────────────────── */
+  /* ── 견적 계산기───────────────────────────────────────────────────────── */
   const GetplaceMoney = (
     phototype: string,
-    floor: string
+    floor: string,
+    userCnt: number,
+    useHour: number
   ): GetPlaceMoneyResult => {
     let placeOriginfee = 0;
     let place = 0;
@@ -360,10 +386,12 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     }
 
     console.log({
+      placeOriginfee: placeOriginfee,
       getplaceMoney: floor,
       userCnt: userCnt,
       overuser: overUser,
       overfee: overfee,
+      useHour: useHour,
     });
     return { place: place, placeOriginfee: placeOriginfee, overfee: overfee };
   };
@@ -384,43 +412,94 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
     );
   };
-  // const handleCheckboxChange = (value: string) => {
-  //   setSelectedFloors((prev) =>
-  //     prev.includes(value)
-  //       ? prev.filter((item) => item !== value)
-  //       : [...prev, value]
-  //   );
-  // };
+
   const handleDownEstimate = async () => {
     const userTim = getHourDiff(startTime, endTime);
     const userInt2 = userInt?.split("인")[0];
-    console.log({ gubun, userInt2, userTim, selrentPlace, selectedFloors });
-    // GetplaceMoney()
+    console.log({ gubun, userInt2, userTim, selectedFloors });
+    let totalMoney = 0;
+    let totalMsg = "";
+    let floortotalMoney = 0;
+
+    for (let i = 0; i < selectedFloors.length; i++) {
+      const phototype = gubun ?? "";
+      let info = GetplaceMoney(
+        phototype,
+        selectedFloors[i],
+        Number(userInt2),
+        Number(userTim)
+      );
+      console.log({ 계산하기: phototype, info: info });
+
+      let floortotalMoney = 0;
+
+      switch (phototype) {
+        case "3":
+          // 행사일 경우 이미 총액이므로 곱하기 필요 없음
+          floortotalMoney = info.placeOriginfee * 10;
+          break;
+        case "2":
+          // 행사일 경우 이미 총액이므로 곱하기 필요 없음
+          floortotalMoney =
+            (info.placeOriginfee * userTim + info.overfee) * 1.1;
+          break;
+
+        default:
+          // 사진/영상 등은 시간당 요금 + 초과요금
+          floortotalMoney = info.placeOriginfee * userTim + info.overfee;
+          break;
+      }
+      totalMoney += floortotalMoney;
+    }
+    setEstprice(totalMoney);
   };
 
   const handleDownloadCs = async () => {};
   const handleDownloadVat = async () => {};
-  const handleDownloadEstimate = () =>
+  const handleDownloadEstimate = () => {
+    console.log(formatDate(newStart));
+    const userTime = getHourDiff(startTime, endTime);
+    const formattedFloors = selectedFloors.map((floor) => `${floor}층`);
+    const today = new Date();
     downloadEstimate({
       no: "2025-0012",
-      date: "2025-09-05",
-      customerName: "Aube Studio 고객",
+      date: `${today}`,
+      customerName: customerName,
       bankInfo: "기업은행 027-162297-04-021 (주)타울",
       items: [
         {
-          name: "스튜디오 렌탈(홀 A)",
-          spec: "09:00~18:00",
+          name: `스튜디오 렌탈_ ${gubun}`,
+          spec: `${formattedFloors}`,
           qty: 1,
-          unit: 800000,
+          unit: estPrice,
         },
-        { name: "장비 대여", spec: "Aputure 600D", qty: 1, unit: 200000 },
+        {
+          name: `촬영일`,
+          spec: `${formatDate(newStart)}~${formatDate(newEnd)}`,
+          qty: 1,
+          unit: 0,
+        },
+
+        {
+          name: `사용시간 `,
+          spec: `${startTime}~${endTime}`,
+          qty: `${userTime}시간`,
+          // unit: estPrice,
+        },
+        {
+          name: `스튜디오 사용인원 `,
+          spec: `${userInt}`,
+          qty: 0,
+          // unit: estPrice,
+        },
       ],
     });
+  };
 
   async function downloadEstimate(payload: any, tries = 2, timeoutMs = 15000) {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), timeoutMs); // ⏱ 타임아웃
-
+    console.log(payload);
     try {
       const r = await fetch(`${API_URL}/api/estimates/pdf`, {
         method: "POST",
@@ -568,21 +647,6 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
             </Select>
           </FormControl>
 
-          {/* <FormControl fullWidth>
-            <InputLabel>인원</InputLabel>
-            <Select
-              value={userInt}
-              onChange={(e) => setUserInt(e.target.value)}
-            >
-              <MenuItem value="10인이하">10인이하</MenuItem>
-              <MenuItem value="11~15인">11~15인</MenuItem>
-              <MenuItem value="16~20인">16~20인</MenuItem>
-              <MenuItem value="21~25인">21~25인</MenuItem>
-              <MenuItem value="26~30인">26~30인</MenuItem>
-              <MenuItem value="31인이상">31인이상</MenuItem>
-            </Select>
-          </FormControl> */}
-
           <TextField
             label="고객명"
             fullWidth
@@ -631,10 +695,11 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
             <Button onClick={handleDownloadEstimate} variant="outlined">
               견적서 다운로드
             </Button>
-            <Button onClick={handleDownloadCs} variant="outlined">
+            <Button onClick={() => setCsOpen(true)} variant="outlined">
               CS조회
             </Button>
-            <Button onClick={handleDownloadVat} variant="outlined">
+
+            <Button onClick={() => setVatOpen(true)} variant="outlined">
               세금계산서
             </Button>
           </Box>
@@ -697,26 +762,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
                 </label>
               ))}
             </div>
-            {/* <p style={{ fontSize: "15pt" }}>
-              선택된 층:{" "}
-              {selectedFloors.length > 0 ? selectedFloors.join(", ") : "없음"}
-            </p> */}
           </Box>
-
-          <TextField
-            label="대관장소"
-            fullWidth
-            value={(selrentPlace || []).join(", ")}
-            onClick={openSelector}
-            InputProps={{ readOnly: true }}
-          />
-          {isSelectorOpen && (
-            <RentPlaceSelector
-              selectedPlaces={selrentPlace || []}
-              onChange={handleSelectorChange}
-              onClose={closeSelector}
-            />
-          )}
 
           <Box sx={{ display: "flex", gap: 1 }}>
             <TextField
@@ -794,8 +840,39 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
         </DialogActions>
       </Dialog>
 
-      {/* 문자 발송 모달 */}
+      {/* cs내역조회 모달 */}
+      <Dialog
+        open={csOpen}
+        onClose={() => setCsOpen(false)}
+        maxWidth="xl"
+        fullWidth
+      >
+        <DialogTitle>CS 내역 조회</DialogTitle>
+        <DialogContent dividers>
+          {/* <Cs embedded defaultCustomerName={customerName} autoSearch /> */}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCsOpen(false)}>닫기</Button>
+        </DialogActions>
+      </Dialog>
 
+      {/* 세금계산서 모달 */}
+      <Dialog
+        open={vatOpen}
+        onClose={() => setVatOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>세금계산서 발행</DialogTitle>
+        <InvoiceIssueModal
+          open={vatOpen}
+          onClose={() => setVatOpen(false)}
+          apiUrl="/api/taxinvoice/issue" // 필요시 엔드포인트 변경
+          onIssued={(res) => console.log("발행 완료:", res)}
+        />
+      </Dialog>
+
+      {/* 문자 발송 모달 */}
       <Dialog
         open={smsOpen}
         onClose={() => setSmsOpen(false)}
