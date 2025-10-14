@@ -12,7 +12,8 @@
 .jexcel_container{
     display: block;
     /* overflow: hidden!important; */
-    overflow-x: hidden
+    /* overflow-x: hidden */
+    overflow: visible !important; 
 }
 
 .jexcel_content {
@@ -66,4 +67,78 @@ border-right: 1px solid #333;
     display: none;
 }
 
+.jdropdown-container .jdropdown-close {
+    display: none !important; /* 모바일 UI를 강제로 억제 */
+}
+.jdropdown-container {
+    /* 🚨 9999와 같은 매우 높은 값으로 설정하여 다른 모든 요소 위에 표시 */
+    z-index: 10000 !important; 
+    
+    /* 기존 스타일 유지 및 개선 */
+    min-width: 150px !important; 
+    border-radius: 6px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); 
+    border: 1px solid #ccc;
+    background-color: #fff;
+}
 
+/* 드롭다운 내용 영역 (스크롤 컨테이너) */
+.jdropdown-container .jdropdown-content {
+    padding: 4px 0; /* 내부 패딩 조정 */
+    max-height: 200px; /* 최대 높이 설정 (보기 좋은 크기) */
+    overflow-y: auto; /* 내용이 많으면 스크롤 */
+}
+
+/* ========================================= */
+/* 3. 개별 항목 (Item) 스타일 개선 */
+/* ========================================= */
+
+/* 개별 항목 */
+.jdropdown-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.15s ease; /* 호버 시 부드러운 전환 */
+    font-size: 14px;
+    color: #333;
+}
+
+/* 항목 호버 시 (마우스 오버) */
+.jdropdown-item:hover {
+    background-color: #a4dcff;
+}
+
+/* 선택된 항목 (Selected) */
+.jdropdown-item.jdropdown-selected,
+.jdropdown-item.jdropdown-cursor {
+    background-color: #007bff; /* 파란색 배경 (강조) */
+    /* color: #fff; 흰색 텍스트 */
+    font-weight: 500;
+}
+
+/* 선택된 항목의 호버 스타일 (더 진하게) */
+.jdropdown-item.jdropdown-selected:hover {
+    background-color: #0056b3!important;
+}
+
+/* 항목 내부의 설명 텍스트 */
+.jdropdown-item .jdropdown-description {
+    /* 텍스트 스타일 조정이 필요하면 여기에 추가 */
+    white-space: nowrap; /* 텍스트가 줄바꿈되지 않도록 */
+}
+.jdropdown-container .jdropdown-content .jdropdown-item {
+    background-color: #fff !important; 
+}
+.jdropdown-default .jdropdown-item:hover
+{
+    background-color:#1f93ff;
+    color:#000000!important;
+}
+.jdropdown-item {
+    white-space: nowrap;
+    text-align: left;
+    text-overflow: ellipsis;
+    overflow-x: hidden;
+    color: #6c6c6c !important;
+    display: flex;
+    align-items: center;
+}

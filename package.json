@@ -18,7 +18,7 @@
     "cors": "^2.8.5",
     "date-fns": "^2.28.0",
     "hangul-js": "^0.2.6",
-    "jspreadsheet-ce": "^4.2.1",
+    "jspreadsheet-ce": "^5.0.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.1",

@@ -1,119 +1,163 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Button, TextField } from '@mui/material';
-import GetCsKind from "../schedules/get_csKind";
-interface FieldsOption {
-    label: string;
-    name: string;
-    type: string;
+import React, { useState, useEffect } from "react";
+import {
+  Box,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Button, // 🚨 Button import 추가
+} from "@mui/material";
+// import GetCsKind from "../schedules/get_csKind"; // 🚨 GetCsKind는 직접 렌더링으로 대체
+
+// 은행 거래 유형 옵션
+const TRADE_TYPE_OPTIONS = [
+  { value: 0, label: "전체" },
+  { value: 1, label: "입금" },
+  { value: 2, label: "출금" },
+];
+
+// CS 유형 옵션 (GetCsKind를 대체하여 직접 정의하거나, 별도 상수 파일에서 가져와야 함)
+// 임시로 기본 옵션을 정의합니다.
+const CS_KIND_OPTIONS = [
+  { value: 0, label: "전체" },
+  { value: 1, label: "단순문의" },
+  { value: 2, label: "대관" },
+  { value: 3, label: "답사" },
+  { value: 4, label: "가부킹" },
+  { value: 5, label: "기타" },
+  // ... 필요한 CS 유형을 여기에 추가하세요.
+];
+
+interface SearchFieldsProps {
+  prarentComponent: "cs" | "bank" | "provider"; // 부모 컴포넌트 타입을 명시
+  formData: any;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleSearch: () => void;
+  // 두 가지 유형의 핸들러를 모두 받습니다.
+  onCsKindChange: (value: number | string) => void;
+  onTradeTypeChange?: (value: number | string) => void;
 }
 
-const SearchFields: React.FC<{ 
-    prarentComponent: string, 
-    formData: any, 
-    handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void, 
-    handleSearch: () => void, 
-    onCsKindChange: (value: number) => void // 부모 컴포넌트로 csKind 값을 넘기기 위한 prop 추가
-}> = ({ prarentComponent, formData, handleChange, handleSearch, onCsKindChange }) => {
+// 🚨 interface와 실제 컴포넌트 props 타입을 일치시켰습니다.
+const SearchFields: React.FC<SearchFieldsProps> = ({
+  prarentComponent,
+  formData,
+  handleChange,
+  handleSearch,
+  onCsKindChange,
+  onTradeTypeChange, // BankTransactions 컴포넌트에서 전달받음
+}) => {
+  // 1. 현재 컴포넌트 유형에 맞는 옵션, 값, 핸들러, 라벨을 결정합니다.
+  const isBank = prarentComponent === "bank";
+  const isCs = prarentComponent === "cs";
 
-    const [csKind, setCsKind] = useState<number>(0);
-    const [fields, setFields] = useState<FieldsOption[]>([
-        { label: '시작일', name: 'startDate', type: 'date' },
-        { label: '종료일', name: 'endDate', type: 'date' },
-        { label: '고객명', name: 'customerName', type: 'text' }
-    ]);
+  // 렌더링할 드롭다운의 옵션 목록
+  const options = isBank ? TRADE_TYPE_OPTIONS : CS_KIND_OPTIONS;
+  // 드롭다운 라벨
+  const selectLabel = isBank ? "거래 유형" : "CS 유형";
+  // formData에서 접근할 값의 키 ('tradeType' 또는 'csKind')
+  const selectValueKey = isBank ? "tradeType" : "csKind";
+  // Select 변경 시 호출할 핸들러
+  // bank 컴포넌트에서 onTradeTypeChange를 넘겨줬을 경우 그것을 사용하고,
+  // cs 컴포넌트에서는 onCsKindChange를 사용합니다.
+  const changeHandler = isBank ? onTradeTypeChange : onCsKindChange;
 
+  // 텍스트 검색 필드의 라벨 및 키
+  const searchFieldLabel = isBank ? "적요" : "고객명";
+  const searchFieldKey = isBank ? "description" : "customerName";
 
-        useEffect(() => {
-            if (prarentComponent === 'provider') {
-                setFields([{ label: '고객명', name: 'customerName', type: 'text' }]);
-            } else if (prarentComponent === 'cs') {
-                setFields([
-                    { label: '등록시작일', name: 'startDate', type: 'date' },
-                    { label: '등록종료일', name: 'endDate', type: 'date' },
-                    { label: '고객명', name: 'customerName', type: 'text' }
-                ]);
-            }
-        }, [prarentComponent]);
+  // *필수: CS컴포넌트에서 CS유형을 별도의 상태로 관리해야 하는 경우를 위해
+  // onCsKindChange는 그대로 유지하지만, 내부 로직은 formData 기반으로 변경되었습니다.
 
-        const handleCsKindChange = (value: number) => {
-            setCsKind(value);
-            onCsKindChange(value); // 부모에게 csKind 전달
-        };
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "12px",
+        marginBottom: "10px",
+        width: "100%",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+      className="search-fields-container"
+    >
+      {/* 1. 시작일과 종료일 필드 */}
+      {(isBank || isCs) && ( // Bank와 CS일 때만 표시
+        <Box sx={{ display: "flex", width: "100%", gap: "12px" }}>
+          <TextField
+            label={isCs ? "등록시작일" : "시작일"} // CS일 때 '등록시작일'로 라벨 변경
+            name="startDate"
+            type="date"
+            value={formData.startDate}
+            onChange={handleChange}
+            InputLabelProps={{ shrink: true }}
+            sx={{ flex: 1 }}
+          />
+          <TextField
+            label={isCs ? "등록종료일" : "종료일"} // CS일 때 '등록종료일'로 라벨 변경
+            name="endDate"
+            type="date"
+            value={formData.endDate}
+            onChange={handleChange}
+            InputLabelProps={{ shrink: true }}
+            sx={{ flex: 1 }}
+          />
+        </Box>
+      )}
 
-        
-
-        return (
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '12px',
-                    marginBottom: '10px',
-                    width: '100%',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    // margin: '0 0 10px 0',
-                    // paddingBottom:'100px',
-                    // backgroundColor:'red'
-                }}
-                className='search-fields-container'
+      {/* 2. 드롭다운, 검색어 필드, 검색 버튼 */}
+      <Box
+        sx={{
+          display: "flex",
+          width: "100%",
+          gap: "12px",
+          alignItems: "center",
+        }}
+      >
+        {/* CS 유형 또는 거래 유형 드롭다운 */}
+        {(isBank || isCs) && (
+          <FormControl sx={{ flexShrink: 0, minWidth: 100 }}>
+            <InputLabel>{selectLabel}</InputLabel>
+            <Select
+              // ⚠️ formData에서 동적 키로 값을 가져옴 (csKind 또는 tradeType)
+              value={formData[selectValueKey] || 0}
+              label={selectLabel}
+              onChange={(e) => changeHandler && changeHandler(e.target.value)}
             >
-                {/* 시작일과 종료일을 provider일 경우 숨김 */}
-                {prarentComponent !== 'provider' && (
-                    <Box sx={{ display: 'flex', width: '100%', gap: '12px' }}>
-                        <TextField
-                            label="등록시작일"
-                            name="startDate"
-                            type="date"
-                            value={formData.startDate}
-                            onChange={handleChange}
-                            InputLabelProps={{ shrink: true }}
-                            sx={{ flex: 1 }}  // 50% 너비 설정
-                        />
-                        <TextField
-                            label="등록종료일"
-                            name="endDate"
-                            type="date"
-                            value={formData.endDate}
-                            onChange={handleChange}
-                            InputLabelProps={{ shrink: true }}
-                            sx={{ flex: 1 }}  // 50% 너비 설정
-                        />
-                    </Box>
-                )}
+              {options.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
 
-                {/* 고객명과 검색 버튼을 다음 줄에 배치 */}
-                <Box sx={{ display: 'flex', width: '100%', gap: '12px', alignItems: 'center' }}>
-                    {/* GetCsKind의 너비를 20%로 설정 */}
-                    {prarentComponent !== 'provider' && (
-                        <Box sx={{  width:'100%',maxWidth: '30%', display: 'flex', alignItems: 'center' }}>
-                            <GetCsKind  onValueChange={handleCsKindChange} csKind={csKind} 
-                            />
-                        </Box>
-                    )}
-      
-                    <TextField
-                        label="고객명"
-                        name="customerName"
-                        type="text"
-                        value={formData.customerName}
-                        onChange={handleChange}
-                        InputLabelProps={{ shrink: true }}
-                        sx={{ flexGrow: 1 }}
-                    />
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handleSearch}
-                        sx={{ flexShrink: 0 }}
-                    >
-                        검색
-                    </Button>
-                </Box>
+        {/* 검색어 필드 (고객명 또는 계좌번호) */}
+        <TextField
+          label={searchFieldLabel}
+          // ⚠️ formData에서 동적 키로 값을 가져옴 (customerName 또는 accountNumber)
+          name={searchFieldKey}
+          type="text"
+          value={formData[searchFieldKey] || ""}
+          onChange={handleChange}
+          InputLabelProps={{ shrink: true }}
+          sx={{ flexGrow: 1 }}
+        />
 
-            </Box>
-        );
-    };
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSearch}
+          sx={{ flexShrink: 0 }}
+        >
+          검색
+        </Button>
+      </Box>
+    </Box>
+  );
+};
 
 export default SearchFields;
-

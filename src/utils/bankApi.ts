@@ -10,6 +10,10 @@ export type BankRow = {
   account_no: string | null;
   channel?: string | null;
   flow_type?: string | null;
+  customer_name?: string | null; // savePayTypes에서 사용
+  pay_type?: string | null;       // jspreadsheet의 '구분' 값 (DB 저장 값)
+  payment_type?: string | null;   // 백엔드 호환성을 위해 추가 (getPayType에서 참조)
+  tag?: string | null;            // 백엔드 호환성을 위해 추가 (getPayType에서 참조)
 };
 
 export interface FetchBankParams {
@@ -30,6 +34,7 @@ export async function fetchBankTransactions({
   path = "/api/bank",
 }: FetchBankParams): Promise<BankRow[]> {
   const params = new URLSearchParams();
+  console.log('keyword', keyword)
   if (start) params.set("start", start);
   if (end) params.set("end", end);
   if (keyword) params.set("keyword", keyword);

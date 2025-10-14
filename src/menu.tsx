@@ -37,12 +37,12 @@ const Menu: React.FC = () => {
         return "견적서 관리";
       case "/oldestimate":
         return "(구)견적서 관리";
-      case "/adMng":
-        return "광고 관리";
-      case "/autopr/autopr":
-        return "자동 게시글 관리";
-      case '/adMng':
-        return '광고관리';
+      case "/Bank":
+        return "은행 거래내역 관리";
+      // case "/autopr/autopr":
+      //   return "자동 게시글 관리";
+      // case '/adMng':
+      //   return '광고관리';
       // case '/schedules/test':
       //   return '테스트';
       default:
@@ -78,21 +78,26 @@ const Menu: React.FC = () => {
               견적서관리
             </Link>
           </AntdMenu.Item>
-          <AntdMenu.Item key="4">
+          <AntdMenu.Item key="5">
             <Link to="/oldestimate" onClick={onClose}>
               (구)견적서관리
             </Link>
           </AntdMenu.Item>
-          <AntdMenu.Item key="5">
+          <AntdMenu.Item key="6">
+            <Link to="/Bank" onClick={onClose}>
+              은행 거래내역 관리
+            </Link>
+          </AntdMenu.Item>
+          {/* <AntdMenu.Item key="5">
             <Link to="/autopr/autopr" onClick={onClose}>
               자동 게시글 관리
             </Link>
           </AntdMenu.Item>
-                    <AntdMenu.Item key="4">
+          <AntdMenu.Item key="4">
             <Link to="/adMng" onClick={onClose}>
               광고관리
             </Link>
-          </AntdMenu.Item>
+          </AntdMenu.Item> */}
           {isAuthenticated && <Button onClick={handleLogout}>Logout</Button>}
         </AntdMenu>
       </Drawer>

@@ -12,6 +12,10 @@ import {
   FormControl,
   InputLabel,
   Typography,
+  Paper,
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
   Table,
   TableHead,
   TableBody,
@@ -20,6 +24,8 @@ import {
   CircularProgress,
 } from "@mui/material";
 import Cs from "../cs/cs";
+import Bank from "../Bank";
+import axios from "axios";
 import RentPlaceSelector from "./RentPlaceSelector";
 import {
   ScheduleModalProps,
@@ -144,9 +150,8 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
 
   // CS 모달 상태
   const [csOpen, setCsOpen] = useState(false);
-
   const [vatOpen, setVatOpen] = useState(false);
-
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
   const [tpls, setTpls] = useState<SmsTemplate[]>([]);
   const [tplLoading, setTplLoading] = useState(false);
   const [tplErr, setTplErr] = useState<string | null>(null);
@@ -163,20 +168,6 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     { value: "2", label: "2층" },
     { value: "3", label: "3층" },
   ];
-
-  // ▼ 우리(공급자) 정보 — 고정 기본값(원하면 .env나 설정 파일에서 가져오세요)
-  const supplier = {
-    corpNum: "1498802941", // 하이픈 없는 10자리
-    corpName: "오브넌트 스튜디오",
-    ceoName: "대표자 성명",
-    addr: "서울시 ○○구 ○○로 00",
-    bizClass: "스튜디오대관",
-    bizType: "서비스",
-    contactName: "정산담당",
-    tel: "02-000-0000",
-    hp: "010-0000-0000",
-    email: "billing@aube.studio",
-  };
 
   /* ── 유틸 ──────────────────────────────────────────────────────────────── */
   const openSelector = () => setIsSelectorOpen(true);
@@ -214,7 +205,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     ) => {
       setCustomerName(selectedCustomer);
       setContactPerson(contact);
-      setContactTel(Tel);
+      setContactTel?.(Tel);
       setCustomerEtc(etcText);
     },
     [setContactPerson, setCustomerEtc, setCustomerName, setContactTel]
@@ -272,35 +263,6 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [closeModal]);
-
-  // 모달 열릴 때 대관장소 배열화 & 문자 기본 메시지 구성
-  // useEffect(() => {
-  //   if (!isOpen) return;
-  //   const arr = (rentPlace || "").split(",").filter(Boolean);
-  //   setSelRentPlace(arr);
-
-  //   setSmsTo(contactPerson || "");
-  //   setSmsMsg(
-  //     `[${customerName || ""}] 예약 문의\n` +
-  //       `일시: ${newStart ? formatToKoreanTimeString(newStart) : ""} ${
-  //         startTime || ""
-  //       } ~ ` +
-  //       `${newEnd ? formatToKoreanTimeString(newEnd) : ""} ${endTime || ""}\n` +
-  //       `장소: ${rentPlace || ""}\n` +
-  //       `견적: ${estPrice ? estPrice.toLocaleString() : ""}원`
-  //   );
-  // }, [
-  //   isOpen,
-  //   rentPlace,
-  //   contactPerson,
-  //   contactTel,
-  //   customerName,
-  //   newStart,
-  //   newEnd,
-  //   startTime,
-  //   endTime,
-  //   estPrice,
-  // ]);
 
   // 입금내역 로드 (모달 열릴 때만)
   useEffect(() => {
@@ -562,6 +524,14 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   };
 
   const openSmsModal = () => setSmsOpen(true);
+  const updateMoneyFinish = async () => {
+    alert(id);
+    const isFinish = "1";
+    const res = await axios.put(`${API_URL}/api/popbill/updateMoneyfinish`, {
+      id: id,
+      isFinish: isFinish,
+    });
+  };
 
   const handleSendSms = async () => {
     if (!smsTo) {
@@ -610,8 +580,10 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       <DialogContent>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <GetCsKind onValueChange={setCsKind} csKind={csKind} />
-          <GetADmedia onValueChange={setADmedia} ADmedia={ADmedia} />
-
+          <GetADmedia
+            onValueChange={setADmedia ?? (() => {})}
+            ADmedia={ADmedia}
+          />
           <FormControl fullWidth>
             <InputLabel>촬영구분</InputLabel>
             <Select value={gubun} onChange={(e) => setGubun(e.target.value)}>
@@ -646,31 +618,39 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
               <MenuItem value="100인이상">100인이상</MenuItem>
             </Select>
           </FormControl>
-
-          <TextField
-            label="고객명"
-            fullWidth
-            value={customerName}
-            required
-            onChange={(e) => setCustomerName(e.target.value)}
-            InputProps={{
-              readOnly: true,
-              endAdornment: (
-                <Box sx={{ display: "flex", gap: 1 }}>
-                  <Button
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openJexcelModal(customerName);
-                    }}
-                  >
-                    검색
-                  </Button>
-                </Box>
-              ),
-            }}
-          />
-
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <TextField
+              label="고객명"
+              fullWidth
+              value={customerName}
+              required
+              sx={{ flex: 8 }}
+              onChange={(e) => setCustomerName(e.target.value)}
+              InputProps={{
+                readOnly: true,
+                endAdornment: (
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <Button
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openJexcelModal(customerName);
+                      }}
+                    >
+                      검색
+                    </Button>
+                  </Box>
+                ),
+              }}
+            />
+            <Button
+              onClick={() => setCsOpen(true)}
+              variant="contained"
+              sx={{ flex: 2 }}
+            >
+              CS 내역조회
+            </Button>
+          </Box>
           <Box>
             <Box sx={{ display: "flex", gap: 2 }}>
               <Box sx={{ flex: 1 }}>{`담당자명: ${contactPerson || ""}`}</Box>
@@ -686,20 +666,23 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
               flexDirection: { xs: "column", sm: "row" }, // 모바일(xs)에서는 세로, sm 이상에서는 가로
             }}
           >
-            <Button variant="outlined" onClick={openSmsModal}>
+            <Button variant="outlined" onClick={openSmsModal} fullWidth>
               문자 발송
             </Button>
-            <Button size="small" variant="outlined" onClick={openDepositModal}>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={openDepositModal}
+              fullWidth
+            >
               입금내역 확인
             </Button>
-            <Button onClick={handleDownloadEstimate} variant="outlined">
-              견적서 다운로드
-            </Button>
-            <Button onClick={() => setCsOpen(true)} variant="outlined">
-              CS조회
-            </Button>
 
-            <Button onClick={() => setVatOpen(true)} variant="outlined">
+            <Button
+              onClick={() => setVatOpen(true)}
+              variant="outlined"
+              fullWidth
+            >
               세금계산서
             </Button>
           </Box>
@@ -736,48 +719,86 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
             />
           </Box>
 
-          <Box>
-            <label style={{ fontSize: "15pt" }}>렌탈장소</label>
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap", // 줄바꿈 가능
-                gap: "12px", // 체크박스 사이 간격
-                fontSize: "15pt", // 전체 텍스트 크기
+          <Box sx={{ position: "relative", mt: 1 }}>
+            {/* 라벨 (TextField의 떠있는 라벨처럼) */}
+            <Typography
+              variant="caption"
+              sx={{
+                position: "absolute",
+                top: -8, // 라벨을 테두리 위로 살짝
+                left: 10, // 좌측 간격
+                px: 0.5, // 라벨 배경 여백
+                bgcolor: "background.paper",
+                lineHeight: 1,
+                fontSize: 13,
+                color: "#696969ff",
               }}
             >
-              {floorOptions.map((floor) => (
-                <label
-                  key={floor.value}
-                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
-                >
-                  <input
-                    type="checkbox"
-                    value={floor.value}
-                    checked={selectedFloors.includes(floor.value)}
-                    onChange={() => handleCheckboxChange(floor.value)}
-                    style={{ width: "18px", height: "18px" }}
-                  />
-                  {floor.label}
-                </label>
-              ))}
-            </div>
-          </Box>
+              렌탈장소
+            </Typography>
 
+            {/* 아웃라인 박스 (TextField의 Outlined 스타일처럼) */}
+            <Paper
+              variant="outlined"
+              sx={{
+                borderRadius: 1.5,
+                p: 1.5,
+                pt: 2, // 라벨과 안겹치게 윗쪽 여백 살짝 추가
+                borderColor: "#c2c2c2ff",
+              }}
+            >
+              <FormGroup
+                row
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 1.75, // 버튼 사이 간격 (≈14px)
+                  "& .MuiFormControlLabel-root": { m: 0 }, // 기본 마진 제거
+                }}
+              >
+                {floorOptions.map((floor) => (
+                  <FormControlLabel
+                    key={floor.value}
+                    control={
+                      <Checkbox
+                        size="small"
+                        checked={selectedFloors.includes(floor.value)}
+                        onChange={() => handleCheckboxChange(floor.value)}
+                      />
+                    }
+                    label={
+                      <Typography
+                        sx={{ fontSize: 16 /* 비고와 비슷한 크기 */ }}
+                      >
+                        {floor.label}
+                      </Typography>
+                    }
+                  />
+                ))}
+              </FormGroup>
+            </Paper>
+          </Box>
           <Box sx={{ display: "flex", gap: 1 }}>
             <TextField
               label="견적가"
               fullWidth
               value={formatNumber(estPrice || 0)}
               onChange={handlePriceChange}
-              sx={{ flex: 7 }} // 70%
+              sx={{ flex: 5 }} // 70%
             />
             <Button
               onClick={handleDownEstimate}
-              variant="outlined"
-              sx={{ flex: 3 }} // 30%
+              variant="contained"
+              sx={{ flex: 2 }} // 30%
             >
               견적
+            </Button>
+            <Button
+              onClick={handleDownloadEstimate}
+              variant="outlined"
+              sx={{ flex: 3 }}
+            >
+              견적서 다운로드
             </Button>
           </Box>
           <TextField
@@ -821,35 +842,39 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
         open={depositOpen}
         onClose={() => setDepositOpen(false)}
         maxWidth="md"
-        fullWidth
       >
         <DialogTitle>
-          입금내역 {customerName ? `- ${customerName}` : ""}
+          입금내역 [{formatDate(newStart) ? `${formatDate(newStart)}` : ""}]
+          {customerName ? ` ${customerName} ` : ""}
         </DialogTitle>
         <DialogContent dividers>
-          <DepositJspreadModal
-            open={depositOpen}
-            onClose={() => setDepositOpen(false)}
-            customerName={customerName}
-            baseUrl="http://localhost:8001"
-            listPath="/api/bank" // GET 목록 엔드포인트
-          />
+          <Bank embedded defaultCustomerName={customerName} autoSearch />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDepositOpen(false)}>닫기</Button>
+          <Box
+            sx={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "space-between",
+            }}
+          >
+            <Button onClick={updateMoneyFinish} color="primary">
+              입금완료 처리
+            </Button>
+            <Button onClick={() => setDepositOpen(false)} color="inherit">
+              닫기
+            </Button>
+          </Box>
         </DialogActions>
       </Dialog>
 
       {/* cs내역조회 모달 */}
-      <Dialog
-        open={csOpen}
-        onClose={() => setCsOpen(false)}
-        maxWidth="xl"
-        fullWidth
-      >
+      <Dialog open={csOpen} onClose={() => setCsOpen(false)} maxWidth="xl">
         <DialogTitle>CS 내역 조회</DialogTitle>
         <DialogContent dividers>
-          {/* <Cs embedded defaultCustomerName={customerName} autoSearch /> */}
+          {/* <Cs />
+           */}
+          <Cs embedded defaultCustomerName={customerName} autoSearch />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setCsOpen(false)}>닫기</Button>
@@ -869,6 +894,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
           onClose={() => setVatOpen(false)}
           apiUrl="/api/taxinvoice/issue" // 필요시 엔드포인트 변경
           onIssued={(res) => console.log("발행 완료:", res)}
+          defaultInvoiceeCorpName={customerName}
         />
       </Dialog>
 
