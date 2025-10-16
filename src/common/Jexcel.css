@@ -104,16 +104,11 @@ border-right: 1px solid #333;
 
 /* 항목 호버 시 (마우스 오버) */
 .jdropdown-item:hover {
-    background-color: #a4dcff;
+    background-color: #1f93ff;
 }
 
 /* 선택된 항목 (Selected) */
-.jdropdown-item.jdropdown-selected,
-.jdropdown-item.jdropdown-cursor {
-    background-color: #007bff; /* 파란색 배경 (강조) */
-    /* color: #fff; 흰색 텍스트 */
-    font-weight: 500;
-}
+
 
 /* 선택된 항목의 호버 스타일 (더 진하게) */
 .jdropdown-item.jdropdown-selected:hover {
@@ -125,20 +120,20 @@ border-right: 1px solid #333;
     /* 텍스트 스타일 조정이 필요하면 여기에 추가 */
     white-space: nowrap; /* 텍스트가 줄바꿈되지 않도록 */
 }
-.jdropdown-container .jdropdown-content .jdropdown-item {
-    background-color: #fff !important; 
-}
+/* .jdropdown-container .jdropdown-content .jdropdown-item {
+    background-color: #ffffff !important; 
+} */
 .jdropdown-default .jdropdown-item:hover
 {
     background-color:#1f93ff;
-    color:#000000!important;
+    color:#ffff!important;
 }
 .jdropdown-item {
     white-space: nowrap;
     text-align: left;
     text-overflow: ellipsis;
     overflow-x: hidden;
-    color: #6c6c6c !important;
+    color: #3f3f3f !important;
     display: flex;
     align-items: center;
 }

@@ -3,14 +3,7 @@ import jspreadsheet from "jspreadsheet-ce";
 import "jspreadsheet-ce/dist/jspreadsheet.css";
 import dayjs from "dayjs";
 import ScheduleModal from "../schedules/ScheduleModal";
-import {
-  ISchedule,
-  saveSchedule,
-  closeModalUtil,
-  openModalUtil,
-  openJexcelModalUtil,
-  getCurrentDate,
-} from "../utils/scheduleUtils";
+import { ISchedule, saveSchedule, closeModalUtil, openModalUtil, openJexcelModalUtil, getCurrentDate } from "../utils/scheduleUtils";
 import { JSpreadsheetInstance } from "../provider/Customer";
 import axios from "axios";
 import { Box } from "@mui/material";
@@ -24,23 +17,14 @@ interface CsProps {
   autoSearch?: boolean;
 }
 
-const apiUrl =
-  process.env.NODE_ENV === "production"
-    ? process.env.REACT_APP_API_URL_PRODUCTION
-    : process.env.REACT_APP_API_URL_LOCAL;
+const apiUrl = process.env.NODE_ENV === "production" ? process.env.REACT_APP_API_URL_PRODUCTION : process.env.REACT_APP_API_URL_LOCAL;
 
-const Cs: React.FC<CsProps> = ({
-  embedded = false,
-  defaultCustomerName = "",
-  autoSearch = false,
-}) => {
+const Cs: React.FC<CsProps> = ({ embedded = false, defaultCustomerName = "", autoSearch = false }) => {
   const calendarRef = useRef<any>(null);
   const [schedules, setSchedules] = useState<ISchedule[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
-  const [currentSchedule, setCurrentSchedule] = useState<ISchedule | null>(
-    null
-  );
+  const [currentSchedule, setCurrentSchedule] = useState<ISchedule | null>(null);
   const [newStart, setNewStart] = useState<Date | undefined>(undefined);
   const [newEnd, setNewEnd] = useState<Date | undefined>(undefined);
   const [startTime, setStartTime] = useState<string>("00:00");
@@ -60,7 +44,7 @@ const Cs: React.FC<CsProps> = ({
   const [id, setId] = useState<number>(0); // ID값
   const [ADmedia, setADmedia] = useState<number>(7); // ID값
   const [contactTel, setContactTel] = useState<string>("");
-
+  const [moneyFinishNY, setmoneyFinishNY] = useState<number>(0);
   const [activeRow, SetactiveRow] = useState<number>(0);
   const [tableData, setTableData] = useState<string[][]>([]);
   const tableRef = useRef<HTMLDivElement>(null);
@@ -74,33 +58,33 @@ const Cs: React.FC<CsProps> = ({
     csKind: 0,
   });
 
-  const openModal = useCallback(
-    (mode: "create" | "edit", scheduleData: ISchedule | null = null) => {
-      openModalUtil(
-        mode,
-        scheduleData,
-        setModalMode,
-        setCurrentSchedule,
-        setNewStart,
-        setNewEnd,
-        setStartTime,
-        setEndTime,
-        setNewTitle,
-        setCustomerName,
-        setRentPlace,
-        setGubun,
-        setUserInt,
-        setEstprice,
-        setId,
-        setEtc,
-        setIsModalOpen,
-        setCsKind,
-        setCustomerEtc,
-        setContactPerson
-      );
-    },
-    []
-  );
+  const openModal = useCallback((mode: "create" | "edit", scheduleData: ISchedule | null = null) => {
+    openModalUtil(
+      mode,
+      scheduleData,
+      setModalMode,
+      setCurrentSchedule,
+      setNewStart,
+      setNewEnd,
+      setStartTime,
+      setEndTime,
+      setNewTitle,
+      setCustomerName,
+      setRentPlace,
+      setGubun,
+      setUserInt,
+      setEstprice,
+      setId,
+      setEtc,
+      setIsModalOpen,
+      setCsKind,
+      setADmedia,
+      setCustomerEtc,
+      setContactPerson,
+      setContactTel,
+      setmoneyFinishNY
+    );
+  }, []);
   useEffect(() => {
     if (defaultCustomerName) {
       setCustomerName(defaultCustomerName);
@@ -111,11 +95,7 @@ const Cs: React.FC<CsProps> = ({
   // 자동검색: 초기 세팅 끝난 뒤 단 1회
   const autoSearchedRef = useRef(false);
   useEffect(() => {
-    const ready =
-      !!formData.customerName &&
-      (defaultCustomerName
-        ? formData.customerName === defaultCustomerName
-        : true);
+    const ready = !!formData.customerName && (defaultCustomerName ? formData.customerName === defaultCustomerName : true);
 
     if (autoSearch && ready && !autoSearchedRef.current) {
       autoSearchedRef.current = true;
@@ -159,16 +139,10 @@ const Cs: React.FC<CsProps> = ({
             { type: "hidden", title: "담당자", width: 1 },
             { type: "hidden", title: "고객비고", width: 1 },
           ],
-        });
+        } as any);
       } else {
         jexcelInstance.current.setData(tableData);
-        jexcelInstance.current.options.onselection = (
-          instance: JSpreadsheetInstance,
-          x1: number,
-          y1: number,
-          x2: number,
-          y2: number
-        ) => {
+        jexcelInstance.current.options.onselection = (instance: JSpreadsheetInstance, x1: number, y1: number, x2: number, y2: number) => {
           if (tableData[y1]) {
             SetactiveRow(y1);
             setId(parseInt(tableData[y1][0])); /////ID값세팅
@@ -196,9 +170,7 @@ const Cs: React.FC<CsProps> = ({
           ...(formData.customerName && { customerName: formData.customerName }),
         });
         // 서버로부터 데이터를 가져오는 비동기 호출
-        const res = await axios.get(
-          `${apiUrl}/api/schedules/cs?${queryParams.toString()}`
-        );
+        const res = await axios.get(`${apiUrl}/api/schedules/cs?${queryParams.toString()}`);
         console.log(res.data);
         if (res.data.length == 0) {
           setTableData([[" "]]);
@@ -325,9 +297,7 @@ const Cs: React.FC<CsProps> = ({
 
   const handleDeleteCustomer = useCallback(
     async (id: Number, customerName: string) => {
-      const confirmDelete = window.confirm(
-        `${customerName} 민원을 정말 삭제하시겠습니까?`
-      );
+      const confirmDelete = window.confirm(`${customerName} 민원을 정말 삭제하시겠습니까?`);
       if (confirmDelete) {
         try {
           const res = await axios.delete(`${apiUrl}/api/schedules/${id}`);
@@ -377,9 +347,7 @@ const Cs: React.FC<CsProps> = ({
             formData={formData}
             handleChange={handleChange}
             handleSearch={handleSearch}
-            onCsKindChange={(v) =>
-              handleCsKindChange(typeof v === "string" ? parseInt(v, 10) : v)
-            }
+            onCsKindChange={(v) => handleCsKindChange(typeof v === "string" ? parseInt(v, 10) : v)}
           />
         </Box>
 
@@ -425,16 +393,10 @@ const Cs: React.FC<CsProps> = ({
           setContactPerson={setContactPerson}
           onDeleteSchedule={(id) => handleDeleteSchedule(id)} // onDeleteSchedule 추가
           onSaveSchedule={onSaveSchedule}
-          // onDeleteSchedule={() => setSchedules(prev => prev.filter(s => s.id !== currentSchedule?.id))}
           closeModal={closeModal}
-          // openJexcelModal={openJexcelModal}
+          setmoneyFinishNY={setmoneyFinishNY}
         />
-        <JexcelModal
-          isOpen={isJexcelModalOpen}
-          onClose={closeJexcelModal}
-          onSelect={onSelectCustomer}
-          searchQuery={searchQuery}
-        />
+        <JexcelModal isOpen={isJexcelModalOpen} onClose={closeJexcelModal} onSelect={onSelectCustomer} searchQuery={searchQuery} />
       </Box>
     </div>
   );

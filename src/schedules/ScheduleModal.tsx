@@ -16,52 +16,29 @@ import {
   FormGroup,
   FormControlLabel,
   Checkbox,
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
-  CircularProgress,
 } from "@mui/material";
 import Cs from "../cs/cs";
 import Bank from "../Bank";
 import axios from "axios";
-import RentPlaceSelector from "./RentPlaceSelector";
-import {
-  ScheduleModalProps,
-  openJexcelModalUtil,
-} from "../utils/scheduleUtils";
+import { ScheduleModalProps, openJexcelModalUtil } from "../utils/scheduleUtils";
 import JexcelModal from "./JexcelModal";
 import GetCsKind from "./get_csKind";
 import GetADmedia from "./get_ADmedia";
-import DepositJspreadModal from "../common/DepositJspreadModal";
 import type { GetPlaceMoneyResult } from "../types/pricing";
-import {
-  formatMoney,
-  formatDate,
-} from "../../../tui_calendar_init/src/utils/util";
+import { formatMoney, formatDate, extractPersonnelNumber, formatEstPriceToAmount } from "../../../tui_calendar_init/src/utils/util";
 import InvoiceIssueModal from "../components/InvoiceIssueModal";
+import KakaoSender from "../components/kakaoSender";
+// import { formatEstPriceToAmount, extractPersonnelNumber } from "../utils/scheduleModalUtils";
 
-const API_URL =
-  process.env.NODE_ENV === "production"
-    ? process.env.REACT_APP_API_URL_PRODUCTION
-    : process.env.REACT_APP_API_URL_LOCAL;
+const API_URL = process.env.NODE_ENV === "production" ? process.env.REACT_APP_API_URL_PRODUCTION : process.env.REACT_APP_API_URL_LOCAL;
 
-/* ──────────────────────────────────────────────────────────────────────────────
-  작은 셀렉트 컴포넌트
-────────────────────────────────────────────────────────────────────────────── */
 interface TimePickerProps {
   label: string;
   value: string;
   onChange: (value: string) => void;
   options: string[];
 }
-const TimePicker: React.FC<TimePickerProps> = ({
-  label,
-  value,
-  onChange,
-  options,
-}) => (
+const TimePicker: React.FC<TimePickerProps> = ({ label, value, onChange, options }) => (
   <FormControl fullWidth>
     <InputLabel>{label}</InputLabel>
     <Select value={value} onChange={(e) => onChange(e.target.value)}>
@@ -74,20 +51,6 @@ const TimePicker: React.FC<TimePickerProps> = ({
   </FormControl>
 );
 
-/* ──────────────────────────────────────────────────────────────────────────────
-  타입
-────────────────────────────────────────────────────────────────────────────── */
-interface DepositItem {
-  date: string;
-  amount: number;
-  memo?: string;
-  bank?: string;
-  balance?: number;
-}
-
-/* ──────────────────────────────────────────────────────────────────────────────
-  메인 모달
-────────────────────────────────────────────────────────────────────────────── */
 const ScheduleModal: React.FC<ScheduleModalProps> = ({
   isOpen,
   modalMode,
@@ -107,6 +70,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   customerEtc,
   contactPerson,
   contactTel,
+  moneyFinishNY,
   setNewStart,
   setNewEnd,
   onSaveSchedule,
@@ -125,43 +89,22 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   setCustomerEtc,
   setContactPerson,
   setContactTel,
+  setmoneyFinishNY,
 }) => {
-  /* ── 모든 훅은 최상단에서 항상 같은 순서로 호출 ─────────────────────────── */
   const [selrentPlace, setSelRentPlace] = useState<string[]>();
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
 
   const [isJexcelModalOpen, setIsJexcelModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-
-  // 입금내역 모달
   const [depositOpen, setDepositOpen] = useState(false);
-  const [depositLoading, setDepositLoading] = useState(false);
-  const [deposits, setDeposits] = useState<DepositItem[]>([]);
-  const [depositErr, setDepositErr] = useState<string>("");
-
-  // 문자발송 모달
   const [smsOpen, setSmsOpen] = useState(false);
-  const [smsTo, setSmsTo] = useState<string>("");
-  const [smsMsg, setSmsMsg] = useState<string>("");
-  const [smsSending, setSmsSending] = useState(false);
-
-  // 문자 템플릿 상태
-  type SmsTemplate = { id: number; title: string; body: string };
-
+  // const [smsTo, setSmsTo] = useState<string>("");
+  // const [smsMsg, setSmsMsg] = useState<string>("");
+  // const [smsSending, setSmsSending] = useState(false);
   // CS 모달 상태
   const [csOpen, setCsOpen] = useState(false);
   const [vatOpen, setVatOpen] = useState(false);
-  const [invoiceOpen, setInvoiceOpen] = useState(false);
-  const [tpls, setTpls] = useState<SmsTemplate[]>([]);
-  const [tplLoading, setTplLoading] = useState(false);
-  const [tplErr, setTplErr] = useState<string | null>(null);
-  const [selectedTplId, setSelectedTplId] = useState<number | "">("");
-  const [phototype, setphototype] = useState<string>("1");
-  const [floortype, setfloortype] = useState<string>("1");
-  const [resultMsg, setresultMsg] = useState<string>("");
-  const [useHour, setuseHour] = useState<number>(4);
-  const [tmoney, setTmoney] = useState<number>(0);
-  const [userCnt, setUserCnt] = useState<number>(5);
+
   const [selectedFloors, setSelectedFloors] = useState<string[]>([]);
   const floorOptions = [
     { value: "1", label: "1층" },
@@ -170,7 +113,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   ];
 
   /* ── 유틸 ──────────────────────────────────────────────────────────────── */
-  const openSelector = () => setIsSelectorOpen(true);
+  // const openSelector = () => setIsSelectorOpen(true);
   const closeSelector = () => setIsSelectorOpen(false);
 
   const formatToKoreanTimeString = (date: Date): string => {
@@ -197,12 +140,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   };
 
   const onSelectCustomer = useCallback(
-    (
-      selectedCustomer: string,
-      contact: string,
-      etcText: string,
-      Tel: string
-    ) => {
+    (selectedCustomer: string, contact: string, etcText: string, Tel: string) => {
       setCustomerName(selectedCustomer);
       setContactPerson(contact);
       setContactTel?.(Tel);
@@ -219,40 +157,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   const hourOptions = generateHourOptions();
 
   /* ── Effects (조건은 콜백 내부에서 가드) ───────────────────────────────── */
-  useEffect(() => {
-    console.log("rentPlace", rentPlace);
-    if (!smsOpen) return;
-    const loadTemplates = async () => {
-      setTplLoading(true);
-      setTplErr(null);
-      try {
-        const resp = await fetch(`${API_URL}/api/sms`, {
-          credentials: "include",
-        });
-        console.log(resp);
-        if (!resp.ok) throw new Error("템플릿 로딩 실패");
-        const data: SmsTemplate[] = await resp.json();
-        setTpls(Array.isArray(data) ? data : []);
 
-        if (data && data.length > 0) {
-          setSelectedTplId(data[0].id);
-          if (!smsMsg || smsMsg.trim() === "") {
-            setSmsMsg(data[0].body);
-          }
-        } else {
-          setSelectedTplId("");
-        }
-      } catch (e: any) {
-        setTplErr(e?.message || "템플릿 불러오기 실패");
-      } finally {
-        setTplLoading(false);
-      }
-    };
-
-    loadTemplates();
-  }, [smsOpen]);
-
-  // ESC로 닫기
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -265,11 +170,11 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   }, [closeModal]);
 
   // 입금내역 로드 (모달 열릴 때만)
-  useEffect(() => {
-    if (smsOpen && contactTel) {
-      setSmsTo(contactTel);
-    }
-  }, [smsOpen, contactTel]);
+  // useEffect(() => {
+  //   if (smsOpen && contactTel) {
+  //     setSmsTo(contactTel);
+  //   }
+  // }, [smsOpen, contactTel]);
   useEffect(() => {
     if (!rentPlace) return;
     const parsed = rentPlace
@@ -281,38 +186,9 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   useEffect(() => {
     setRentPlace(selectedFloors.join(",")); // "1층,2층"
   }, [selectedFloors, setRentPlace]);
-  useEffect(() => {
-    const loadDeposits = async () => {
-      if (!depositOpen || !customerName) return;
-      setDepositLoading(true);
-      setDepositErr("");
-      try {
-        const resp = await fetch(
-          `/api/bank/deposits?keyword=${encodeURIComponent(customerName)}`,
-          {
-            credentials: "include",
-          }
-        );
-        if (!resp.ok) throw new Error("서버 오류");
-        const data: DepositItem[] = await resp.json();
-        setDeposits(Array.isArray(data) ? data : []);
-      } catch (err: any) {
-        setDepositErr(err.message || "불러오기 실패");
-        setDeposits([]);
-      } finally {
-        setDepositLoading(false);
-      }
-    };
-    loadDeposits();
-  }, [depositOpen, customerName]);
 
   /* ── 견적 계산기───────────────────────────────────────────────────────── */
-  const GetplaceMoney = (
-    phototype: string,
-    floor: string,
-    userCnt: number,
-    useHour: number
-  ): GetPlaceMoneyResult => {
+  const GetplaceMoney = (phototype: string, floor: string, userCnt: number, useHour: number): GetPlaceMoneyResult => {
     let placeOriginfee = 0;
     let place = 0;
     let basicUser = 0;
@@ -365,14 +241,8 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     return (eh * 60 + em - (sh * 60 + sm)) / 60;
   }
 
-  const handleSelectorChange = (selected: string[]) => {
-    setSelRentPlace(selected);
-    setRentPlace(selected.join(","));
-  };
   const handleCheckboxChange = (value: string) => {
-    setSelectedFloors((prev) =>
-      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
-    );
+    setSelectedFloors((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
   };
 
   const handleDownEstimate = async () => {
@@ -385,12 +255,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
 
     for (let i = 0; i < selectedFloors.length; i++) {
       const phototype = gubun ?? "";
-      let info = GetplaceMoney(
-        phototype,
-        selectedFloors[i],
-        Number(userInt2),
-        Number(userTim)
-      );
+      let info = GetplaceMoney(phototype, selectedFloors[i], Number(userInt2), Number(userTim));
       console.log({ 계산하기: phototype, info: info });
 
       let floortotalMoney = 0;
@@ -402,8 +267,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
           break;
         case "2":
           // 행사일 경우 이미 총액이므로 곱하기 필요 없음
-          floortotalMoney =
-            (info.placeOriginfee * userTim + info.overfee) * 1.1;
+          floortotalMoney = (info.placeOriginfee * userTim + info.overfee) * 1.1;
           break;
 
         default:
@@ -416,8 +280,8 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     setEstprice(totalMoney);
   };
 
-  const handleDownloadCs = async () => {};
-  const handleDownloadVat = async () => {};
+  // const handleDownloadCs = async () => {};
+  // const handleDownloadVat = async () => {};
   const handleDownloadEstimate = () => {
     console.log(formatDate(newStart));
     const userTime = getHourDiff(startTime, endTime);
@@ -486,9 +350,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       }
 
       // 3) 다운로드
-      const url = URL.createObjectURL(
-        new Blob([buf], { type: "application/pdf" })
-      );
+      const url = URL.createObjectURL(new Blob([buf], { type: "application/pdf" }));
       const a = document.createElement("a");
       a.href = url;
       a.download = `estimate_${Date.now()}.pdf`;
@@ -498,10 +360,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       clearTimeout(t);
 
       // 네트워크/타임아웃/Abort 일 때 재시도
-      const transient =
-        err?.name === "AbortError" ||
-        err?.message?.includes("NetworkError") ||
-        err?.message?.includes("Failed to fetch");
+      const transient = err?.name === "AbortError" || err?.message?.includes("NetworkError") || err?.message?.includes("Failed to fetch");
 
       if (transient && tries > 0) {
         // 짧게 쉬고 재시도
@@ -524,66 +383,43 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   };
 
   const openSmsModal = () => setSmsOpen(true);
-  const updateMoneyFinish = async () => {
-    alert(id);
-    const isFinish = "1";
-    const res = await axios.put(`${API_URL}/api/popbill/updateMoneyfinish`, {
-      id: id,
-      isFinish: isFinish,
-    });
-  };
 
-  const handleSendSms = async () => {
-    if (!smsTo) {
-      alert("받는 번호를 입력해 주세요.");
-      return;
-    }
-    setSmsSending(true);
+  const updateMoneyFinish = async () => {
+    const currentStatus = Number(moneyFinishNY);
+    const isFinish = currentStatus === 1 ? 0 : 1;
+
+    // 🚨 1. 오류 처리를 위해 try...catch 블록 사용
     try {
-      const resp = await fetch(`/api/sms/send`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          to: smsTo,
-          message: smsMsg,
-          scheduleId: id,
-          customer: customerName,
-        }),
+      const res = await axios.put(`${API_URL}/api/popbill/bank/updateMoneyfinish`, {
+        id: id,
+        isFinish: isFinish,
       });
-      if (!resp.ok) throw new Error("전송 실패");
-      alert("문자를 전송했습니다.");
-      setSmsOpen(false);
-    } catch (e: any) {
-      alert(`전송 실패: ${e.message}`);
-    } finally {
-      setSmsSending(false);
+      console.log(res);
+      // 🚨 2. 서버 응답(res.data)에서 message 속성을 추출하여 alert
+      const successMessage = res.data.message || "입금 상태 처리가 완료되었습니다.";
+      alert(successMessage);
+
+      if (typeof setmoneyFinishNY === "function") {
+        setmoneyFinishNY(isFinish);
+      }
+    } catch (error) {
+      alert(`오류 발생`);
     }
   };
 
   /* ── 가드: 모든 훅 정의 이후에 배치 ────────────────────────────────────── */
   if (!isOpen) return null;
-
+  const formattedAmount = formatEstPriceToAmount(estPrice);
+  const formattedPersonnel = extractPersonnelNumber(userInt);
   /* ── 렌더 ─────────────────────────────────────────────────────────────── */
   return (
-    <Dialog
-      open={isOpen}
-      onClose={closeModal}
-      maxWidth="md"
-      fullWidth
-      sx={{ fontSize: "12px", maxWidth: "700px", margin: "0 auto" }}
-    >
-      <DialogTitle>
-        {modalMode === "edit" ? `수정 [ID:${id}]` : "추가"}
-      </DialogTitle>
+    <Dialog open={isOpen} onClose={closeModal} maxWidth="md" fullWidth sx={{ fontSize: "12px", maxWidth: "700px", margin: "0 auto" }}>
+      <DialogTitle>{modalMode === "edit" ? `수정 [ID:${id}]` : "추가"}</DialogTitle>
 
       <DialogContent>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <GetCsKind onValueChange={setCsKind} csKind={csKind} />
-          <GetADmedia
-            onValueChange={setADmedia ?? (() => {})}
-            ADmedia={ADmedia}
-          />
+          <GetADmedia onValueChange={setADmedia ?? (() => {})} ADmedia={ADmedia} />
           <FormControl fullWidth>
             <InputLabel>촬영구분</InputLabel>
             <Select value={gubun} onChange={(e) => setGubun(e.target.value)}>
@@ -597,10 +433,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
           </FormControl>
           <FormControl fullWidth>
             <InputLabel>인원</InputLabel>
-            <Select
-              value={userInt}
-              onChange={(e) => setUserInt(e.target.value)}
-            >
+            <Select value={userInt} onChange={(e) => setUserInt(e.target.value)}>
               {/* 10인이하 */}
               <MenuItem value="10인이하">10인이하</MenuItem>
 
@@ -643,11 +476,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
                 ),
               }}
             />
-            <Button
-              onClick={() => setCsOpen(true)}
-              variant="contained"
-              sx={{ flex: 2 }}
-            >
+            <Button onClick={() => setCsOpen(true)} variant="contained" sx={{ flex: 2 }}>
               CS 내역조회
             </Button>
           </Box>
@@ -669,20 +498,11 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
             <Button variant="outlined" onClick={openSmsModal} fullWidth>
               문자 발송
             </Button>
-            <Button
-              size="small"
-              variant="outlined"
-              onClick={openDepositModal}
-              fullWidth
-            >
-              입금내역 확인
+            <Button size="small" variant="outlined" onClick={openDepositModal} fullWidth>
+              {Number(moneyFinishNY) === 1 ? "입금내역 확인[완료건]" : "입금내역 확인"}
             </Button>
 
-            <Button
-              onClick={() => setVatOpen(true)}
-              variant="outlined"
-              fullWidth
-            >
+            <Button onClick={() => setVatOpen(true)} variant="outlined" fullWidth>
               세금계산서
             </Button>
           </Box>
@@ -695,12 +515,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
               onChange={(e) => setNewStart(new Date(e.target.value))}
               fullWidth
             />
-            <TimePicker
-              label="시작 시간"
-              value={startTime || "00:00"}
-              onChange={setStartTime}
-              options={generateHourOptions()}
-            />
+            <TimePicker label="시작 시간" value={startTime || "00:00"} onChange={setStartTime} options={generateHourOptions()} />
           </Box>
 
           <Box sx={{ display: "flex", gap: 2 }}>
@@ -711,12 +526,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
               onChange={(e) => setNewEnd(new Date(e.target.value))}
               fullWidth
             />
-            <TimePicker
-              label="종료 시간"
-              value={endTime || "00:00"}
-              onChange={setEndTime}
-              options={generateHourOptions()}
-            />
+            <TimePicker label="종료 시간" value={endTime || "00:00"} onChange={setEndTime} options={generateHourOptions()} />
           </Box>
 
           <Box sx={{ position: "relative", mt: 1 }}>
@@ -760,19 +570,9 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
                   <FormControlLabel
                     key={floor.value}
                     control={
-                      <Checkbox
-                        size="small"
-                        checked={selectedFloors.includes(floor.value)}
-                        onChange={() => handleCheckboxChange(floor.value)}
-                      />
+                      <Checkbox size="small" checked={selectedFloors.includes(floor.value)} onChange={() => handleCheckboxChange(floor.value)} />
                     }
-                    label={
-                      <Typography
-                        sx={{ fontSize: 16 /* 비고와 비슷한 크기 */ }}
-                      >
-                        {floor.label}
-                      </Typography>
-                    }
+                    label={<Typography sx={{ fontSize: 16 /* 비고와 비슷한 크기 */ }}>{floor.label}</Typography>}
                   />
                 ))}
               </FormGroup>
@@ -793,21 +593,11 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
             >
               견적
             </Button>
-            <Button
-              onClick={handleDownloadEstimate}
-              variant="outlined"
-              sx={{ flex: 3 }}
-            >
+            <Button onClick={handleDownloadEstimate} variant="outlined" sx={{ flex: 3 }}>
               견적서 다운로드
             </Button>
           </Box>
-          <TextField
-            label="비고"
-            fullWidth
-            value={etc}
-            onChange={(e) => setEtc(e.target.value)}
-            multiline
-          />
+          <TextField label="비고" fullWidth value={etc} onChange={(e) => setEtc(e.target.value)} multiline />
         </Box>
       </DialogContent>
 
@@ -816,10 +606,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
           저장
         </Button>
         {modalMode === "edit" && (
-          <Button
-            onClick={() => onDeleteSchedule(Number(id))}
-            variant="outlined"
-          >
+          <Button onClick={() => onDeleteSchedule(Number(id))} variant="outlined">
             삭제
           </Button>
         )}
@@ -830,22 +617,12 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       </DialogActions>
 
       {/* 고객 검색 모달 */}
-      <JexcelModal
-        isOpen={isJexcelModalOpen}
-        onClose={closeJexcelModal}
-        onSelect={onSelectCustomer}
-        searchQuery={searchQuery}
-      />
+      <JexcelModal isOpen={isJexcelModalOpen} onClose={closeJexcelModal} onSelect={onSelectCustomer} searchQuery={searchQuery} />
 
       {/* 입금내역 모달 */}
-      <Dialog
-        open={depositOpen}
-        onClose={() => setDepositOpen(false)}
-        maxWidth="md"
-      >
+      <Dialog open={depositOpen} onClose={() => setDepositOpen(false)} maxWidth="md">
         <DialogTitle>
-          입금내역 [{formatDate(newStart) ? `${formatDate(newStart)}` : ""}]
-          {customerName ? ` ${customerName} ` : ""}
+          입금내역 [{formatDate(newStart) ? `${formatDate(newStart)}` : ""}]{customerName ? ` ${customerName} ` : ""}
         </DialogTitle>
         <DialogContent dividers>
           <Bank embedded defaultCustomerName={customerName} autoSearch />
@@ -859,7 +636,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
             }}
           >
             <Button onClick={updateMoneyFinish} color="primary">
-              입금완료 처리
+              {Number(moneyFinishNY) === 1 ? "입금완료 취소" : "입금완료 처리"}
             </Button>
             <Button onClick={() => setDepositOpen(false)} color="inherit">
               닫기
@@ -869,7 +646,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       </Dialog>
 
       {/* cs내역조회 모달 */}
-      <Dialog open={csOpen} onClose={() => setCsOpen(false)} maxWidth="xl">
+      <Dialog open={csOpen} onClose={() => setCsOpen(false)} maxWidth="md">
         <DialogTitle>CS 내역 조회</DialogTitle>
         <DialogContent dividers>
           {/* <Cs />
@@ -882,98 +659,51 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       </Dialog>
 
       {/* 세금계산서 모달 */}
-      <Dialog
-        open={vatOpen}
-        onClose={() => setVatOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
+      <Dialog open={vatOpen} onClose={() => setVatOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>세금계산서 발행</DialogTitle>
-        <InvoiceIssueModal
-          open={vatOpen}
-          onClose={() => setVatOpen(false)}
-          apiUrl="/api/taxinvoice/issue" // 필요시 엔드포인트 변경
-          onIssued={(res) => console.log("발행 완료:", res)}
-          defaultInvoiceeCorpName={customerName}
-        />
+        <InvoiceIssueModal defaultInvoiceeCorpName={customerName} />
+        <DialogActions>
+          {/* 🚨 KakaoSender 내부 폼과 중복되므로 전송 버튼 제거를 권장합니다. */}
+          <Button onClick={() => setVatOpen(false)} color="primary" variant="contained">
+            닫기
+          </Button>
+        </DialogActions>
       </Dialog>
 
       {/* 문자 발송 모달 */}
       <Dialog
         open={smsOpen}
         onClose={() => setSmsOpen(false)}
-        maxWidth="sm"
-        fullWidth
+        maxWidth={false}
+        // 2. PaperProps를 사용하여 내부 Paper 컴포넌트의 최대 너비를 직접 설정
+        PaperProps={{
+          sx: {
+            // ⭐️ 핵심: md(900px)보다 작은 값으로 직접 설정합니다.
+            maxWidth: 650, // 예: 850px (md의 900px보다 약간 작게)
+            width: "100%", // 너비는 100%로 유지
+          },
+        }}
       >
-        <DialogTitle>문자 발송</DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {/* 템플릿 제목 선택 */}
-            <FormControl fullWidth size="small">
-              <InputLabel id="sms-tpl-label">템플릿 제목</InputLabel>
-              <Select
-                labelId="sms-tpl-label"
-                label="템플릿 제목"
-                value={selectedTplId}
-                onChange={(e) => {
-                  const id = e.target.value as number;
-                  setSelectedTplId(id);
-                  const found = tpls.find((t) => t.id === id);
-                  if (found) setSmsMsg(found.body);
-                }}
-                disabled={tplLoading || !!tplErr}
-                displayEmpty
-              >
-                {tplLoading && (
-                  <MenuItem value="" disabled>
-                    불러오는 중...
-                  </MenuItem>
-                )}
-                {tplErr && (
-                  <MenuItem value="" disabled>
-                    {tplErr}
-                  </MenuItem>
-                )}
-                {!tplLoading && !tplErr && tpls.length === 0 && (
-                  <MenuItem value="" disabled>
-                    (사용 가능한 템플릿 없음)
-                  </MenuItem>
-                )}
-                {tpls.map((t) => (
-                  <MenuItem key={t.id} value={t.id}>
-                    {t.title}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <TextField
-              label="받는 번호"
-              value={smsTo}
-              onChange={(e) => setSmsTo(e.target.value)}
-              placeholder="01012345678"
-              fullWidth
-            />
-
-            <TextField
-              label={`메시지${smsMsg ? ` (${smsMsg.length}자)` : ""}`}
-              value={smsMsg}
-              onChange={(e) => setSmsMsg(e.target.value)}
-              fullWidth
-              multiline
-              minRows={6}
-              placeholder="템플릿을 선택하면 자동으로 채워집니다."
-            />
-          </Box>
-        </DialogContent>
+        <DialogTitle>알림톡</DialogTitle>
+        <KakaoSender
+          sendApiUrl="/api/popbill/kakao/MessageSend"
+          // 🚨 스케줄 모달 데이터를 KakaoSender의 초기값으로 전달
+          defaultReceiver={contactTel || ""}
+          defaultCustomerName={customerName || ""}
+          defaultReservationStartDate={newStart ? formatToKoreanTimeString(newStart) : ""}
+          defaultReservationStartTime={startTime || ""}
+          defaultReservationEndDate={newEnd ? formatToKoreanTimeString(newEnd) : ""}
+          defaultReservationEndTime={endTime || ""}
+          defaultRentPlace={rentPlace || ""}
+          defaultUsagePersonnel={formattedPersonnel} // "10인이하"에서 숫자만 추출
+          defaultAmount={formattedAmount} // 금액 (숫자)
+          defaultEtc1={etc || ""} // 비고
+          // etc2, etc3 등 추가 정보는 ScheduleModal에 해당 데이터가 없어 전달하지 않습니다.
+        />
         <DialogActions>
-          <Button onClick={() => setSmsOpen(false)}>취소</Button>
-          <Button
-            onClick={handleSendSms}
-            disabled={smsSending || !smsTo || !smsMsg}
-            variant="contained"
-          >
-            {smsSending ? "전송중..." : "전송"}
+          {/* 🚨 KakaoSender 내부 폼과 중복되므로 전송 버튼 제거를 권장합니다. */}
+          <Button onClick={() => setSmsOpen(false)} color="primary" variant="contained">
+            닫기
           </Button>
         </DialogActions>
       </Dialog>

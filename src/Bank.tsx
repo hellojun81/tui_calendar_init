@@ -6,8 +6,8 @@ import axios from "axios";
 import { Box, Button } from "@mui/material";
 import CrudButtons from "./common/CrudButtons";
 import SearchFields from "./provider/SearchFields"; // 검색 컴포넌트 재사용
-import "./common/Jexcel.css";
 import "jsuites/dist/jsuites.css";
+import "./common/Jexcel.css";
 
 interface ITransaction {
   tid: string;
@@ -41,16 +41,9 @@ const getCurrentDate = () => {
   };
 };
 
-const apiUrl =
-  process.env.NODE_ENV === "production"
-    ? process.env.REACT_APP_API_URL_PRODUCTION
-    : process.env.REACT_APP_API_URL_LOCAL;
+const apiUrl = process.env.NODE_ENV === "production" ? process.env.REACT_APP_API_URL_PRODUCTION : process.env.REACT_APP_API_URL_LOCAL;
 
-const BankTransactions: React.FC<BankProps> = ({
-  embedded = false,
-  defaultCustomerName = "",
-  autoSearch = false,
-}) => {
+const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustomerName = "", autoSearch = false }) => {
   // -------------------------
   // 1. 상태 및 Refs 정의
   // -------------------------
@@ -92,11 +85,7 @@ const BankTransactions: React.FC<BankProps> = ({
   // 자동검색: 초기 세팅 끝난 뒤 단 1회
   const autoSearchedRef = useRef(false);
   useEffect(() => {
-    const ready =
-      !!formData.description &&
-      (defaultCustomerName
-        ? formData.description === defaultCustomerName
-        : true);
+    const ready = !!formData.description && (defaultCustomerName ? formData.description === defaultCustomerName : true);
 
     if (autoSearch && ready && !autoSearchedRef.current) {
       autoSearchedRef.current = true;
@@ -110,7 +99,7 @@ const BankTransactions: React.FC<BankProps> = ({
   useEffect(() => {
     if (tableRef.current) {
       if (!jexcelInstance.current) {
-        console.log("JSpreadsheet 초기화 시작");
+        // console.log("JSpreadsheet 초기화 시작");
         jexcelInstance.current = jspreadsheet(tableRef.current, {
           data: tableData.length ? tableData : [[]],
           // 컬럼 정의 (은행 거래 내역 형식에 맞게 변경)
@@ -135,18 +124,17 @@ const BankTransactions: React.FC<BankProps> = ({
             { type: "hidden", title: "TRSerial", width: 1 },
           ],
         });
+        const memoColumnIndex = 7;
+
+        // jspreadsheet API를 사용하여 너비를 설정합니다.
+        // width 값은 픽셀 또는 문자 단위로 실험해 보세요.
+        jexcelInstance.current.setWidth(memoColumnIndex, 200);
       } else {
         // 데이터는 tableData가 변경될 때마다 업데이트합니다.
         jexcelInstance.current.setData(tableData);
 
         // 🚨 선택 로직을 키(TID, TRSerial) 저장 로직으로 업데이트
-        jexcelInstance.current.options.onselection = (
-          instance: any,
-          x1: number,
-          y1: number,
-          x2: number,
-          y2: number
-        ) => {
+        jexcelInstance.current.options.onselection = (instance: any, x1: number, y1: number, x2: number, y2: number) => {
           if (tableData[y1]) {
             const selectedRow = tableData[y1];
 
@@ -168,57 +156,15 @@ const BankTransactions: React.FC<BankProps> = ({
       console.error("tableRef.current가 null입니다.");
     }
   }, [tableData]);
-
   const handleFetchTransactions = async () => {
     console.log("handleFetchTransactions");
-    const apiStartDate = dayjs(formData.startDate).format("YYYYMMDD");
-    const apiEndDate = dayjs(formData.endDate).format("YYYYMMDD");
-    const queryParams = new URLSearchParams({
-      startDate: apiStartDate,
-      endDate: apiEndDate,
-      tradeType: formData.tradeType.toString(),
-      ...(formData.description && {
-        description: formData.description,
-      }),
-    });
 
-    // API 엔드포인트 수정: 은행 거래 내역 조회
-    const res = await axios.get(
-      `${apiUrl}/api/popbill/get_DB_BankTransactions?${queryParams.toString()}`
-    );
-    const transactions: ITransaction[] = res.data.list || res.data; // 서버 응답 구조에 따라 조정
-
-    if (transactions.length === 0) {
-      setTableData([["조회된 거래 내역이 없습니다."]]);
-      return;
-    }
-
-    // JSpreadsheet 형식 (2차원 배열)으로 데이터 변환
-    setTableData(
-      transactions.map((t: ITransaction, index: number) => [
-        (index + 1).toString(), // 순번
-        dayjs(t.trdt, "YYYYMMDDHHmmss").format("MM-DD HH:mm:ss"), // 거래일시 포맷
-        formatCurrencyWithoutDecimals(t.accIn), // 입금액
-        formatCurrencyWithoutDecimals(t.accOut), // 출금액
-        formatCurrencyWithoutDecimals(t.balance), // 잔액
-        t.combined_remark, // 적요 (remark1 사용)
-        // t.accountID, // 계좌 ID
-        t.pay_type || "", // 분류 (커스텀)
-        t.memo || "", // 고객명 (커스텀)
-        t.tid, // TID (숨김)
-        t.trserial.toString(), // TRSerial (숨김)
-      ])
-    );
-  };
-  // -------------------------
-  // 3. 실시간 내역 조회 (handleCollectLatest)
-  // -------------------------
-  const handleCollectLatest = async () => {
+    // 🚨 2. 비동기 오류 처리를 위해 try...catch 블록 추가
     try {
-      // 🚨 JobID 요청 및 처리 로직은 백엔드에서 수행되어야 합니다.
-      // 여기서는 백엔드가 이미 수집된 데이터를 조회한다고 가정합니다.
       const apiStartDate = dayjs(formData.startDate).format("YYYYMMDD");
       const apiEndDate = dayjs(formData.endDate).format("YYYYMMDD");
+
+      // 1. URLSearchParams는 값 자체를 문자열로 변환하므로 현재 코드는 유지
       const queryParams = new URLSearchParams({
         startDate: apiStartDate,
         endDate: apiEndDate,
@@ -229,9 +175,82 @@ const BankTransactions: React.FC<BankProps> = ({
       });
 
       // API 엔드포인트 수정: 은행 거래 내역 조회
-      const res = await axios.get(
-        `${apiUrl}/api/popbill/latestTransactions?${queryParams.toString()}`
+      const res = await axios.get(`${apiUrl}/api/popbill/bank/get_DB_BankTransactions?${queryParams.toString()}`);
+      const transactions: ITransaction[] = res.data.list || res.data;
+
+      if (transactions.length === 0) {
+        setTableData([["조회된 거래 내역이 없습니다."]]);
+        return;
+      }
+
+      // JSpreadsheet 형식 (2차원 배열)으로 데이터 변환
+      setTableData(
+        transactions.map((t: ITransaction, index: number) => [
+          (index + 1).toString(), // 순번
+          dayjs(t.trdt, "YYYYMMDDHHmmss").format("MM-DD HH:mm:ss"), // 거래일시 포맷
+          formatCurrencyWithoutDecimals(t.accIn), // 입금액
+          formatCurrencyWithoutDecimals(t.accOut), // 출금액
+          formatCurrencyWithoutDecimals(t.balance), // 잔액
+          t.combined_remark, // 적요 (remark1 사용)
+          // t.accountID, // 계좌 ID
+          t.pay_type || "", // 분류 (커스텀)
+          t.memo || "", // 고객명 (커스텀)
+          t.tid, // TID (숨김)
+          t.trserial.toString(), // TRSerial (숨김)
+        ])
       );
+    } catch (error) {
+      // 🚨 오류 발생 시 사용자에게 피드백 제공 및 테이블 초기화
+      console.error("거래 내역 조회 중 오류 발생:", error);
+      setTableData([[`조회 오류: 알수없는 오류발생`]]);
+    }
+  };
+  // const handleFetchTransactions = async () => {
+  //   console.log("handleFetchTransactions");
+  //   const apiStartDate = dayjs(formData.startDate).format("YYYYMMDD");
+  //   const apiEndDate = dayjs(formData.endDate).format("YYYYMMDD");
+  //   const queryParams = new URLSearchParams({
+  //     startDate: apiStartDate,
+  //     endDate: apiEndDate,
+  //     tradeType: formData.tradeType.toString(),
+  //     ...(formData.description && {
+  //       description: formData.description,
+  //     }),
+  //   });
+
+  //   // API 엔드포인트 수정: 은행 거래 내역 조회
+  //   const res = await axios.get(`${apiUrl}/api/popbill/bank/get_DB_BankTransactions?${queryParams.toString()}`);
+  //   const transactions: ITransaction[] = res.data.list || res.data; // 서버 응답 구조에 따라 조정
+
+  //   if (transactions.length === 0) {
+  //     setTableData([["조회된 거래 내역이 없습니다."]]);
+  //     return;
+  //   }
+
+  //   // JSpreadsheet 형식 (2차원 배열)으로 데이터 변환
+  //   setTableData(
+  //     transactions.map((t: ITransaction, index: number) => [
+  //       (index + 1).toString(), // 순번
+  //       dayjs(t.trdt, "YYYYMMDDHHmmss").format("MM-DD HH:mm:ss"), // 거래일시 포맷
+  //       formatCurrencyWithoutDecimals(t.accIn), // 입금액
+  //       formatCurrencyWithoutDecimals(t.accOut), // 출금액
+  //       formatCurrencyWithoutDecimals(t.balance), // 잔액
+  //       t.combined_remark, // 적요 (remark1 사용)
+  //       // t.accountID, // 계좌 ID
+  //       t.pay_type || "", // 분류 (커스텀)
+  //       t.memo || "", // 고객명 (커스텀)
+  //       t.tid, // TID (숨김)
+  //       t.trserial.toString(), // TRSerial (숨김)
+  //     ])
+  //   );
+  // };
+  // -------------------------
+  // 3. 실시간 내역 조회 (handleCollectLatest)
+  // -------------------------
+  const handleCollectLatest = async () => {
+    try {
+      // API 엔드포인트 수정: 은행 거래 내역 조회
+      const res = await axios.get(`${apiUrl}/api/popbill/bank/latestTransactions`);
       const resultData = res.data;
       const infoMessage = resultData.info;
 
@@ -288,12 +307,9 @@ const BankTransactions: React.FC<BankProps> = ({
 
     try {
       // 3. 백엔드의 새로운 배치 업데이트 엔드포인트로 전송
-      const res = await axios.post(
-        `${apiUrl}/api/popbill/transactions/bulkUpdate`,
-        {
-          updates: bulkUpdateData,
-        }
-      );
+      const res = await axios.post(`${apiUrl}/api/popbill/bank/bulkUpdate`, {
+        updates: bulkUpdateData,
+      });
 
       alert(`업데이트 성공: ${res.data.updatedCount}건 처리됨`);
 
@@ -384,9 +400,7 @@ const BankTransactions: React.FC<BankProps> = ({
             handleChange={handleChange}
             handleSearch={handleSearch}
             // 기존 onCsKindChange를 onTradeTypeChange로 변경
-            onCsKindChange={(v) =>
-              handleTradeTypeChange(typeof v === "string" ? parseInt(v, 10) : v)
-            }
+            onCsKindChange={(v) => handleTradeTypeChange(typeof v === "string" ? parseInt(v, 10) : v)}
           />
         </Box>
 

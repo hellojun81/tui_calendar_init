@@ -34,7 +34,6 @@ interface SearchFieldsProps {
   formData: any;
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSearch: () => void;
-  // 두 가지 유형의 핸들러를 모두 받습니다.
   onCsKindChange: (value: number | string) => void;
   onTradeTypeChange?: (value: number | string) => void;
 }
@@ -147,12 +146,7 @@ const SearchFields: React.FC<SearchFieldsProps> = ({
           sx={{ flexGrow: 1 }}
         />
 
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleSearch}
-          sx={{ flexShrink: 0 }}
-        >
+        <Button variant="contained" color="primary" onClick={handleSearch} sx={{ flexShrink: 0 }}>
           검색
         </Button>
       </Box>

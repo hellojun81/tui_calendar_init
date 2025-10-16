@@ -1,34 +1,14 @@
 import React, { useCallback, useState, useEffect, useRef } from "react";
-import {
-  Box,
-  Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-} from "@mui/material";
+import { Box, Button, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import ScheduleModal from "./ScheduleModal";
 import "./Calendar.css";
 import axios from "axios";
 import dayjs from "dayjs";
 import CheckView from "./CheckVIew";
 import Sales from "./Sales";
-import {
-  ISchedule,
-  saveSchedule,
-  closeModalUtil,
-  openModalUtil,
-  openJexcelModalUtil,
-  getSchedulesUtil,
-} from "../utils/scheduleUtils";
+import { apiUrl, ISchedule, saveSchedule, closeModalUtil, openModalUtil, openJexcelModalUtil, getSchedulesUtil } from "../utils/scheduleUtils";
 import TUICalendar from "@toast-ui/react-calendar";
 import "tui-calendar/dist/tui-calendar.css";
-// import { Box, Button, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
-// const apiUrl = process.env.REACT_APP_API_URL;
-const apiUrl =
-  process.env.NODE_ENV === "production"
-    ? process.env.REACT_APP_API_URL_PRODUCTION
-    : process.env.REACT_APP_API_URL_LOCAL;
 
 const Schedule = () => {
   const calendarRef = useRef<any>(null);
@@ -37,9 +17,7 @@ const Schedule = () => {
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [currentYear, setCurrentYear] = useState<number>(dayjs().year());
   const [currentMonth, setCurrentMonth] = useState<number>(dayjs().month() + 1);
-  const [currentSchedule, setCurrentSchedule] = useState<ISchedule | null>(
-    null
-  );
+  const [currentSchedule, setCurrentSchedule] = useState<ISchedule | null>(null);
   const [newStart, setNewStart] = useState<Date | undefined>(undefined);
   const [newEnd, setNewEnd] = useState<Date | undefined>(undefined);
   const [startTime, setStartTime] = useState<string>("00:00");
@@ -58,19 +36,14 @@ const Schedule = () => {
   const [csKind, setCsKind] = useState<number>(0);
   const [ADmedia, setADmedia] = useState<number>(7);
   const [id, setId] = useState<number>(0); // ID값
+  const [moneyFinishNY, setmoneyFinishNY] = useState<number>(0); // ID값
   const formatMonth = (month: number): string => {
     return month.toString().padStart(2, "0");
   };
   const start = new Date();
 
   useEffect(() => {
-    getSchedulesUtil(
-      currentYear,
-      currentMonth,
-      sort,
-      setSchedules,
-      formatMonth
-    );
+    getSchedulesUtil(currentYear, currentMonth, sort, setSchedules, formatMonth);
   }, [currentYear, currentMonth, sort]);
 
   const closeModal = useCallback(() => {
@@ -102,57 +75,47 @@ const Schedule = () => {
       setSchedules,
       closeModal
     );
-    getSchedulesUtil(
-      currentYear,
-      currentMonth,
-      sort,
-      setSchedules,
-      formatMonth
-    );
+    getSchedulesUtil(currentYear, currentMonth, sort, setSchedules, formatMonth);
   };
 
-  const openModal = useCallback(
-    (mode: "create" | "edit", scheduleData: ISchedule | null = null) => {
-      console.log({
-        customerEtc: customerEtc,
-        setCsKind: csKind,
-        ADmedia: ADmedia,
-      });
-
-      openModalUtil(
-        mode,
-        scheduleData,
-        setModalMode,
-        setCurrentSchedule,
-        setNewStart,
-        setNewEnd,
-        setStartTime,
-        setEndTime,
-        setNewTitle,
-        setCustomerName,
-        setRentPlace,
-        setGubun,
-        setUserInt,
-        setEstprice,
-        setId,
-        setEtc,
-        setIsModalOpen,
-        setCsKind,
-        setADmedia,
-        setCustomerEtc,
-        setContactPerson,
-        setContactTel
-      );
-    },
-    []
-  );
+  const openModal = useCallback((mode: "create" | "edit", scheduleData: ISchedule | null = null) => {
+    openModalUtil(
+      mode,
+      scheduleData,
+      setModalMode,
+      setCurrentSchedule,
+      setNewStart,
+      setNewEnd,
+      setStartTime,
+      setEndTime,
+      setNewTitle,
+      setCustomerName,
+      setRentPlace,
+      setGubun,
+      setUserInt,
+      setEstprice,
+      setId,
+      setEtc,
+      setIsModalOpen,
+      setCsKind,
+      setADmedia,
+      setCustomerEtc,
+      setContactPerson,
+      setContactTel,
+      setmoneyFinishNY
+    );
+    console.log("🔥 openModal: moneyFinishNY to be set:", scheduleData?.moneyFinishNY);
+  }, []);
 
   const fetchScheduleById = useCallback(
     async (id: string) => {
       console.log("id", id);
       try {
+        console.log("apiUrl", apiUrl);
         const res = await axios.get(`${apiUrl}/api/schedules/${id}`);
         const scheduleData = res.data;
+        console.log("🔥 fetchScheduleById: moneyFinishNY from server:", scheduleData.moneyFinishNY);
+
         openModal("edit", scheduleData);
         console.log("fetchScheduleById", scheduleData);
       } catch (err) {
@@ -186,19 +149,11 @@ const Schedule = () => {
       const { schedule, changes } = e;
       // 스케줄 업데이트 처리
       // console.log('onBeforeUpdateSchedule',schedule)
-      calendarRef.current.calendarInst.updateSchedule(
-        schedule.id,
-        schedule.calendarId,
-        changes
-      );
+      calendarRef.current.calendarInst.updateSchedule(schedule.id, schedule.calendarId, changes);
 
       // 날짜와 변경된 값이 있을 때 처리
-      const startDate = new Date(changes.start)
-        ? new Date(dayjs(changes.start).format("YYYY-MM-DD"))
-        : undefined;
-      const endDate = new Date(changes.end)
-        ? new Date(dayjs(changes.end).format("YYYY-MM-DD"))
-        : undefined;
+      const startDate = new Date(changes.start) ? new Date(dayjs(changes.start).format("YYYY-MM-DD")) : undefined;
+      const endDate = new Date(changes.end) ? new Date(dayjs(changes.end).format("YYYY-MM-DD")) : undefined;
 
       // 새로운 스케줄 객체 생성
       const newSchedule: ISchedule = {
@@ -215,9 +170,7 @@ const Schedule = () => {
       }
 
       // 상태 업데이트
-      setNewStart(
-        changes.start ? new Date(changes.start) : new Date(schedule.start)
-      );
+      setNewStart(changes.start ? new Date(changes.start) : new Date(schedule.start));
       setNewEnd(changes.end ? new Date(changes.end) : new Date(schedule.end));
     },
     [calendarRef, currentSchedule]
@@ -237,13 +190,7 @@ const Schedule = () => {
   const onDeleteSchedule = async (id: Number) => {
     console.log("onDeleteSchedule", id);
     const res = await axios.delete(`${apiUrl}/api/schedules/${id}`);
-    getSchedulesUtil(
-      currentYear,
-      currentMonth,
-      sort,
-      setSchedules,
-      formatMonth
-    );
+    getSchedulesUtil(currentYear, currentMonth, sort, setSchedules, formatMonth);
     closeModal(); // 모달 닫기
   };
 
@@ -263,13 +210,7 @@ const Schedule = () => {
   };
   const reloadSchedule = async () => {
     // console.log({ 'reloadSchedule': "", currentYear: currentYear, currentMonth: currentMonth, setSchedules: setSchedules, formatMonth: formatMonth })
-    getSchedulesUtil(
-      currentYear,
-      currentMonth,
-      sort,
-      setSchedules,
-      formatMonth
-    );
+    getSchedulesUtil(currentYear, currentMonth, sort, setSchedules, formatMonth);
   };
   const calendarOptions = {
     defaultView: "month", // 기본 뷰 설정 (month)
@@ -302,11 +243,7 @@ const Schedule = () => {
         </Button>
       </Box>
       <Sales currentYear={currentYear} currentMonth={currentMonth} />
-      <CheckView
-        reloadSchedule={reloadSchedule}
-        currentYear={currentYear}
-        currentMonth={currentMonth}
-      />
+      <CheckView reloadSchedule={reloadSchedule} currentYear={currentYear} currentMonth={currentMonth} />
       <FormControl fullWidth>
         {/* <InputLabel>기준</InputLabel> */}
         <Select value={sort} onChange={(e) => setSort(e.target.value)}>
@@ -348,6 +285,7 @@ const Schedule = () => {
         contactPerson={contactPerson}
         contactTel={contactTel}
         rentPlace={rentPlace || ""}
+        moneyFinishNY={moneyFinishNY}
         setNewStart={setNewStart}
         setNewEnd={setNewEnd}
         setStartTime={setStartTime}
@@ -366,9 +304,8 @@ const Schedule = () => {
         setContactTel={setContactTel}
         onDeleteSchedule={(id) => onDeleteSchedule(Number(id))}
         onSaveSchedule={onSaveSchedule}
-        // onDeleteSchedule={() => setSchedules(prev => prev.filter(s => s.id !== currentSchedule?.id))}
         closeModal={closeModal}
-        // openJexcelModal={openJexcelModal}
+        setmoneyFinishNY={setmoneyFinishNY}
       />
     </div>
   );
