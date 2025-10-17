@@ -1,10 +1,5 @@
 import React, { useEffect } from "react";
-import {
-  HashRouter as Router,
-  Route,
-  Routes,
-  useLocation,
-} from "react-router-dom";
+import { HashRouter as Router, Route, Routes, useLocation } from "react-router-dom";
 import Menu from "./menu";
 import Provider from "./provider/provider";
 import Schedules from "./schedules/Schedule";
@@ -12,8 +7,8 @@ import Cs from "./cs/cs";
 import Estimate from "./estimate";
 import Bank from "./Bank";
 import OldEstimate from "./oldestimate";
-import Setup from "./setup/setup_field";
-import SetupBusinessInfo from "./setup/setup_bussiness_info";
+// import Setup from "./setup/setup_field";
+// import SetupBusinessInfo from "./setup/setup_bussiness_info";
 import LoginPage from "./login";
 import PrivateRoute from "./utils/PrivateRoute";
 import { AuthProvider } from "./utils/AuthContext";
@@ -26,13 +21,7 @@ const usePageTitle = (title: string) => {
 };
 
 // 각 경로에 맞게 페이지 타이틀 설정
-const PageWithTitle = ({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) => {
+const PageWithTitle = ({ title, children }: { title: string; children: React.ReactNode }) => {
   usePageTitle(title);
   return <>{children}</>;
 };

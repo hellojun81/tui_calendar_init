@@ -41,6 +41,7 @@ interface TemplateDetail {
 
 interface KakaoMessageSenderProps {
   sendApiUrl: string;
+  defaultID?: number;
   defaultReceiver?: string;
   defaultCustomerName?: string;
   defaultReservationStartDate?: string;
@@ -58,6 +59,7 @@ const TEMPLATE_API_URL = process.env.REACT_APP_API_URL_LOCAL + "/api/popbill/kak
 
 const KakaoMessageSender: React.FC<KakaoMessageSenderProps> = ({
   sendApiUrl,
+  defaultID,
   defaultReceiver,
   defaultCustomerName,
   defaultReservationStartDate,
@@ -159,6 +161,7 @@ const KakaoMessageSender: React.FC<KakaoMessageSenderProps> = ({
     try {
       // 🚨 템플릿 변수 치환에 사용할 데이터 객체 (서버에서 변수 치환에 사용)
       const templateData = {
+        ID: defaultID,
         고객명: customerName,
         전화번호: receiverNumber.replace(/-/g, ""),
         시작일: reservationStartDate,

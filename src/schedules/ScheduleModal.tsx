@@ -27,7 +27,7 @@ import GetADmedia from "./get_ADmedia";
 import type { GetPlaceMoneyResult } from "../types/pricing";
 import { formatMoney, formatDate, extractPersonnelNumber, formatEstPriceToAmount } from "../../../tui_calendar_init/src/utils/util";
 import InvoiceIssueModal from "../components/InvoiceIssueModal";
-import KakaoSender from "../components/kakaoSender";
+import KakaoSender from "../components/kakaoManager";
 // import { formatEstPriceToAmount, extractPersonnelNumber } from "../utils/scheduleModalUtils";
 
 const API_URL = process.env.NODE_ENV === "production" ? process.env.REACT_APP_API_URL_PRODUCTION : process.env.REACT_APP_API_URL_LOCAL;
@@ -322,10 +322,10 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     });
   };
 
-  async function downloadEstimate(payload: any, tries = 2, timeoutMs = 15000) {
+  async function downloadEstimate(payload: unknown, tries = 2, timeoutMs = 15000): Promise<void> {
     const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), timeoutMs); // ⏱ 타임아웃
-    console.log(payload);
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+
     try {
       const r = await fetch(`${API_URL}/api/estimates/pdf`, {
         method: "POST",
@@ -334,15 +334,13 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
         signal: ctrl.signal,
       });
 
-      clearTimeout(t);
-
-      // 1) HTTP 에러면 본문 읽고 사용자에게 보여주고 중단
+      // 1) HTTP 에러면 본문 읽고 에러 던지기
       if (!r.ok) {
         const msg = await r.text().catch(() => "");
         throw new Error(`서버 오류(${r.status}) ${msg}`);
       }
 
-      // 2) PDF 유효성 간이검사(파일 헤더가 %PDF?)
+      // 2) PDF 헤더 검증
       const buf = await r.arrayBuffer();
       const head = String.fromCharCode(...new Uint8Array(buf).slice(0, 4));
       if (head !== "%PDF") {
@@ -357,20 +355,18 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       a.click();
       URL.revokeObjectURL(url);
     } catch (err: any) {
-      clearTimeout(t);
+      const isTransient = err?.name === "AbortError" || err?.message?.includes("NetworkError") || err?.message?.includes("Failed to fetch");
 
-      // 네트워크/타임아웃/Abort 일 때 재시도
-      const transient = err?.name === "AbortError" || err?.message?.includes("NetworkError") || err?.message?.includes("Failed to fetch");
-
-      if (transient && tries > 0) {
-        // 짧게 쉬고 재시도
+      if (isTransient && tries > 0) {
         await new Promise((r) => setTimeout(r, 800));
+        // 재귀 호출 시에도 같은 반환 타입 유지
         return downloadEstimate(payload, tries - 1, timeoutMs);
       }
 
-      // 최종 에러 표기
       alert(`PDF 다운로드 실패: ${err?.message || err}`);
       throw err;
+    } finally {
+      clearTimeout(t);
     }
   }
 
@@ -496,7 +492,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
             }}
           >
             <Button variant="outlined" onClick={openSmsModal} fullWidth>
-              문자 발송
+              알림톡
             </Button>
             <Button size="small" variant="outlined" onClick={openDepositModal} fullWidth>
               {Number(moneyFinishNY) === 1 ? "입금내역 확인[완료건]" : "입금내역 확인"}
@@ -680,7 +676,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
           sx: {
             // ⭐️ 핵심: md(900px)보다 작은 값으로 직접 설정합니다.
             maxWidth: 650, // 예: 850px (md의 900px보다 약간 작게)
-            width: "100%", // 너비는 100%로 유지
+            width: "100%", // 너비는 100%로 유지입
           },
         }}
       >
@@ -688,6 +684,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
         <KakaoSender
           sendApiUrl="/api/popbill/kakao/MessageSend"
           // 🚨 스케줄 모달 데이터를 KakaoSender의 초기값으로 전달
+          defaultID={id || 0}
           defaultReceiver={contactTel || ""}
           defaultCustomerName={customerName || ""}
           defaultReservationStartDate={newStart ? formatToKoreanTimeString(newStart) : ""}

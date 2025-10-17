@@ -1,39 +1,48 @@
-import React, { useRef, useEffect } from 'react';
-import jspreadsheet from 'jspreadsheet-ce';
-import 'jspreadsheet-ce/dist/jspreadsheet.css';
+import React, { useRef, useEffect } from "react";
+import jspreadsheet from "jspreadsheet-ce";
+import "jspreadsheet-ce/dist/jspreadsheet.css";
 
 interface JexcelComponentProps {
-    data: string[][];
-    columns: any[];
-    onEdit: (rowIndex: number) => void;
+  data: string[][];
+  columns: any[];
+  onEdit: (rowIndex: number) => void;
 }
 
+// 간단 타입 (필요 시 확장)
+type JSSInstance = {
+  setData: (d: any[][]) => void;
+  getData: () => any[][];
+  destroy: () => void;
+  options?: any;
+};
+
 const JexcelComponent: React.FC<JexcelComponentProps> = ({ data, columns, onEdit }) => {
-    const tableRef = useRef<HTMLDivElement>(null);
+  const tableRef = useRef<HTMLDivElement | null>(null);
+  const instanceRef = useRef<JSSInstance | null>(null);
 
-    useEffect(() => {
-        if (tableRef.current) {
-            if (tableRef.current.jspreadsheet) {
-                tableRef.current.jspreadsheet.destroy();
-            }
+  useEffect(() => {
+    // 기존 인스턴스 제거
+    instanceRef.current?.destroy();
 
-            tableRef.current.jspreadsheet = jspreadsheet(tableRef.current, {
-                data: data.length ? data : [[]],
-                columns: columns,
-                oneditionstart: (instance, cell, x, y) => {
-                    onEdit(y);  // Trigger onEdit when a cell is edited
-                },
-            });
-        }
+    if (tableRef.current) {
+      const instance = jspreadsheet(tableRef.current, {
+        data: data.length ? data : [[]],
+        columns,
+        oneditionstart: (instance: any, cell: HTMLTableCellElement, x: number, y: number) => {
+          onEdit(y);
+        },
+      } as any);
 
-        return () => {
-            if (tableRef.current && tableRef.current.jspreadsheet) {
-                tableRef.current.jspreadsheet.destroy();
-            }
-        };
-    }, [data, columns, onEdit]);
+      instanceRef.current = instance as unknown as JSSInstance;
+    }
 
-    return <div ref={tableRef} className='jexcel' />;
+    return () => {
+      instanceRef.current?.destroy();
+      instanceRef.current = null;
+    };
+  }, [data, columns, onEdit]);
+
+  return <div ref={tableRef} className="jexcel" />;
 };
 
 export default JexcelComponent;
