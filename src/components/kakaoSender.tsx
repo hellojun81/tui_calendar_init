@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import dayjs, { Dayjs } from "dayjs";
 import { formatRentPlaceForKakao, apiUrl } from "../../../tui_calendar_init/src/utils/util";
@@ -23,8 +23,8 @@ import {
 // 🚨 MUI X TimePicker 및 Provider import 추가
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs"; // Day.js 어댑터
-
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { EditableMessage } from "./EditableMessage";
 // ... (나머지 코드 유지) ...
 interface TemplateDetail {
   templateCode: string;
@@ -83,7 +83,7 @@ const KakaoMessageSender: React.FC<KakaoMessageSenderProps> = ({
   // 🚨 대관 장소 변환 로직
   const initialRentPlace = formatRentPlaceForKakao(defaultRentPlace);
 
-  const [receiverNumber, setReceiverNumber] = useState(defaultReceiver || "01094550996");
+  const [receiverNumber, setReceiverNumber] = useState(defaultReceiver || "");
   const [messageContent, setMessageContent] = useState(""); // 로드 후 템플릿 내용으로 설정
 
   const [customerName, setCustomerName] = useState(defaultCustomerName || "홍길동");
@@ -117,11 +117,11 @@ const KakaoMessageSender: React.FC<KakaoMessageSenderProps> = ({
         if (Array.isArray(data) && data.length > 0) {
           setTpls(data);
 
-          // 첫 번째 템플릿으로 초기값 설정
           const firstTpl = data[0];
           setSelectedTitle(firstTpl.templateName);
           setTemplateCode(firstTpl.templateCode);
           setMessageContent(firstTpl.template);
+          setMessageContent(replaceTemplate(firstTpl.template));
         } else {
           setTpls([]);
           setError("로드된 카카오 템플릿이 없습니다.");
@@ -136,6 +136,39 @@ const KakaoMessageSender: React.FC<KakaoMessageSenderProps> = ({
 
     loadTemplates();
   }, [TEMPLATE_API_URL]);
+  const replaceTemplate = (content: string): string => {
+    // 날짜 치환 문자열
+    const replaceDate = `${defaultReservationStartDate}[${defaultReservationStartTime}]~${defaultReservationEndDate}[${defaultReservationEndTime}]`;
+
+    // 대관정보 (값이 비어 있지 않을 때만 구성)
+    let replaceUserInfo = "";
+    if (defaultRentPlace && defaultUsagePersonnel) {
+      replaceUserInfo = `대관장소[${defaultRentPlace}]층 인원[${defaultUsagePersonnel}명]`;
+    } else if (defaultRentPlace) {
+      replaceUserInfo = `대관장소[${defaultRentPlace}]층`;
+    } else if (defaultUsagePersonnel) {
+      replaceUserInfo = `인원[${defaultUsagePersonnel}명]`;
+    }
+
+    let result = content;
+
+    // 날짜 치환
+    if (defaultReservationStartDate && defaultReservationEndDate) {
+      result = result.replaceAll("#{날짜}", replaceDate);
+    }
+
+    // 사용정보 치환
+    if (replaceUserInfo) {
+      result = result.replaceAll("#{사용정보}", replaceUserInfo);
+    }
+
+    return result;
+  };
+
+  const highlightVariables = (text: string): string => {
+    // {변수명} 패턴을 찾아 색상 입힘
+    return text.replace(/\{([^}]+)\}/g, `<span style="color:#1976d2;font-weight:600;">{$1}</span>`);
+  };
 
   // 템플릿 제목 변경 핸들러
   const handleTemplateChange = (event: SelectChangeEvent<string>) => {
@@ -147,7 +180,7 @@ const KakaoMessageSender: React.FC<KakaoMessageSenderProps> = ({
     if (selectedOption) {
       setTemplateCode(selectedOption.templateCode);
       // 🚨 선택된 템플릿의 내용을 메시지 내용으로 설정
-      setMessageContent(selectedOption.template);
+      setMessageContent(replaceTemplate(selectedOption.template));
     }
   };
 
@@ -156,7 +189,17 @@ const KakaoMessageSender: React.FC<KakaoMessageSenderProps> = ({
     event.preventDefault();
     setIsSending(true);
     setResponseMessage("");
+    if (messageContent.includes("{")) {
+      // 방법 1) 상단 알림 띄우기 (현재 Alert를 활용)
+      setResponseMessage("메세지 본문에 변수를 확인해주세요");
+      setIsSending(false);
+      return;
 
+      // 방법 2) 즉시 경고창 (원하면 위 대신 이 줄 사용)
+      // window.alert("메세지창으로 본문에 변수를 확인해주세요");
+      // setIsSending(false);
+      // return;
+    }
     // --- 2. 백엔드로 전송할 페이로드 구성 ---
     try {
       // 🚨 템플릿 변수 치환에 사용할 데이터 객체 (서버에서 변수 치환에 사용)
@@ -319,16 +362,11 @@ const KakaoMessageSender: React.FC<KakaoMessageSenderProps> = ({
                   <InputGroup label="사용인원" id="usagePersonnel" value={usagePersonnel} onChange={setUsagePersonnel} type="number" required />
                 </Grid>
                 <Grid item xs={12} md={3}>
-                  <InputGroup label="대관장소" id="rentPlace" value={rentPlace} onChange={setrentPlace} type="text" />
+                  <InputGroup label="대관장소" id="rentPlace" value={rentPlace} onChange={setrentPlace} type="text" required />
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <InputGroup label="비고" id="etc1" value={etc1} onChange={setEtc1} type="text" />
                 </Grid>
-
-                {/* 4행: 기타3 */}
-                {/* <Grid item xs={12} md={4}>
-                <InputGroup label="기타3" id="etc3" value={etc3} onChange={setEtc3} type="text" />
-              </Grid> */}
               </Grid>
             </Paper>
 
@@ -339,20 +377,11 @@ const KakaoMessageSender: React.FC<KakaoMessageSenderProps> = ({
               <Typography variant="subtitle1" fontWeight={700}>
                 메시지 내용 ({messageContent.length}자)
               </Typography>
-              <TextField
-                id="messageContent"
+
+              <EditableMessage
                 value={messageContent}
-                onChange={(e) => setMessageContent(e.target.value)}
-                multiline
-                minRows={10}
-                required
-                sx={{
-                  "& .MuiInputBase-input": {
-                    fontSize: "0.9rem", // 👈 원하는 폰트 크기로 변경 (예: 1rem, 16px, 0.9rem 등)
-                    lineHeight: 1.5, // 가독성을 위해 줄 간격도 함께 조정 권장
-                  },
-                }}
-                fullWidth
+                onChange={setMessageContent}
+                placeholder="메시지 내용을 입력하세요. {고객명} 같은 변수를 쓰면 파란색으로 표시됩니다."
               />
             </Stack>
 

@@ -58,13 +58,10 @@ const KakaoHistory: React.FC<KakaoHistoryProps> = ({
 }) => {
   const [rows, setRows] = useState<HistoryItem[]>([]);
   const [total, setTotal] = useState(0);
-
   const [page, setPage] = useState(0); // 0-based
   const [rowsPerPage, setRowsPerPage] = useState(defaultPageSize);
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const normalizeStatus = (raw?: string): "성공" | "실패" | "전송중" => {
     if (!raw) return "전송중";
     const map: Record<string, "성공" | "실패" | "전송중"> = {

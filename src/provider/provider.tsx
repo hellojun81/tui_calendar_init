@@ -2,16 +2,29 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Box } from "@mui/material";
 import jspreadsheet from "jspreadsheet-ce";
 import "jspreadsheet-ce/dist/jspreadsheet.css";
+import "jsuites/dist/jsuites.css";
 import CrudButtons from "../common/CrudButtons";
 import CustomerDialog from "./CustomerDialog";
 import SearchFields from "./SearchFields";
 import dayjs from "dayjs";
 import { Customer, JSpreadsheetInstance } from "./Customer";
 import "../common/Jexcel.css";
-import axios, { Axios } from "axios";
+import axios from "axios";
 import { getCurrentDate } from "../utils/scheduleUtils";
 
 const apiUrl = process.env.NODE_ENV === "production" ? process.env.REACT_APP_API_URL_PRODUCTION : process.env.REACT_APP_API_URL_LOCAL;
+
+// JSpreadsheet 인스턴스에서 데이터를 가져오는 유틸리티 함수
+// 이 함수는 'getData' 함수를 관리자 인스턴스가 아닌 첫 번째 워크시트에서 호출하도록 보장합니다.
+// const getJExcelData = (instance: any): string[][] => {
+//   console.log(instance.worksheets[0].getData());
+//   if (instance && instance.worksheets && instance.worksheets.length > 0) {
+//     return instance.worksheets[0].getData();
+//   }
+//   // 데이터가 없거나 인스턴스가 초기화되지 않은 경우 빈 배열 반환
+//   return [];
+// };
+
 const Provider: React.FC = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | undefined>(undefined);
@@ -41,12 +54,14 @@ const Provider: React.FC = () => {
     phone: row[4],
     email: row[5],
     leadSource: row[6],
+    // dayjs를 사용하여 날짜 형식을 "YYYY-MM-DD"로 보장합니다.
     inboundDate: new Date(dayjs(row[7]).format("YYYY-MM-DD")),
     businessNumber: row[8],
     representative: row[9],
     location: row[10],
     notes: row[11],
   });
+
   const handleAddCustomer = () => {
     setSelectedCustomer(undefined);
     setDialogOpen(true);
@@ -116,7 +131,6 @@ const Provider: React.FC = () => {
     if (customer.id !== 0) {
       ///수정 저장
       result = await axios.put(`${apiUrl}/api/customers/${customer.id}`, customer);
-      console.log("EDITcustomers", customers);
       setCustomers(customers.map((c) => (c.id === customer.id ? customer : c)));
     } else {
       ///신규저장
@@ -126,7 +140,6 @@ const Provider: React.FC = () => {
       }
       customer.inboundDate = new Date(dayjs(customer.inboundDate).format("YYYY-MM-DD"));
       result = await axios.post(`${apiUrl}/api/customers`, customer);
-      // console.log('New SaveCustomer', res)
       setCustomers([...customers, customer]);
     }
     setDialogOpen(false);
@@ -162,7 +175,7 @@ const Provider: React.FC = () => {
             { type: "text", title: "소재지", width: 30 },
             { type: "text", title: "메모", width: 30 },
           ],
-        } as any);
+        });
       } else {
         jexcelInstance.current.setData(tableData);
         jexcelInstance.current.options.onselection = (instance: JSpreadsheetInstance, x1: number, y1: number, x2: number, y2: number) => {
@@ -180,10 +193,8 @@ const Provider: React.FC = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleCsKindChange = (value: number | string) => {
-    // 현재 Provider에서는 CS Kind를 필터링하지 않으므로 아무것도 하지 않습니다.
-    // console.log("CS Kind 변경되었으나 Provider에서 처리하지 않음:", value);
-  };
+  const handleCsKindChange = (value: number | string) => {};
+
   const handleSearch = async () => {
     try {
       const queryParams = new URLSearchParams({
@@ -193,12 +204,14 @@ const Provider: React.FC = () => {
       });
 
       const res = await axios.get(`${apiUrl}/api/customers/coustomerName?${queryParams.toString()}`);
-      if (res.data.length == 0) {
-        setTableData([[" "]]);
-        return;
-      }
-      setTableData(
-        res.data.map((customer: Customer) => [
+
+      let newTableData: string[][];
+
+      if (res.data.length === 0) {
+        // 결과가 없으면, JSpreadsheet에 빈 행 하나를 표시하도록 설정
+        newTableData = [[" "]];
+      } else {
+        newTableData = res.data.map((customer: Customer) => [
           customer.id.toString(),
           customer.customerName,
           customer.contactPerson,
@@ -211,23 +224,22 @@ const Provider: React.FC = () => {
           customer.representative,
           customer.location,
           customer.notes,
-        ])
-      );
+        ]);
+      }
+      // console.log("newTableData", newTableData);
+      setTableData(newTableData); // React 상태 업데이트
+
+      // 💡 수정: JSpreadsheet 인스턴스 업데이트
+      // if (jexcelInstance.current && jexcelInstance.current.worksheets && jexcelInstance.current.worksheets.length > 0) {
+      //   // 관리자 인스턴스에서 첫 번째 시트 인스턴스를 가져와 setData 호출
+      //   jexcelInstance.current.worksheets[0].setData(newTableData);
+      // }
     } catch (error) {
       console.error("There was a problem with the fetch operation:", error);
     }
   };
 
-  // const actions = [
-  //     { icon: <DeleteIcon />, name: '삭제' , onClick: handleDeleteCustomer},
-  //     { icon: <EditIcon />, name: '수정', onClick: handleEditCustomer },
-  //     { icon: <AddIcon />, name: '추가'  ,onClick: handleAddCustomer },
-
-  // ];
   const handleCloseModal = () => {
-    // if (jexcelInstance.current) {
-    //     jexcelInstance.current.closeEditor();
-    // }
     setDialogOpen(false);
   };
 

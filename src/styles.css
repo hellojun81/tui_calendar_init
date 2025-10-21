@@ -111,4 +111,18 @@ button.cancel-button {
 
 
 
-.jexcel_container{margin-top: 10px;}
+.jexcel_container{margin-top: 10px;font-size: 12px;}
+
+.editable-message .tpl-var {
+  color: #1976d2;
+  font-weight: 600;
+  background: rgba(25,118,210,0.06);
+  border-radius: 4px;
+  padding: 0 2px;
+}
+
+/* placeholder */
+.editable-message:empty:before {
+  content: attr(data-placeholder);
+  color: #9e9e9e;
+}

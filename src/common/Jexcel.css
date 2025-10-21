@@ -16,15 +16,16 @@
     overflow: visible !important; 
 }
 
-.jexcel_content {
+.jss_worksheet {
     width: 100%;
-    /* border: 1px solid #ddd; */
-    /* border-radius: 8px; */
     font-family: Arial, sans-serif;
-    font-size: 12px;
+    font-size: 12px!important;
     background-color: #fff;
     table-layout: auto;
 }
+.jss_content table thead tr,
+.jss_content table tbody tr{height: 35px!important;}
+
 .jexcel {
     table-layout: auto;
     width: 100%; /* 테이블 전체 너비를 100%로 설정 */

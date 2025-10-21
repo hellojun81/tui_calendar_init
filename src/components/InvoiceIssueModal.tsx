@@ -33,13 +33,14 @@ import { apiUrl } from "utils/util";
 
 /* ======= Props / Types ======= */
 export type InvoiceIssueModalProps = {
-  // open: boolean;
+  // open: boolean; // 주석 처리된 프롭스는 원본을 유지합니다.
   // onClose: () => void;
   /** 제출할 API 엔드포인트 (기본: /api/taxinvoice/issue) */
   // submitUrl?: string;
   // onIssued?: (response: any) => void;
   /** 모달 오픈 시 공급받는자 상호 기본값 */
   defaultInvoiceeCorpName?: string;
+  scheduleId?: number;
 };
 
 type InvoiceItem = {
@@ -50,14 +51,17 @@ type InvoiceItem = {
   /** 입력 중 IME 보호를 위해 문자열 유지 */
   qty: string;
   unitCost: string;
-  amount: number; // 합계 (qty * unitCost)
-  supplyCost: number; // 공급가액
+  // 🚨 [수정 1] supplyCost를 입력받기 위해 string으로 변경
+  supplyCost: string;
+  amount: number; // 합계 (qty * unitCost 또는 supplyCost 기반 역산)
   tax: number; // 세액
   remark?: string;
 };
 
 /* ======= UI Utils / Styles ======= */
 const fmt = (n: number) => (Number.isFinite(n) ? n.toLocaleString("ko-KR") : "0");
+
+// ... (COLW 및 squareChipSx는 동일) ...
 
 const COLW = {
   month: 50,
@@ -87,21 +91,50 @@ export const squareChipSx: SxProps<Theme> = {
 /* ======= 계산 유틸 ======= */
 const toNumber = (v: string | number | "") => {
   if (v === "" || v === undefined || v === null) return 0;
-  const n = Number(v);
+  const n = Number(String(v).replace(/,/g, "")); // 쉼표 제거 추가
   return Number.isFinite(n) ? n : 0;
 };
 
-const calcRow = (qty: string | number | "", unitCost: string | number | "", taxType: string) => {
-  const q = toNumber(qty);
-  const u = toNumber(unitCost);
-  const amount = Math.round(q * u);
+// 🚨 [수정 2] calcRow 함수: supplyCost를 기준으로 합계(amount)와 세액(tax)을 역산하는 로직 추가
+const calcRow = (
+  qty: string | number | "",
+  unitCost: string | number | "",
+  supplyCostStr: string | number | "", // 새롭게 추가된 공급가액
+  taxType: string
+) => {
   const isTaxFree = taxType === "면세" || taxType === "영세";
-  const supply = isTaxFree ? amount : Math.round(amount / 1.1);
-  const tax = isTaxFree ? 0 : amount - supply;
+  const supplyCost = toNumber(supplyCostStr);
+
+  let amount: number;
+  let supply: number;
+  let tax: number;
+
+  if (supplyCost > 0) {
+    // case 1: 공급가액 (supplyCost)이 입력된 경우, 이를 기준으로 합계와 세액 역산
+    supply = supplyCost;
+    if (isTaxFree) {
+      tax = 0;
+      amount = supply; // 면세/영세는 공급가액 = 합계
+    } else {
+      // 과세인 경우, 세액은 공급가액의 10%
+      tax = Math.round(supply * 0.1);
+      amount = supply + tax;
+    }
+  } else {
+    // case 2: 수량(qty)과 단가(unitCost)를 기준으로 계산 (기존 로직)
+    const q = toNumber(qty);
+    const u = toNumber(unitCost);
+    amount = Math.round(q * u);
+
+    supply = isTaxFree ? amount : Math.round(amount / 1.1);
+    tax = isTaxFree ? 0 : amount - supply;
+  }
+
   return { amount, supply, tax };
 };
 
 /* ======= PartyCard (공급자/공급받는자) ======= */
+// ... (PartyCard 컴포넌트는 동일하게 유지) ...
 type PartyCardProps = {
   title: string;
   corpNum: string;
@@ -217,9 +250,10 @@ const PartyCard: React.FC<PartyCardProps> = React.memo(
     </Paper>
   )
 );
+// ... (PartyCard 컴포넌트는 동일하게 유지) ...
 
 /* ======= 메인 컴포넌트 ======= */
-const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCorpName }) => {
+const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCorpName, scheduleId }) => {
   const [taxType, setTaxType] = useState<"과세" | "영세" | "면세">("과세");
   const [issueType, setIssueType] = useState<"정발행" | "역발행" | "위수탁">("정발행");
   const [purposeType, setPurposeType] = useState<"영수" | "청구">("청구");
@@ -254,12 +288,14 @@ const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCo
   const emailDomainOptions = ["gmail.com", "naver.com", "daum.net", "직접입력"] as const;
 
   /* 오픈 시 기본값 주입 */
+  // ... (useMemo는 동일) ...
   React.useEffect(() => {
-    if (!open) return;
-    // if (defaultInvoiceeCorpName) {
-    //   setInvoiceeCorpName(defaultInvoiceeCorpName);
-    // }
-  }, [open, defaultInvoiceeCorpName]);
+    // open 프롭스가 주석 처리되었으므로 주석 처리
+    // if (!open) return;
+    if (defaultInvoiceeCorpName) {
+      setInvoiceeCorpName(defaultInvoiceeCorpName);
+    }
+  }, [defaultInvoiceeCorpName]); // open 의존성 제거
 
   /* 항목들 (초기 2행) — qty/unitCost는 string으로 */
   const [items, setItems] = useState<InvoiceItem[]>(
@@ -270,8 +306,8 @@ const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCo
       spec: "",
       qty: "",
       unitCost: "",
+      supplyCost: "", // 🚨 [수정 1] 초기값도 string으로 설정
       amount: 0,
-      supplyCost: 0,
       tax: 0,
       remark: "",
     }))
@@ -286,9 +322,11 @@ const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCo
     setItems((prev) => {
       const next = [...prev];
       const r = next[idx];
-      const { amount, supply, tax } = calcRow(r.qty, r.unitCost, taxType);
+      // 🚨 [수정 3] calcRow 함수 호출 시 supplyCost 인자 추가
+      const { amount, supply, tax } = calcRow(r.qty, r.unitCost, r.supplyCost, taxType);
       r.amount = amount;
-      r.supplyCost = supply;
+      // 🚨 [수정 3] 계산된 supply 값을 다시 string supplyCost에 저장 (단가/수량으로 계산되었을 경우)
+      r.supplyCost = supply.toLocaleString("ko-KR");
       r.tax = taxType === "과세" ? tax : 0;
       return next;
     });
@@ -301,10 +339,24 @@ const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCo
       const next = [...prev];
       const row = { ...next[idx], [key]: v } as InvoiceItem;
       next[idx] = row;
-      if (!isComposing && (key === "qty" || key === "unitCost" || key === "itemName" || key === "spec")) {
-        const { amount, supply, tax } = calcRow(row.qty, row.unitCost, taxType);
+
+      const isPriceKey = key === "qty" || key === "unitCost" || key === "supplyCost";
+
+      if (!isComposing && isPriceKey) {
+        // 🚨 [수정 4] 가격 관련 필드가 변경될 때마다 계산
+        // SupplyCost가 변경되면 qty/unitCost를 초기화 (상충 방지)
+        if (key === "supplyCost") {
+          row.qty = "";
+          row.unitCost = "";
+        } else if (key === "qty" || key === "unitCost") {
+          // qty/unitCost가 변경되면 supplyCost를 초기화
+          row.supplyCost = "";
+        }
+
+        const { amount, supply, tax } = calcRow(row.qty, row.unitCost, row.supplyCost, taxType);
         row.amount = amount;
-        row.supplyCost = supply;
+        // 계산된 supply 값을 다시 string supplyCost에 저장 (단가/수량으로 계산되었을 경우)
+        row.supplyCost = supply.toLocaleString("ko-KR");
         row.tax = taxType === "과세" ? tax : 0;
       }
       return next;
@@ -315,16 +367,31 @@ const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCo
     setItems((prev) => {
       const next = [...prev];
       const r = next[idx];
-      const { amount, supply, tax } = calcRow(r.qty, r.unitCost, taxType);
+      // 🚨 [수정 5] 수동 계산 시 supplyCost 인자 추가
+      const { amount, supply, tax } = calcRow(r.qty, r.unitCost, r.supplyCost, taxType);
       r.amount = amount;
-      r.supplyCost = supply;
+      r.supplyCost = supply.toLocaleString("ko-KR");
       r.tax = taxType === "과세" ? tax : 0;
       return next;
     });
   };
 
   const addItem = () =>
-    setItems((p) => [...p, { month: "", day: "", itemName: "", spec: "", qty: "", unitCost: "", amount: 0, supplyCost: 0, tax: 0, remark: "" }]);
+    setItems((p) => [
+      ...p,
+      {
+        month: "",
+        day: "",
+        itemName: "",
+        spec: "",
+        qty: "",
+        unitCost: "",
+        supplyCost: "", // 🚨 [수정 1] 초기값 설정
+        amount: 0,
+        tax: 0,
+        remark: "",
+      },
+    ]);
   const removeItem = (idx: number) => setItems((p) => p.filter((_, i) => i !== idx));
 
   /* 합계 */
@@ -332,7 +399,8 @@ const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCo
     const isTaxFree = taxType === "면세" || taxType === "영세";
     const sum = items.reduce(
       (acc, r) => {
-        const { amount, supply, tax } = calcRow(r.qty, r.unitCost, taxType);
+        // 🚨 [수정 6] 합계 계산 시 supplyCost 인자 추가
+        const { amount, supply, tax } = calcRow(r.qty, r.unitCost, r.supplyCost, taxType);
         acc.amount += amount;
         acc.supply += supply;
         acc.tax += isTaxFree ? 0 : tax;
@@ -349,6 +417,7 @@ const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCo
 
   /* 토스트 */
   const [loading, setLoading] = useState(false);
+  // ... (toast 상태 및 onlyDigits, joinAddr 함수는 동일) ...
   const [toast, setToast] = useState<{ open: boolean; message: string; severity: "success" | "error" | "info" }>({
     open: false,
     message: "",
@@ -356,8 +425,10 @@ const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCo
   });
   const onlyDigits = (s: string = "") => s.replace(/[^0-9]/g, "");
   const joinAddr = (addr?: string, detail?: string) => [addr, detail].filter(Boolean).join(" ");
+
   /* 사업자 정보 조회 (컴포넌트 내부 useCallback) */
   const checkBizInfo = useCallback(async (corpNum: string) => {
+    // ... (checkBizInfo 함수는 동일) ...
     try {
       // const corpNum = onlyDigits(corpNum);
       const { data: res } = await axios.get(`${baseApiUrl}/api/popbill/biz/checkBizInfo?checkCorpNum=${corpNum}`);
@@ -386,21 +457,28 @@ const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCo
   /* Payload 생성 */
   const buildPayload = () => {
     const emailJoin = (local: string, domain: string) => (domain && domain !== "직접입력" ? `${local}@${domain}` : local);
-
+    const purchaseYear = (writeDate || "").slice(0, 4); // 작성일자에서 연도만 추출
     const detailList = items
-      .map((it, i) => ({
-        serialNum: i + 1,
-        purchaseDT: (writeDate || "").replaceAll("-", ""),
-        itemName: it.itemName,
-        spec: it.spec || "",
-        qty: toNumber(it.qty),
-        unitCost: toNumber(it.unitCost),
-        supplyCost: it.supplyCost,
-        tax: taxType === "과세" ? it.tax : 0,
-        remark: it.remark || "",
-      }))
-      .filter((d) => d.itemName || d.qty || d.unitCost);
+      .map((it, i) => {
+        // 품목의 월/일이 있다면 사용하고, 없다면 작성일자의 월/일을 대체로 사용
+        const itemMonth = (it.month || (writeDate || "").slice(5, 7)).padStart(2, "0");
+        const itemDay = (it.day || (writeDate || "").slice(8, 10)).padStart(2, "0");
 
+        const purchaseDT = `${purchaseYear}${itemMonth}${itemDay}`; // YYYYMMDD 포맷 구성
+
+        return {
+          serialNum: i + 1,
+          purchaseDT: purchaseDT, // 🚨 품목별 거래 일자 적용
+          itemName: it.itemName,
+          spec: it.spec || "",
+          qty: toNumber(it.qty),
+          unitCost: toNumber(it.unitCost),
+          supplyCost: toNumber(it.supplyCost),
+          tax: taxType === "과세" ? it.tax : 0,
+          remark: it.remark || "",
+        };
+      })
+      .filter((d) => d.itemName || d.qty || d.unitCost || d.supplyCost);
     const taxinvoice = {
       writeDate: (writeDate || "").replaceAll("-", ""),
       chargeDirection: "정과금",
@@ -437,6 +515,7 @@ const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCo
       remark: "",
 
       detailList,
+      scheduleId,
     } as const;
 
     return { taxinvoice };
@@ -444,15 +523,14 @@ const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCo
 
   /* 제출 */
   const handleSubmit = async () => {
+    // ... (생략) ...
     try {
       setLoading(true);
 
-      // 1) 프론트에서 만드는 payload
-      //    { taxinvoice: { ...프론트 상태들..., detailList: [...] } }
       const payload = buildPayload();
+      console.log("handleSubmit payload", payload);
       const submitUrl = `${apiUrl}/api/popbill/tax/registTaxIssue`;
-      // 2) 서버로 전송
-      console.log("payload", payload);
+
       const res = await fetch(submitUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -460,18 +538,24 @@ const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCo
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.message || `HTTP ${res.status}`);
+        // 서버의 JSON 응답 본문을 상세 오류 정보로 가져옵니다.
+        const errBody = await res.json().catch(() => ({}));
+        const serverErrorDetail = errBody?.error || errBody?.message;
+
+        // 상세 오류 원인이 있다면 throw new Error(상세 원인)으로 넘깁니다.
+        if (serverErrorDetail) {
+          // 에러 코드까지 포함하여 throw 합니다.
+          throw new Error(`[Code: ${errBody?.popbillErrorCode || res.status}] ${serverErrorDetail}`);
+        } else {
+          throw new Error(`HTTP ${res.status} 오류. 서버에서 상세 원인을 받지 못했습니다.`);
+        }
       }
 
       const data = await res.json().catch(() => ({}));
       setToast({ open: true, message: "세금계산서 발행 요청이 완료되었습니다.", severity: "success" });
-
-      // 필요 시 상위 콜백
-      // onIssued?.(data);
-      // onClose?.();
     } catch (err: any) {
-      setToast({ open: true, message: `발행 실패: ${err?.message || err}`, severity: "error" });
+      const errorMessage = err?.message || "발행 요청 중 알 수 없는 오류가 발생했습니다.";
+      setToast({ open: true, message: `발행 실패: ${errorMessage}`, severity: "error" });
     } finally {
       setLoading(false);
     }
@@ -479,6 +563,7 @@ const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCo
 
   /* 리셋 */
   const handleReset = () => {
+    // ... (handleReset 함수는 동일) ...
     setTaxType("과세");
     setIssueType("정발행");
     setPurposeType("청구");
@@ -504,13 +589,15 @@ const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCo
         spec: "",
         qty: "",
         unitCost: "",
+        supplyCost: "", // 🚨 [수정 1] 초기값 설정
         amount: 0,
-        supplyCost: 0,
         tax: 0,
         remark: "",
       }))
     );
   };
+
+  // ... (리턴 UI 부분) ...
 
   return (
     <div>
@@ -538,9 +625,11 @@ const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCo
             }}
           >
             {/* 상단 섹션: 공급자/공급받는자 + 작성일/비고/합계 */}
+            {/* ... (상단 UI는 동일) ... */}
             <Stack spacing={1}>
               <Grid container spacing={2} sx={{ width: "100% !important" }}>
                 <Grid item xs={12} md={6} sx={{ pl: "0px !important" }}>
+                  {/* ... PartyCard 공급자 ... */}
                   <PartyCard
                     title="공급자"
                     corpNum={invoicerCorpNum}
@@ -566,6 +655,7 @@ const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCo
                 </Grid>
 
                 <Grid item xs={12} md={6}>
+                  {/* ... PartyCard 공급받는자 ... */}
                   <PartyCard
                     title="공급받는자"
                     corpNum={invoiceeCorpNum}
@@ -756,8 +846,17 @@ const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCo
                           </IconButton>
                         </Stack>
                       </TableCell>
+                      {/* 🚨 [수정 8] 공급가액을 입력 가능한 TextField로 변경 */}
                       <TableCell align="right">
-                        <Chip label={fmt(row.supplyCost)} sx={squareChipSx} />
+                        <TextField
+                          size="small"
+                          type="text"
+                          inputMode="decimal"
+                          value={row.supplyCost}
+                          onChange={handleItemChange(idx, "supplyCost")}
+                          onCompositionStart={handleCompositionStart}
+                          onCompositionEnd={handleCompositionEnd(idx)}
+                        />
                       </TableCell>
                       <TableCell align="right">
                         <Chip label={fmt(taxType === "과세" ? row.tax : 0)} sx={squareChipSx} />
@@ -798,22 +897,12 @@ const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCo
           </DialogContent>
 
           <DialogActions>
+            {/* ... (DialogActions는 동일) ... */}
             <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ mt: 1, pr: 2.5, width: "100%" }}>
               <Button variant="outlined" onClick={handleReset}>
                 초기화
               </Button>
               <Box flex={1} />
-              {/* 과세/영세/면세 & 발행유형(옵션) */}
-              <ToggleButtonGroup size="small" exclusive value={taxType} onChange={(_, v) => v && setTaxType(v)}>
-                <ToggleButton value="과세">과세</ToggleButton>
-                <ToggleButton value="영세">영세</ToggleButton>
-                <ToggleButton value="면세">면세</ToggleButton>
-              </ToggleButtonGroup>
-              <ToggleButtonGroup size="small" exclusive value={issueType} onChange={(_, v) => v && setIssueType(v)}>
-                <ToggleButton value="정발행">정발행</ToggleButton>
-                <ToggleButton value="역발행">역발행</ToggleButton>
-                <ToggleButton value="위수탁">위수탁</ToggleButton>
-              </ToggleButtonGroup>
               <Button variant="contained" onClick={handleSubmit} disabled={loading} sx={{ width: 150 }}>
                 {loading ? "발급 중..." : "발급하기"}
               </Button>

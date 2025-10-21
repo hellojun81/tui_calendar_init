@@ -37,6 +37,9 @@ const Schedule = () => {
   const [ADmedia, setADmedia] = useState<number>(7);
   const [id, setId] = useState<number>(0); // ID값
   const [moneyFinishNY, setmoneyFinishNY] = useState<number>(0); // ID값
+  const [messageLogCount, setmessageLogCount] = useState<number>(0); // ID값
+  const [vatSendCount, setvatSendCount] = useState<number>(0); // ID값
+  const [isSmsModalOpen, setIsSmsModalOpen] = useState(false);
   const formatMonth = (month: number): string => {
     return month.toString().padStart(2, "0");
   };
@@ -55,7 +58,14 @@ const Schedule = () => {
       alert("모든 필수 입력란을 작성해 주세요.");
       return;
     }
-    console.log("MODE", modalMode);
+    let isSendingAlimtalk = false;
+    if (modalMode === "create") {
+      const shouldSendAlimtalk = window.confirm("알림톡을 발송하시겠습니까?");
+      if (shouldSendAlimtalk) {
+        isSendingAlimtalk = true;
+      }
+    }
+    const closeAfterSave = isSendingAlimtalk ? () => {} : closeModal;
     await saveSchedule(
       csKind,
       ADmedia,
@@ -73,8 +83,12 @@ const Schedule = () => {
       estPrice,
       etc,
       setSchedules,
-      closeModal
+      closeAfterSave
     );
+    if (isSendingAlimtalk) {
+      // 이전에 추가한 setIsSmsModalOpen 상태 업데이트
+      setIsSmsModalOpen(true);
+    }
     getSchedulesUtil(currentYear, currentMonth, sort, setSchedules, formatMonth);
   };
 
@@ -104,20 +118,16 @@ const Schedule = () => {
       setContactTel,
       setmoneyFinishNY
     );
-    console.log("🔥 openModal: moneyFinishNY to be set:", scheduleData?.moneyFinishNY);
   }, []);
 
   const fetchScheduleById = useCallback(
     async (id: string) => {
-      console.log("id", id);
       try {
-        console.log("apiUrl", apiUrl);
         const res = await axios.get(`${apiUrl}/api/schedules/${id}`);
         const scheduleData = res.data;
-        console.log("🔥 fetchScheduleById: moneyFinishNY from server:", scheduleData.moneyFinishNY);
-
+        setmessageLogCount(scheduleData.messageLogCount);
+        setvatSendCount(scheduleData.vatSendCount);
         openModal("edit", scheduleData);
-        console.log("fetchScheduleById", scheduleData);
       } catch (err) {
         console.error("Error fetching schedule by ID:", err);
       }
@@ -194,12 +204,12 @@ const Schedule = () => {
     closeModal(); // 모달 닫기
   };
 
-  const onMonthChange = useCallback((year: number, month: number) => {
-    setCurrentYear(year);
-    setCurrentMonth(month);
-    getSchedulesUtil(year, month, sort, setSchedules, formatMonth);
-    console.log(schedules);
-  }, []);
+  // const onMonthChange = useCallback((year: number, month: number) => {
+  //   setCurrentYear(year);
+  //   setCurrentMonth(month);
+  //   getSchedulesUtil(year, month, sort, setSchedules, formatMonth);
+  //   console.log(schedules);
+  // }, []);
   const onClickNextButton = () => {
     calendarRef.current.calendarInst.next();
     updateCurrentMonthYear();
@@ -286,6 +296,8 @@ const Schedule = () => {
         contactTel={contactTel}
         rentPlace={rentPlace || ""}
         moneyFinishNY={moneyFinishNY}
+        messageLogCount={messageLogCount}
+        vatSendCount={vatSendCount}
         setNewStart={setNewStart}
         setNewEnd={setNewEnd}
         setStartTime={setStartTime}
@@ -306,6 +318,8 @@ const Schedule = () => {
         onSaveSchedule={onSaveSchedule}
         closeModal={closeModal}
         setmoneyFinishNY={setmoneyFinishNY}
+        isSmsModalOpen={isSmsModalOpen}
+        setIsSmsModalOpen={setIsSmsModalOpen}
       />
     </div>
   );

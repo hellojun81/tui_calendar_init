@@ -71,7 +71,7 @@ const JexcelModal: React.FC<JexcelModalProps> = ({ isOpen, onClose, onSelect, se
   }, [tableData]); // tableData가 업데이트될 때마다 초기화
 
   useEffect(() => {
-    console.log("customerName", customerName);
+    // console.log("customerName", customerName);
   }, [customerName]); // 의존성 배열에서 tableRef.current 제외, tableData가 있을 때만 초기화
 
   const SearchCusTomerName = (customerName: string) => {

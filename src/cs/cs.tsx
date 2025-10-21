@@ -1,6 +1,13 @@
 import React, { useCallback, useState, useRef, useEffect } from "react";
 import jspreadsheet from "jspreadsheet-ce";
+import jSuites from "jsuites";
 import "jspreadsheet-ce/dist/jspreadsheet.css";
+import "jsuites/dist/jsuites.css";
+// (window as any).jSuites = jSuites; // ✅ 전역에 주입
+// (window as any).jspreadsheet = jspreadsheet; // (선택) 디버깅/플러그인용
+(window as any).jSuites = jSuites; // ✅ 전역에 주입
+(window as any).jspreadsheet = jspreadsheet; // (선택) 디버깅/플러그인용
+
 import dayjs from "dayjs";
 import ScheduleModal from "../schedules/ScheduleModal";
 import { ISchedule, saveSchedule, closeModalUtil, openModalUtil, openJexcelModalUtil, getCurrentDate } from "../utils/scheduleUtils";
@@ -20,6 +27,9 @@ interface CsProps {
 const apiUrl = process.env.NODE_ENV === "production" ? process.env.REACT_APP_API_URL_PRODUCTION : process.env.REACT_APP_API_URL_LOCAL;
 
 const Cs: React.FC<CsProps> = ({ embedded = false, defaultCustomerName = "", autoSearch = false }) => {
+  const tableRef = useRef<HTMLDivElement>(null);
+  const jexcelRef = useRef<any>(null);
+  const jexcelInstance = useRef<any>(null);
   const calendarRef = useRef<any>(null);
   const [schedules, setSchedules] = useState<ISchedule[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -46,9 +56,11 @@ const Cs: React.FC<CsProps> = ({ embedded = false, defaultCustomerName = "", aut
   const [contactTel, setContactTel] = useState<string>("");
   const [moneyFinishNY, setmoneyFinishNY] = useState<number>(0);
   const [activeRow, SetactiveRow] = useState<number>(0);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<string>("");
+
+  const [messageLogCount, setmessageLogCount] = useState<number>(0);
   const [tableData, setTableData] = useState<string[][]>([]);
-  const tableRef = useRef<HTMLDivElement>(null);
-  const jexcelInstance = useRef<any>(null);
   const { startDate, endDate } = getCurrentDate();
   const [formData, setFormData] = useState({
     startDate: startDate,
@@ -85,24 +97,37 @@ const Cs: React.FC<CsProps> = ({ embedded = false, defaultCustomerName = "", aut
       setmoneyFinishNY
     );
   }, []);
+
+  const firstAutoSearchDone = useRef(false);
+
+  // defaultCustomerName이 바뀌면 다음 자동검색을 허용
   useEffect(() => {
-    if (defaultCustomerName) {
-      setCustomerName(defaultCustomerName);
-      setFormData((prev) => ({ ...prev, customerName: defaultCustomerName }));
-    }
+    firstAutoSearchDone.current = false;
   }, [defaultCustomerName]);
 
-  // 자동검색: 초기 세팅 끝난 뒤 단 1회
-  const autoSearchedRef = useRef(false);
+  // 1단계: 모달 열릴 때 고객명 state에 주입
   useEffect(() => {
-    const ready = !!formData.customerName && (defaultCustomerName ? formData.customerName === defaultCustomerName : true);
+    if (autoSearch && defaultCustomerName) {
+      setFormData((prev) => ({ ...prev, customerName: defaultCustomerName }));
+    }
+  }, [autoSearch, defaultCustomerName]);
 
-    if (autoSearch && ready && !autoSearchedRef.current) {
-      autoSearchedRef.current = true;
-      handleSearch();
+  // 2단계: customerName이 실제로 반영된 다음 자동검색 실행
+  useEffect(() => {
+    if (!autoSearch || firstAutoSearchDone.current) return;
+    if (defaultCustomerName && formData.customerName === defaultCustomerName) {
+      firstAutoSearchDone.current = true;
+      handleSearch({ customerName: defaultCustomerName }); // ★ override 사용
     }
   }, [autoSearch, defaultCustomerName, formData.customerName]);
-
+  useEffect(() => {
+    if (defaultCustomerName) {
+      setFormData((prev) => ({ ...prev, customerName: defaultCustomerName }));
+      if (autoSearch) {
+        handleSearch();
+      }
+    }
+  }, [defaultCustomerName, autoSearch]);
   useEffect(() => {
     if (tableRef.current) {
       if (!jexcelInstance.current) {
@@ -139,7 +164,7 @@ const Cs: React.FC<CsProps> = ({ embedded = false, defaultCustomerName = "", aut
             { type: "hidden", title: "담당자", width: 1 },
             { type: "hidden", title: "고객비고", width: 1 },
           ],
-        } as any);
+        });
       } else {
         jexcelInstance.current.setData(tableData);
         jexcelInstance.current.options.onselection = (instance: JSpreadsheetInstance, x1: number, y1: number, x2: number, y2: number) => {
@@ -159,19 +184,17 @@ const Cs: React.FC<CsProps> = ({ embedded = false, defaultCustomerName = "", aut
     }
   }, [tableData]);
 
-  const handleSearch = async () => {
+  const handleSearch = async (override?: Partial<typeof formData>) => {
+    const source = { ...formData, ...(override || {}) }; // ★ 여기!
     const fetchSchedules = async () => {
       try {
-        // console.log('CS_csKind',formData.csKind)
         const queryParams = new URLSearchParams({
-          startDate: formData.startDate,
-          endDate: formData.endDate,
-          csKind: formData.csKind.toString(),
-          ...(formData.customerName && { customerName: formData.customerName }),
+          startDate: source.startDate,
+          endDate: source.endDate,
+          csKind: source.csKind.toString(),
+          ...(source.customerName && { customerName: source.customerName }),
         });
-        // 서버로부터 데이터를 가져오는 비동기 호출
         const res = await axios.get(`${apiUrl}/api/schedules/cs?${queryParams.toString()}`);
-        console.log(res.data);
         if (res.data.length == 0) {
           setTableData([[" "]]);
           return;
@@ -189,15 +212,15 @@ const Cs: React.FC<CsProps> = ({ embedded = false, defaultCustomerName = "", aut
             dayjs(schedule.start).format("YYYY-MM-DD"),
             dayjs(schedule.end).format("YYYY-MM-DD"),
             schedule.etc,
-            schedule.contactPerson,
             schedule.customerEtc,
+            schedule.contactPerson,
           ])
         );
       } catch (err) {
         console.error("Error fetching schedules:", err);
       }
     };
-    await fetchSchedules(); // 비동기 함수를 호출
+    await fetchSchedules();
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -325,9 +348,12 @@ const Cs: React.FC<CsProps> = ({ embedded = false, defaultCustomerName = "", aut
       }
     }
   };
-  const handleCsKindChange = (value: number | string) => {
-    const num = typeof value === "string" ? parseInt(value, 10) : value;
-    setFormData((prev) => ({ ...prev, csKind: Number.isNaN(num) ? 0 : num }));
+  const handleCsKindChange = (value: number) => {
+    console.log("handleCsKindChange", value);
+    setFormData({
+      ...formData,
+      csKind: value,
+    });
   };
 
   return (
@@ -395,6 +421,7 @@ const Cs: React.FC<CsProps> = ({ embedded = false, defaultCustomerName = "", aut
           onSaveSchedule={onSaveSchedule}
           closeModal={closeModal}
           setmoneyFinishNY={setmoneyFinishNY}
+          messageLogCount={messageLogCount}
         />
         <JexcelModal isOpen={isJexcelModalOpen} onClose={closeJexcelModal} onSelect={onSelectCustomer} searchQuery={searchQuery} />
       </Box>

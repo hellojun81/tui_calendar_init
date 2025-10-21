@@ -71,6 +71,8 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   contactPerson,
   contactTel,
   moneyFinishNY,
+  messageLogCount,
+  vatSendCount,
   setNewStart,
   setNewEnd,
   onSaveSchedule,
@@ -90,18 +92,18 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   setContactPerson,
   setContactTel,
   setmoneyFinishNY,
+  isSmsModalOpen,
+  setIsSmsModalOpen,
 }) => {
+  const smsOpen = isSmsModalOpen ?? false;
+  const setSmsOpen = setIsSmsModalOpen;
   const [selrentPlace, setSelRentPlace] = useState<string[]>();
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
 
   const [isJexcelModalOpen, setIsJexcelModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [depositOpen, setDepositOpen] = useState(false);
-  const [smsOpen, setSmsOpen] = useState(false);
-  // const [smsTo, setSmsTo] = useState<string>("");
-  // const [smsMsg, setSmsMsg] = useState<string>("");
-  // const [smsSending, setSmsSending] = useState(false);
-  // CS 모달 상태
+  // const [smsOpen, setSmsOpen] = useState(false);
   const [csOpen, setCsOpen] = useState(false);
   const [vatOpen, setVatOpen] = useState(false);
 
@@ -115,7 +117,6 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   /* ── 유틸 ──────────────────────────────────────────────────────────────── */
   // const openSelector = () => setIsSelectorOpen(true);
   const closeSelector = () => setIsSelectorOpen(false);
-
   const formatToKoreanTimeString = (date: Date): string => {
     if (!date) return "";
     const year = date.getFullYear();
@@ -169,12 +170,6 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [closeModal]);
 
-  // 입금내역 로드 (모달 열릴 때만)
-  // useEffect(() => {
-  //   if (smsOpen && contactTel) {
-  //     setSmsTo(contactTel);
-  //   }
-  // }, [smsOpen, contactTel]);
   useEffect(() => {
     if (!rentPlace) return;
     const parsed = rentPlace
@@ -378,7 +373,12 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     setDepositOpen(true);
   };
 
-  const openSmsModal = () => setSmsOpen(true);
+  const openSmsModal = () => {
+    // 🚨 setIsSmsModalOpen 프롭스를 사용해야 합니다.
+    if (setIsSmsModalOpen) {
+      setIsSmsModalOpen(true);
+    }
+  };
 
   const updateMoneyFinish = async () => {
     const currentStatus = Number(moneyFinishNY);
@@ -492,14 +492,14 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
             }}
           >
             <Button variant="outlined" onClick={openSmsModal} fullWidth>
-              알림톡
+              알림톡[{messageLogCount}]
             </Button>
             <Button size="small" variant="outlined" onClick={openDepositModal} fullWidth>
               {Number(moneyFinishNY) === 1 ? "입금내역 확인[완료건]" : "입금내역 확인"}
             </Button>
 
             <Button onClick={() => setVatOpen(true)} variant="outlined" fullWidth>
-              세금계산서
+              세금계산서[{vatSendCount}]
             </Button>
           </Box>
 
@@ -657,7 +657,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       {/* 세금계산서 모달 */}
       <Dialog open={vatOpen} onClose={() => setVatOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>세금계산서 발행</DialogTitle>
-        <InvoiceIssueModal defaultInvoiceeCorpName={customerName} />
+        <InvoiceIssueModal defaultInvoiceeCorpName={customerName} scheduleId={id} />
         <DialogActions>
           {/* 🚨 KakaoSender 내부 폼과 중복되므로 전송 버튼 제거를 권장합니다. */}
           <Button onClick={() => setVatOpen(false)} color="primary" variant="contained">
@@ -669,7 +669,12 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       {/* 문자 발송 모달 */}
       <Dialog
         open={smsOpen}
-        onClose={() => setSmsOpen(false)}
+        onClose={() => {
+          // setSmsModalOpen이 존재할 때만 함수 호출
+          if (setIsSmsModalOpen) {
+            setIsSmsModalOpen(false);
+          }
+        }}
         maxWidth={false}
         // 2. PaperProps를 사용하여 내부 Paper 컴포넌트의 최대 너비를 직접 설정
         PaperProps={{
@@ -699,7 +704,15 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
         />
         <DialogActions>
           {/* 🚨 KakaoSender 내부 폼과 중복되므로 전송 버튼 제거를 권장합니다. */}
-          <Button onClick={() => setSmsOpen(false)} color="primary" variant="contained">
+          <Button
+            onClick={() => {
+              if (setIsSmsModalOpen) {
+                setIsSmsModalOpen(false);
+              }
+            }}
+            color="primary"
+            variant="contained"
+          >
             닫기
           </Button>
         </DialogActions>

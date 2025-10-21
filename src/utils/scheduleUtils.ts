@@ -47,6 +47,7 @@ export interface ISchedule {
   endTime?: string;
   created_at?: Date | string;
   moneyFinishNY?: number;
+  messageLogCount?: number;
 }
 
 export interface ScheduleModalProps {
@@ -70,6 +71,8 @@ export interface ScheduleModalProps {
   contactPerson?: string;
   contactTel?: string;
   moneyFinishNY?: number;
+  messageLogCount?: number;
+  vatSendCount?: number;
   setNewStart: (date: Date | undefined) => void;
   setNewEnd: (date: Date | undefined) => void;
   onSaveSchedule: () => void;
@@ -78,7 +81,6 @@ export interface ScheduleModalProps {
   setNewTitle: (title: string) => void;
   setCustomerName: (text: string) => void;
   setRentPlace: (text: string) => void;
-  // openJexcelModal: (customerName: string) => void;
   setGubun: (text: string) => void;
   setUserInt: (text: string) => void;
   setEtc: (text: string) => void;
@@ -90,14 +92,11 @@ export interface ScheduleModalProps {
   setCustomerEtc: (text: string) => void;
   setContactPerson: (text: string) => void;
   setContactTel?: (text: string) => void; // ✅ 선택으로 변경
-  setmoneyFinishNY: (text: number) => void;
+  setmoneyFinishNY?: (text: number) => void;
+  isSmsModalOpen?: boolean;
+  setIsSmsModalOpen?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-/**
- * 모달 오픈 유틸
- * - 호출부(cs.tsx)에 맞춰 인자 순서 조정
- * - setContactTel, setADmedia는 선택 인자
- */
 export const openModalUtil = (
   mode: "create" | "edit",
   scheduleData: ISchedule | null,
@@ -122,6 +121,7 @@ export const openModalUtil = (
   setContactPerson: (contactPerson: string) => void,
   setContactTel: (contactTel: string) => void,
   setmoneyFinishNY: (moneyFinishNY: number) => void
+  // setmessageLogCount: (messageLogCount: number) => void
 ) => {
   setModalMode(mode);
 
