@@ -5,7 +5,7 @@ const highlightVariables = (text: string) => {
   // XSS 방지: 먼저 <> 등 이스케이프
   const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   // {foo} 패턴만 <span>으로 감싸기
-  const html = esc(text).replace(/\{([^}]+)\}/g, (_m, p1) => {
+  const html = esc(text).replace(/#\{([^}]+)\}/g, (_m, p1) => {
     return `<span class="tpl-var">{${p1}}</span>`;
   });
   return html.replace(/\n/g, "<br/>");

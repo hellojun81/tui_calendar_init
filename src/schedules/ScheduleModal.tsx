@@ -181,6 +181,37 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   useEffect(() => {
     setRentPlace(selectedFloors.join(",")); // "1층,2층"
   }, [selectedFloors, setRentPlace]);
+  const handleOpenVatModal = () => {
+    if (Number(vatSendCount) > 0) {
+      alert(`해당 스케쥴에 이미 ${vatSendCount}건의 세금계산서 발행 이력이 있습니다.`);
+    }
+    setVatOpen(true);
+  };
+  useEffect(() => {
+    // depositOpen 상태가 true일 때만 실행
+    if (depositOpen) {
+      // 복사할 내용 생성: "입금내역 [YYYY-MM-DD] 고객명 " 형식
+      const contentToCopy = `${newStart ? formatDate(newStart) : ""} ${customerName ? customerName : ""}`;
+
+      // 클립보드 복사 로직 (iframe 환경 호환성을 위해 document.execCommand('copy') 사용)
+      const tempTextArea = document.createElement("textarea");
+      // 복사를 위해 DOM에 임시로 추가
+      tempTextArea.value = contentToCopy.trim();
+      document.body.appendChild(tempTextArea);
+      tempTextArea.select();
+
+      try {
+        // document.execCommand('copy')는 구형이지만, iframe 환경에서 navigator.clipboard보다 안정적입니다.
+        document.execCommand("copy");
+        console.log(`자동 클립보드 복사 성공: ${contentToCopy}`);
+        // 사용자에게 피드백을 주려면 Snackbar 등을 사용할 수 있습니다.
+      } catch (err) {
+        console.error("클립보드 복사 실패:", err);
+      }
+      // 사용 후 DOM에서 제거
+      document.body.removeChild(tempTextArea);
+    }
+  }, [depositOpen, newStart, customerName]); // depositOpen, newStart, customerName 변경 시 재실행
 
   /* ── 견적 계산기───────────────────────────────────────────────────────── */
   const GetplaceMoney = (phototype: string, floor: string, userCnt: number, useHour: number): GetPlaceMoneyResult => {
@@ -239,44 +270,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   const handleCheckboxChange = (value: string) => {
     setSelectedFloors((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
   };
-
-  const handleDownEstimate = async () => {
-    const userTim = getHourDiff(startTime, endTime);
-    const userInt2 = userInt?.split("인")[0];
-    console.log({ gubun, userInt2, userTim, selectedFloors });
-    let totalMoney = 0;
-    let totalMsg = "";
-    let floortotalMoney = 0;
-
-    for (let i = 0; i < selectedFloors.length; i++) {
-      const phototype = gubun ?? "";
-      let info = GetplaceMoney(phototype, selectedFloors[i], Number(userInt2), Number(userTim));
-      console.log({ 계산하기: phototype, info: info });
-
-      let floortotalMoney = 0;
-
-      switch (phototype) {
-        case "3":
-          // 행사일 경우 이미 총액이므로 곱하기 필요 없음
-          floortotalMoney = info.placeOriginfee * 10;
-          break;
-        case "2":
-          // 행사일 경우 이미 총액이므로 곱하기 필요 없음
-          floortotalMoney = (info.placeOriginfee * userTim + info.overfee) * 1.1;
-          break;
-
-        default:
-          // 사진/영상 등은 시간당 요금 + 초과요금
-          floortotalMoney = info.placeOriginfee * userTim + info.overfee;
-          break;
-      }
-      totalMoney += floortotalMoney;
-    }
-    setEstprice(totalMoney);
-  };
-
-  // const handleDownloadCs = async () => {};
-  // const handleDownloadVat = async () => {};
+  const handleDownEstimate = () => {};
   const handleDownloadEstimate = () => {
     console.log(formatDate(newStart));
     const userTime = getHourDiff(startTime, endTime);
@@ -383,15 +377,11 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   const updateMoneyFinish = async () => {
     const currentStatus = Number(moneyFinishNY);
     const isFinish = currentStatus === 1 ? 0 : 1;
-
-    // 🚨 1. 오류 처리를 위해 try...catch 블록 사용
     try {
       const res = await axios.put(`${API_URL}/api/popbill/bank/updateMoneyfinish`, {
         id: id,
         isFinish: isFinish,
       });
-      console.log(res);
-      // 🚨 2. 서버 응답(res.data)에서 message 속성을 추출하여 alert
       const successMessage = res.data.message || "입금 상태 처리가 완료되었습니다.";
       alert(successMessage);
 
@@ -498,7 +488,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
               {Number(moneyFinishNY) === 1 ? "입금내역 확인[완료건]" : "입금내역 확인"}
             </Button>
 
-            <Button onClick={() => setVatOpen(true)} variant="outlined" fullWidth>
+            <Button onClick={handleOpenVatModal} variant="outlined" fullWidth>
               세금계산서[{vatSendCount}]
             </Button>
           </Box>
@@ -618,7 +608,8 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       {/* 입금내역 모달 */}
       <Dialog open={depositOpen} onClose={() => setDepositOpen(false)} maxWidth="md">
         <DialogTitle>
-          입금내역 [{formatDate(newStart) ? `${formatDate(newStart)}` : ""}]{customerName ? ` ${customerName} ` : ""}
+          입금내역 [ {formatDate(newStart) ? `${formatDate(newStart)}` : ""}]{customerName ? ` ${customerName} ` : ""}
+          계약금:{estPrice ? ` ${estPrice} ` : ""}
         </DialogTitle>
         <DialogContent dividers>
           <Bank embedded defaultCustomerName={customerName} autoSearch />

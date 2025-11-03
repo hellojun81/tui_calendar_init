@@ -95,6 +95,23 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
     }
   }, [autoSearch, defaultCustomerName, formData.description]);
 
+  const handleSingleUpdate = useCallback(
+    async (tid: string, trserial: string, pay_type: string, memo: string) => {
+      try {
+        const res = await axios.put(`${apiUrl}/api/popbill/bank/${tid}/${trserial}`, {
+          pay_type,
+          memo,
+        });
+        // console.log(`Auto-Save Success: TID=${tid}, TRSerial=${trserial}, Result=${res.data.message}`);
+        // 자동 저장 성공 시 사용자에게 별도의 alert를 표시하지 않고 콘솔에만 기록합니다.
+      } catch (error) {
+        console.error("Auto-Save failed:", error);
+        // 자동 저장 실패 시에도 alert를 표시하지 않고 콘솔에 기록합니다.
+      }
+    },
+    [apiUrl]
+  );
+
   useEffect(() => {
     if (tableRef.current) {
       if (!jexcelInstance.current) {
@@ -122,32 +139,60 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
           ],
         });
         const memoColumnIndex = 7;
-
-        // jspreadsheet API를 사용하여 너비를 설정합니다.
-        // width 값은 픽셀 또는 문자 단위로 실험해 보세요.
         console.log(jexcelInstance.current);
       } else {
         // 데이터는 tableData가 변경될 때마다 업데이트합니다.
         jexcelInstance.current.setData(tableData);
+        jexcelInstance.current.options.onchange = (instance: any, cell: any, x1: number, y1: number, x2: number, y2: number) => {
+          const columnIndex = x1;
+          const rowIndex = y1;
 
-        // 🚨 선택 로직을 키(TID, TRSerial) 저장 로직으로 업데이트
-        jexcelInstance.current.options.onselection = (instance: any, x1: number, y1: number, x2: number, y2: number) => {
-          if (tableData[y1]) {
-            const selectedRow = tableData[y1];
+          // '분류' (index 6) 또는 '메모' (index 7)의 변경만 처리
+          if (Number(columnIndex) === 6 || Number(columnIndex) === 7) {
+            if (tableData[y1]) {
+              const rowData = tableData[y1];
+              const tid = rowData[8]; // TID (index 8)
+              const trserial = rowData[9]; // TRSerial (index 9)
+              const memo = rowData[7];
+              const pay_type = rowData[6];
+              console.log(`pay_type:${pay_type},memo:${memo}`);
+              handleSingleUpdate(tid, trserial, pay_type, memo);
+            }
 
-            SetactiveRow(y1);
+            //     SetactiveRow(y1);
+            //     // 🚨 선택된 행의 tid, trserial, 현재 분류/메모 값을 상태에 저장
+            //     setUpdateFormData({
+            //       // 이 함수가 상위 컴포넌트에 정의되어 있어야 함
+            //       tid: selectedRow[8] || null, // 인덱스 9: TID
+            //       trserial: selectedRow[9] || null, // 인덱스 10: TRSerial
+            //       pay_type: selectedRow[6] || "", // 인덱스 7: 분류
+            //       memo: selectedRow[7] || "", // 인덱스 8: 메모
+            //     });
+            //     // console.log("선택된 거래:", tableData[y1]);
+            //   }
 
-            // 🚨 선택된 행의 tid, trserial, 현재 분류/메모 값을 상태에 저장
-            setUpdateFormData({
-              // 이 함수가 상위 컴포넌트에 정의되어 있어야 함
-              tid: selectedRow[8] || null, // 인덱스 9: TID
-              trserial: selectedRow[9] || null, // 인덱스 10: TRSerial
-              pay_type: selectedRow[6] || "", // 인덱스 7: 분류
-              memo: selectedRow[7] || "", // 인덱스 8: 메모
-            });
-            console.log("선택된 거래:", tableData[y1]);
+            // if (tid && trserial) {
+            //   const pay_type = Number(columnIndex) === 6 ? value : rowData[6];
+            //   const memo = Number(columnIndex) === 7 ? value : rowData[7];
+            //   handleSingleUpdate(tid, trserial, pay_type, memo);
+            // }
           }
         };
+        // (jexcelInstance.current.options.onselection = (instance: any, x1: number, y1: number, x2: number, y2: number) => {
+        //   if (tableData[y1]) {
+        //     const selectedRow = tableData[y1];
+        //     SetactiveRow(y1);
+        //     // 🚨 선택된 행의 tid, trserial, 현재 분류/메모 값을 상태에 저장
+        //     setUpdateFormData({
+        //       // 이 함수가 상위 컴포넌트에 정의되어 있어야 함
+        //       tid: selectedRow[8] || null, // 인덱스 9: TID
+        //       trserial: selectedRow[9] || null, // 인덱스 10: TRSerial
+        //       pay_type: selectedRow[6] || "", // 인덱스 7: 분류
+        //       memo: selectedRow[7] || "", // 인덱스 8: 메모
+        //     });
+        //     // console.log("선택된 거래:", tableData[y1]);
+        //   }
+        // });
       }
     } else {
       console.error("tableRef.current가 null입니다.");
@@ -244,42 +289,40 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
     }));
   };
   // -------------------------
-  // 메모,적요 수정(테이블 전체저장)
-  // -------------------------
-  const handleBulkUpdate = async () => {
-    if (!jexcelInstance.current) {
-      alert("테이블이 초기화되지 않았습니다.");
-      return;
-    }
+  // const handleBulkUpdate = async () => {
+  //   if (!jexcelInstance.current) {
+  //     alert("테이블이 초기화되지 않았습니다.");
+  //     return;
+  //   }
 
-    const allTableData = jexcelInstance.current.getData();
-    const bulkUpdateData = allTableData.map((row: any[]) => ({
-      tid: row[8], // 인덱스 9 (TID)
-      trserial: row[9], // 인덱스 10 (TRSerial)
-      pay_type: row[6], // 인덱스 7 (분류)
-      memo: row[7], // 인덱스 8 (메모)
-    }));
+  //   const allTableData = jexcelInstance.current.getData();
+  //   const bulkUpdateData = allTableData.map((row: any[]) => ({
+  //     tid: row[8], // 인덱스 9 (TID)
+  //     trserial: row[9], // 인덱스 10 (TRSerial)
+  //     pay_type: row[6], // 인덱스 7 (분류)
+  //     memo: row[7], // 인덱스 8 (메모)
+  //   }));
 
-    if (bulkUpdateData.length === 0) {
-      alert("업데이트할 데이터가 없습니다.");
-      return;
-    }
+  //   if (bulkUpdateData.length === 0) {
+  //     alert("업데이트할 데이터가 없습니다.");
+  //     return;
+  //   }
 
-    try {
-      // 3. 백엔드의 새로운 배치 업데이트 엔드포인트로 전송
-      const res = await axios.post(`${apiUrl}/api/popbill/bank/bulkUpdate`, {
-        updates: bulkUpdateData,
-      });
+  //   try {
+  //     // 3. 백엔드의 새로운 배치 업데이트 엔드포인트로 전송
+  //     const res = await axios.post(`${apiUrl}/api/popbill/bank/bulkUpdate`, {
+  //       updates: bulkUpdateData,
+  //     });
 
-      alert(`업데이트 성공: ${res.data.updatedCount}건 처리됨`);
+  //     alert(`업데이트 성공: ${res.data.updatedCount}건 처리됨`);
 
-      // 업데이트 후 테이블 데이터 새로고침
-      handleSearch();
-    } catch (error) {
-      console.error("일괄 업데이트 오류:", error);
-      alert("데이터 일괄 업데이트에 실패했습니다.");
-    }
-  };
+  //     // 업데이트 후 테이블 데이터 새로고침
+  //     handleSearch();
+  //   } catch (error) {
+  //     console.error("일괄 업데이트 오류:", error);
+  //     alert("데이터 일괄 업데이트에 실패했습니다.");
+  //   }
+  // };
 
   // -------------------------
   // 4. 메모,적요 수정(선택된 단일건만)
@@ -368,11 +411,11 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
             필요하다면 '거래 분류'나 '메모 수정' 등으로 변경해야 합니다. */}
         <CrudButtons
           onAdd={handleCollectLatest}
-          onEdit={handleBulkUpdate}
+          // onEdit={handleBulkUpdate}
           // onDelete={() => alert("거래 내역 삭제")}
           // 🚨 라벨 변경
           addLabel="수집"
-          editLabel="저장"
+          // editLabel="저장"
           // deleteLabel="거래 취소"
         />
         <Box

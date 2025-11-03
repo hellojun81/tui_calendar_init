@@ -183,16 +183,18 @@ export const openJexcelModalUtil = (
 
 export const closeModalUtil = (
   setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>,
-  setCurrentSchedule: React.Dispatch<React.SetStateAction<ISchedule | null>>
+  setCurrentSchedule: React.Dispatch<React.SetStateAction<ISchedule | null>>,
+  onRefreshSchedules?: () => void
 ) => {
+  // 닫는 괄호와 화살표를 한 줄에 붙여 오류 방지
   setIsModalOpen(false);
   setCurrentSchedule(null);
+
+  if (onRefreshSchedules) {
+    onRefreshSchedules();
+  }
 };
 
-/**
- * 저장 유틸
- * - closeModal을 선택 인자로 변경 (호출 안 해도 컴파일 OK)
- */
 export const saveSchedule = async (
   csKind: number,
   ADmedia: number,
@@ -290,14 +292,21 @@ export const getSchedulesUtil = async (
   month: number,
   sort: string,
   setSchedules: React.Dispatch<React.SetStateAction<ISchedule[]>>,
-  formatMonth: (month: number) => string
+  formatMonth: (month: number) => string,
+  csKindIds: string[] = []
 ) => {
   const fetchSchedules = async () => {
     try {
       const newMonth = `${year}-${formatMonth(month)}`;
-      console.log("apiUrl", apiUrl);
-      const res = await axios.get<ISchedule[]>(`${apiUrl}/api/schedules?SearchMonth=${newMonth}&sort=${sort}`);
-      console.log("getSchedulesUtil", res);
+
+      // ✅ 2. csKind ID 목록을 쿼리 파라미터로 추가
+      const csKindQuery = csKindIds.length > 0 ? `&csKindIds=${csKindIds.join(",")}` : "";
+
+      // 🚨 3. 최종 API URL에 csKindQuery 추가
+      console.log(`getSchedulesUtil with filter${newMonth},sort${sort},cskindQuery${csKindQuery}`);
+      const res = await axios.get<ISchedule[]>(`${apiUrl}/api/schedules?SearchMonth=${newMonth}&sort=${sort}${csKindQuery}`);
+
+      // console.log("getSchedulesUtil with filter", res);
       const updatedSchedules = res.data.map((schedule) => ({
         ...schedule,
         start: new Date(dayjs(schedule.start).format("YYYY-MM-DD")),

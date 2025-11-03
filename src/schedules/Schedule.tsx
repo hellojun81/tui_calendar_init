@@ -6,7 +6,7 @@ import axios from "axios";
 import dayjs from "dayjs";
 import CheckView from "./CheckVIew";
 import Sales from "./Sales";
-import { apiUrl, ISchedule, saveSchedule, closeModalUtil, openModalUtil, openJexcelModalUtil, getSchedulesUtil } from "../utils/scheduleUtils";
+import { apiUrl, ISchedule, saveSchedule, closeModalUtil, openModalUtil, getSchedulesUtil } from "../utils/scheduleUtils";
 import TUICalendar from "@toast-ui/react-calendar";
 import "tui-calendar/dist/tui-calendar.css";
 
@@ -25,6 +25,7 @@ const Schedule = () => {
   const [newTitle, setNewTitle] = useState("");
   const [estPrice, setEstprice] = useState<number>(0);
   const [sort, setSort] = useState<string>("START");
+  const [selectedCsKinds, setSelectedCsKinds] = useState<string[]>([]);
   const [userInt, setUserInt] = useState("");
   const [gubun, setGubun] = useState("");
   const [customerName, setCustomerName] = useState("");
@@ -45,13 +46,19 @@ const Schedule = () => {
   };
   const start = new Date();
 
-  useEffect(() => {
-    getSchedulesUtil(currentYear, currentMonth, sort, setSchedules, formatMonth);
-  }, [currentYear, currentMonth, sort]);
+  const handleRefreshSchedules = useCallback(() => {
+    getSchedulesUtil(currentYear, currentMonth, sort, setSchedules, formatMonth, selectedCsKinds);
+  }, [currentYear, currentMonth, sort, selectedCsKinds]);
 
+  useEffect(() => {
+    // 초기 로딩 시와 상태 변경 시 스케줄 로드
+    handleRefreshSchedules();
+  }, [handleRefreshSchedules]);
+
+  // 🚨 2. closeModal 유틸리티에 새로고침 함수를 전달하도록 업데이트
   const closeModal = useCallback(() => {
-    closeModalUtil(setIsModalOpen, setCurrentSchedule); // 유틸리티 함수 호출
-  }, []);
+    closeModalUtil(setIsModalOpen, setCurrentSchedule, handleRefreshSchedules); // 새로고침 핸들러 전달
+  }, [handleRefreshSchedules]); // 의존성에 추가
 
   const onSaveSchedule = async () => {
     if (!customerName.trim()) {
@@ -127,6 +134,7 @@ const Schedule = () => {
         const scheduleData = res.data;
         setmessageLogCount(scheduleData.messageLogCount);
         setvatSendCount(scheduleData.vatSendCount);
+        setmoneyFinishNY(scheduleData.moneyFinishNY);
         openModal("edit", scheduleData);
       } catch (err) {
         console.error("Error fetching schedule by ID:", err);
@@ -204,12 +212,6 @@ const Schedule = () => {
     closeModal(); // 모달 닫기
   };
 
-  // const onMonthChange = useCallback((year: number, month: number) => {
-  //   setCurrentYear(year);
-  //   setCurrentMonth(month);
-  //   getSchedulesUtil(year, month, sort, setSchedules, formatMonth);
-  //   console.log(schedules);
-  // }, []);
   const onClickNextButton = () => {
     calendarRef.current.calendarInst.next();
     updateCurrentMonthYear();
@@ -218,9 +220,9 @@ const Schedule = () => {
     calendarRef.current.calendarInst.prev();
     updateCurrentMonthYear();
   };
-  const reloadSchedule = async () => {
-    // console.log({ 'reloadSchedule': "", currentYear: currentYear, currentMonth: currentMonth, setSchedules: setSchedules, formatMonth: formatMonth })
-    getSchedulesUtil(currentYear, currentMonth, sort, setSchedules, formatMonth);
+
+  const reloadSchedule = async (selectedIds: string[]) => {
+    setSelectedCsKinds(selectedIds);
   };
   const calendarOptions = {
     defaultView: "month", // 기본 뷰 설정 (month)
@@ -253,7 +255,11 @@ const Schedule = () => {
         </Button>
       </Box>
       <Sales currentYear={currentYear} currentMonth={currentMonth} />
-      <CheckView reloadSchedule={reloadSchedule} currentYear={currentYear} currentMonth={currentMonth} />
+      <CheckView
+        reloadSchedule={reloadSchedule} // 이제 이 함수는 selectedCsKinds를 인자로 받습니다.
+        currentYear={currentYear}
+        currentMonth={currentMonth}
+      />
       <FormControl fullWidth>
         {/* <InputLabel>기준</InputLabel> */}
         <Select value={sort} onChange={(e) => setSort(e.target.value)}>
