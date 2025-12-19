@@ -7,6 +7,7 @@ import Cs from "./cs/cs";
 import Estimate from "./estimate";
 import Bank from "./Bank";
 import OldEstimate from "./oldestimate";
+import NewEstimate from "./newestimate";
 // import Setup from "./setup/setup_field";
 // import SetupBusinessInfo from "./setup/setup_bussiness_info";
 import LoginPage from "./login";
@@ -67,6 +68,16 @@ const App: React.FC = () => {
                 <PrivateRoute>
                   <PageWithTitle title="[AUBE]스케쥴(민원)관리">
                     <Cs />
+                  </PageWithTitle>
+                </PrivateRoute>
+              }
+            />
+             <Route
+              path="/newestimate"
+              element={
+                <PrivateRoute>
+                  <PageWithTitle title="[AUBE]New견적 관리">
+                    <NewEstimate />
                   </PageWithTitle>
                 </PrivateRoute>
               }

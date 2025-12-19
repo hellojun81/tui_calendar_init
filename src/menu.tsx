@@ -33,6 +33,8 @@ const Menu: React.FC = () => {
         return "고객 관리";
       case "/cs/cs":
         return "CS 관리";
+      case "/newestimate":
+        return "(뉴)견적서 관리";
       case "/estimate":
         return "견적서 관리";
       case "/oldestimate":
@@ -73,17 +75,22 @@ const Menu: React.FC = () => {
               CS관리
             </Link>
           </AntdMenu.Item>
-          <AntdMenu.Item key="4">
+               <AntdMenu.Item key="4">
+            <Link to="/newestimate" onClick={onClose}>
+              (뉴)견적서관리
+            </Link>
+          </AntdMenu.Item>
+          <AntdMenu.Item key="5">
             <Link to="/estimate" onClick={onClose}>
               견적서관리
             </Link>
           </AntdMenu.Item>
-          <AntdMenu.Item key="5">
+          <AntdMenu.Item key="6">
             <Link to="/oldestimate" onClick={onClose}>
               (구)견적서관리
             </Link>
           </AntdMenu.Item>
-          <AntdMenu.Item key="6">
+          <AntdMenu.Item key="7">
             <Link to="/Bank" onClick={onClose}>
               은행 거래내역 관리
             </Link>

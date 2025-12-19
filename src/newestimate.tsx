@@ -1,222 +1,249 @@
-"use client"
-import React, { useState, useEffect } from 'react';
-interface GetplaceMoneyResult {
-    place: number;
-    placeOriginfee: number;
-    overfee: number;
-}
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Select, Button, message } from "antd";
+import { priceTable, PriceTable } from "./utils/priceTable";
 
-// let floor_fee_half = []
-// let basic_fee = []
+const { Option } = Select;
 
-const Home: React.FC = () => {
-    const [inputValues, setInputValues] = useState<string[]>(['', '']);
-    const [floor_fee_half, setfloor_fee_half] = useState<number[]>([0, 0, 0, 0]);
-    const [basic_fee, setbasic_fee] = useState<number[]>([0, 0, 0, 0]);
-    const [phototype, setphototype] = useState<string>('1');
-    const [floortype, setfloortype] = useState<string>('1');
-    const [resultMsg, setresultMsg] = useState<string>('');
-    const [useHour, setuseHour] = useState<number>(4);
-    const [tmoney, setTmoney] = useState<number>(0);
+type FloorKey = keyof PriceTable;
 
-    const [userCnt, setUserCnt] = useState<number>(5);
+// 사진/영상 시간(시간 단위)
+const hourTimes: number[] = [4, 5, 6, 7, 8, 9, 10, 11, 12];
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        if (value === "" || /^[0-9]+$/.test(value)) {
-            setUserCnt(parseInt(value, 10));
-        }
-    };
+// priceTable(구간 키)와 100% 일치
+const peopleOptions = [
+  10,
+  ...Array.from({ length: 10 }, (_, i) => i + 11), // 11~20
+  "21~25",
+  "26~30",
+  "31~40",
+  "41~50",
+  "51~60",
+  "61~70",
+  "71~80",
+  "81~90",
+  "91~",
+] as const;
+type PeopleOption = typeof peopleOptions[number];
 
-    // const [disCountMoney, setdisCountMoney] = useState<number>(0);
-    const [originTmoney, setOriginTmoney] = useState<number>(0);
-    const [result, setResult] = useState<GetplaceMoneyResult | null>(null);
-    const [selectedFloors, setSelectedFloors] = useState<string[]>([]);
+// 촬영 구분
+type ShootType =
+  | "photo"
+  | "video"
+  | "eventCommercial"
+  | "eventNonCommercial"
+  | "student";
 
-    const floorOptions = [
-        { value: "1", label: "1층_마당_별채" },
-        { value: "2", label: "2층" },
-        { value: "3", label: "3층" },
-    ];
+const shootTypeOptions = [
+  { value: "photo", label: "사진" },
+  { value: "video", label: "영상" },
+  { value: "eventCommercial", label: "행사(상업)" },
+  { value: "eventNonCommercial", label: "행사(비상업)" },
+  { value: "student", label: "학생(졸업전시)" },
+] as const;
 
-    const handleCheckboxChange = (value: string) => {
-        setSelectedFloors((prev) =>
-            prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
-        );
-    };
+// 행사 기간 옵션
+type EventDurationKey = "1일" | "1주일" | "2주일" | "3주일" | "한달";
+const allEventDurations: EventDurationKey[] = ["1일", "1주일", "2주일", "3주일", "한달"];
 
-
-    const handleSelectChange1 = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setphototype(e.target.value);
-    };
-
-
-    const handleSelectChange3 = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const selectedOption = e.target.options[e.target.selectedIndex];
-        const description = selectedOption.getAttribute('data-description');
-        setuseHour(parseInt(e.target.value));
-        if (description != null) {
-            //   setuseHour2(parseInt(description));
-        }
-    };
-
-    const GetplaceMoney = (phototype: string, floor: string):
-        GetplaceMoneyResult => {
-        let placeOriginfee = 0
-        let place = 0
-        let basicUser = 0
-        let overUser = 0
-        let overfee = 0
-
-        switch (floor) {   ///묶음 할인가 적용
-            case '1':   //1층+별채+마당
-                placeOriginfee = 200000;
-                place = 1
-                basicUser = 10
-                overUser = userCnt - basicUser;
-                break;
-            case '2':   //1층+2층
-                placeOriginfee = 100000
-                place = 2
-                basicUser = 5
-                overUser = userCnt - basicUser;
-
-                break;
-            case '3':   //1층+3층
-                placeOriginfee = 100000
-                place = 3
-                basicUser = 5
-                overUser = userCnt - basicUser;
-                break;
-        }
-        overfee = (overUser * 5000) * useHour
-        if (overfee < 0) { overfee = 0 }
-
-        // console.log({ 'getplaceMoney': floor, 'userCnt': userCnt, 'overuser': overUser, 'overfee': overfee })
-        return { place: place, placeOriginfee: placeOriginfee, overfee: overfee }
-    };
-
-    const formatMoney = (amount: number): string => {
-        return amount.toLocaleString('ko-KR', { style: 'currency', currency: 'KRW' });
-    }
-    const handleButtonClick = () => {
-        let totalMoney = 0;
-        let totalMsg = "";
-    
-        for (let i = 0; i < selectedFloors.length; i++) {
-            let info = GetplaceMoney(phototype, selectedFloors[i]);
-    
-            let floortotalMoney = info.placeOriginfee * useHour + info.overfee;
-            let result = `<p>${info.place}층 <span style="font-weight: bold;">정상가: ${formatMoney(floortotalMoney)}</span></p>`;
-            
-            totalMsg += result;
-            totalMoney += floortotalMoney;
-        }
-    
-        let discount10 = totalMoney * 0.9;
-        let discount15 = totalMoney * 0.85;
-        let discount20 = totalMoney * 0.8;
-    
-        if (selectedFloors.length > 1) {
-            totalMsg += `
-                <p style="color: black; font-weight: bold; font-size: 30px;">합계금: <span style="color: red;">${formatMoney(totalMoney)}</span></p>
-                <p style="color: green;">10% 할인: <span style="font-weight: bold;">${formatMoney(discount10)}</span> | 시간당 금액: ${formatMoney(discount10 / useHour)}</p>
-                <p style="color: orange;">15% 할인: <span style="font-weight: bold;">${formatMoney(discount15)}</span> | 시간당 금액: ${formatMoney(discount15 / useHour)}</p>
-                <p style="color: red;">20% 할인: <span style="font-weight: bold;">${formatMoney(discount20)}</span> | 시간당 금액: ${formatMoney(discount20 / useHour)}</p>
-            `;
-        } else {
-            totalMsg += `<p style="font-weight: bold;">합계금: <span style="color: red;">${formatMoney(totalMoney)}</span> | 시간당 금액: ${formatMoney(totalMoney / useHour)}</p>`;
-        }
-    
-        setresultMsg(totalMsg);
-    };
-    
-
-  
-
-    function roundUpToTenThousand(won: number): number {
-        return Math.ceil(won / 50000) * 50000;
-    }
-
-    return (
-        <div style={{ padding: '20px', maxWidth: '400px', margin: 'auto' }}>
-            <h1>AUBESTUDIO NEW PRICE</h1>
-            <div style={{ marginBottom: '20px' }}>
-                <label htmlFor="photo-video-select">구분</label>
-                <select
-                    id="photo-video-select"
-                    value={phototype}
-                    onChange={handleSelectChange1}
-                    style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-                >
-                    <option value="1">사진</option>
-                    <option value="2">영상</option>
-                    <option value="3">행사</option>
-                </select>
-            </div>
-            <div style={{ marginBottom: '20px' }}>
-                <div>
-                    <label>렌탈장소</label>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                        {floorOptions.map((floor) => (
-                            <label key={floor.value} style={{ display: "flex", alignItems: "center" }}>
-                                <input
-                                    type="checkbox"
-                                    value={floor.value}
-                                    checked={selectedFloors.includes(floor.value)}
-                                    onChange={() => handleCheckboxChange(floor.value)}
-                                />
-                                {floor.label}
-                            </label>
-                        ))}
-                    </div>
-                    <p>선택된 층: {selectedFloors.length > 0 ? selectedFloors.join(", ") : "없음"}</p>
-                </div>
-            </div>
-            <div style={{ marginBottom: '20px' }}>
-                <label htmlFor="location-select">이용시간</label>
-                <select
-                    id="location-select"
-                    value={useHour}
-                    onChange={handleSelectChange3}
-                    style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-                >
-                    <option value='4' data-description='4'>4시간(BASIC)</option>
-                    <option value='5' data-description='5'>5시간</option>
-                    <option value='6' data-description='6'>6시간</option>
-                    <option value='7' data-description='7'>7시간</option>
-                    <option value='8' data-description='8'>8시간</option>
-                    <option value='9' data-description='9'>9시간</option>
-                    <option value='10' data-description='10'>10시간</option>
-                    <option value='11' data-description='11'>11시간</option>
-                    <option value='12' data-description='12'>12시간</option>
-
-                </select>
-            </div>
-            <div style={{ marginBottom: "20px" }}>
-                <label htmlFor="user-count-input">총인원수</label>
-                <input
-                    id="user-count-input"
-                    type="number"
-                    value={userCnt}
-                    onChange={handleInputChange}
-                    placeholder="총인원수를 입력하세요"
-                    min={1} // 최소값 설정
-                    max={1000} // 최대값 설정 (필요 시 조정)
-                    style={{ width: "100%", padding: "8px", boxSizing: "border-box" }}
-                />
-            </div>
-
-            {/* <h1>견적가:{formatMoney(originTmoney)}원</h1> */}
-            {/* <h1>시간당금액:{formatMoney(tmoney / useHour)}원</h1> */}
-            {/* <p style={{ whiteSpace: "pre-line" }}>{resultMsg}</p> */}
-            <div dangerouslySetInnerHTML={{ __html: resultMsg }} />
-
-            <button onClick={handleButtonClick} style={{ padding: '10px 20px' }}>
-                계산
-            </button>
-        </div>
-    );
+const floorLabelMap: Record<FloorKey, string> = {
+  floor1: "1층",
+  floor2: "2층",
+  floor3: "3층",
+  floor1_2_3: "1+2층",
+  all: "전체",
 };
 
-export default Home;
+const floors: FloorKey[] = ["floor1", "floor2", "floor3", "floor1_2_3", "all"];
+
+/* ================= 행사 요금표 =================
+   1일 12시간 기준, 단위: 만원
+*/
+
+// 상업행사
+const eventCommercialTable: Partial<Record<FloorKey, Partial<Record<EventDurationKey, number>>>> = {
+  all: { "1일": 700, "1주일": 4000, "2주일": 6000, "3주일": 7000, "한달": 8000 },
+  floor1_2_3: { "1일": 650, "1주일": 3700, "2주일": 5550, "3주일": 6475, "한달": 7400 },
+  floor1: { "1일": 600, "1주일": 3400, "2주일": 5100, "3주일": 5950, "한달": 6800 },
+};
+
+// 비상업행사(문화전시)
+const eventNonCommercialTable: Partial<Record<FloorKey, Partial<Record<EventDurationKey, number>>>> = {
+  all: { "1일": 500, "1주일": 3000, "2주일": 5000, "3주일": 6000, "한달": 7000 },
+};
+
+// 학생 졸업전시
+const studentTable: Partial<Record<FloorKey, Partial<Record<EventDurationKey, number>>>> = {
+  all: { "1일": 300 },
+};
+
+const getDurationOptions = (shootType: ShootType): EventDurationKey[] => {
+  if (shootType === "student") return ["1일"];
+  return allEventDurations;
+};
+
+const PriceCalculator: React.FC = () => {
+  const [floor, setFloor] = useState<FloorKey>("floor1");
+  const [time, setTime] = useState<number>(4);
+  const [eventDuration, setEventDuration] = useState<EventDurationKey>("1일");
+  const [people, setPeople] = useState<PeopleOption>(10);
+  const [shootType, setShootType] = useState<ShootType>("photo");
+  const [price, setPrice] = useState<number>(0);
+
+  const isEventType =
+    shootType === "eventCommercial" ||
+    shootType === "eventNonCommercial" ||
+    shootType === "student";
+
+  const durationOptions = useMemo(() => getDurationOptions(shootType), [shootType]);
+
+  const isOver50 =
+    typeof people !== "number" &&
+    (people === "51~60" ||
+      people === "61~70" ||
+      people === "71~80" ||
+      people === "81~90" ||
+      people === "91~");
+
+  const calculatePrice = useCallback(() => {
+    let finalPrice = 0;
+
+    // 필요하면 다시 켜세요: 50인 이상은 전체 대관만
+    // if (isOver50 && floor !== "all") {
+    //   message.warning("50인 이상은 전체 대관만 가능합니다.");
+    //   setPrice(0);
+    //   return;
+    // }
+
+    if (!isEventType) {
+      // ===== 사진 / 영상 =====
+      let base = 0;
+
+      if (typeof people === "number") {
+        base = priceTable[floor][String(people)]?.[time] ?? 0;
+      } else {
+        base = priceTable[floor][people]?.[time] ?? 0;
+      }
+
+      // 영상은 사진 가격의 10% 추가 (단, 50명 이상은 1.1배 적용 안함)
+      finalPrice = shootType === "video" ? Math.round(base * 1.1) : base;
+    } else {
+      // ===== 행사(상업/비상업) / 학생 =====
+      let table:
+        | typeof eventCommercialTable
+        | typeof eventNonCommercialTable
+        | typeof studentTable;
+
+      if (shootType === "eventCommercial") table = eventCommercialTable;
+      else if (shootType === "eventNonCommercial") table = eventNonCommercialTable;
+      else table = studentTable;
+
+      finalPrice = table[floor]?.[eventDuration] ?? 0;
+    }
+
+    setPrice(finalPrice);
+  }, [eventDuration, floor, isEventType, isOver50, people, shootType, time]);
+
+  // ✅ 옵션 변경 시 자동 계산
+  useEffect(() => {
+    calculatePrice();
+  }, [calculatePrice]);
+
+  const handleShootTypeChange = (value: ShootType) => {
+    setShootType(value);
+
+    // ✅ 행사 타입으로 바꿀 때: 기간 UI로 자동 전환 + 기간 1일 자동 적용
+    if (value === "eventCommercial" || value === "eventNonCommercial" || value === "student") {
+      setEventDuration("1일");
+    }
+    // (useEffect가 다음 렌더에서 자동 계산)
+  };
+
+  return (
+    <div style={{ padding: 20, maxWidth: 420 }}>
+      <h2>스튜디오 가격 계산기</h2>
+
+      {/* 촬영 구분 */}
+      <div style={{ marginBottom: 10 }}>
+        <label>촬영 구분: </label>
+        <Select
+          value={shootType}
+          onChange={(value) => handleShootTypeChange(value as ShootType)}
+          style={{ width: "100%" }}
+        >
+          {shootTypeOptions.map((o) => (
+            <Option key={o.value} value={o.value}>
+              {o.label}
+            </Option>
+          ))}
+        </Select>
+      </div>
+
+      {/* 층 선택 */}
+      <div style={{ marginBottom: 10 }}>
+        <label>층 선택: </label>
+        <Select value={floor} onChange={setFloor} style={{ width: "100%" }}>
+          {floors.map((f) => (
+            <Option key={f} value={f}>
+              {floorLabelMap[f]}
+            </Option>
+          ))}
+        </Select>
+      </div>
+
+      {/* 시간 / 기간 선택 */}
+      <div style={{ marginBottom: 10 }}>
+        <label>{isEventType ? "기간 선택:" : "시간 선택:"} </label>
+        {isEventType ? (
+          <Select value={eventDuration} onChange={(v) => setEventDuration(v as EventDurationKey)} style={{ width: "100%" }}>
+            {durationOptions.map((d) => (
+              <Option key={d} value={d}>
+                {d}
+              </Option>
+            ))}
+          </Select>
+        ) : (
+          <Select value={time} onChange={setTime} style={{ width: "100%" }}>
+            {hourTimes.map((t) => (
+              <Option key={t} value={t}>
+                {t}시간
+              </Option>
+            ))}
+          </Select>
+        )}
+      </div>
+
+      {/* 인원 선택 (행사/학생은 인원 무관이므로 disabled) */}
+      <div style={{ marginBottom: 10 }}>
+        <label>인원 선택: </label>
+        <Select value={people} onChange={(v) => setPeople(v as PeopleOption)} style={{ width: "100%" }} disabled={isEventType}>
+          {peopleOptions.map((p) => (
+            <Option key={String(p)} value={p as any}>
+              {typeof p === "number" ? `${p}명` : p}
+            </Option>
+          ))}
+        </Select>
+      </div>
+
+      {/* 자동계산이므로 버튼은 선택 사항 (유지해도 무방) */}
+      <Button onClick={calculatePrice} style={{ marginTop: 10 }}>
+        수동 재계산
+      </Button>
+
+      <div style={{ marginTop: 20, fontSize: 18 }}>
+        {isEventType ? (
+          <>
+            총 가격: <strong>{price.toLocaleString()} 만원</strong>
+          </>
+        ) : (
+          <>
+            총 가격: <strong>{price.toLocaleString()} 만원</strong>
+            <br />
+            시간당 금액: <strong>{(price / time).toLocaleString()} 만원 / 시간</strong>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default PriceCalculator;

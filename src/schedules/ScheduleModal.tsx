@@ -28,6 +28,7 @@ import type { GetPlaceMoneyResult } from "../types/pricing";
 import { formatMoney, formatDate, extractPersonnelNumber, formatEstPriceToAmount } from "../../../tui_calendar_init/src/utils/util";
 import InvoiceIssueModal from "../components/InvoiceIssueModal";
 import KakaoSender from "../components/kakaoManager";
+import Customers from "./customers"
 // import { formatEstPriceToAmount, extractPersonnelNumber } from "../utils/scheduleModalUtils";
 
 const API_URL = process.env.NODE_ENV === "production" ? process.env.REACT_APP_API_URL_PRODUCTION : process.env.REACT_APP_API_URL_LOCAL;
@@ -572,7 +573,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
               onChange={handlePriceChange}
               sx={{ flex: 5 }} // 70%
             />
-            <Button
+            {/* <Button
               onClick={handleDownEstimate}
               variant="contained"
               sx={{ flex: 2 }} // 30%
@@ -581,7 +582,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
             </Button>
             <Button onClick={handleDownloadEstimate} variant="outlined" sx={{ flex: 3 }}>
               견적서 다운로드
-            </Button>
+            </Button> */}
           </Box>
           <TextField label="비고" fullWidth value={etc} onChange={(e) => setEtc(e.target.value)} multiline />
         </Box>
@@ -603,7 +604,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       </DialogActions>
 
       {/* 고객 검색 모달 */}
-      <JexcelModal isOpen={isJexcelModalOpen} onClose={closeJexcelModal} onSelect={onSelectCustomer} searchQuery={searchQuery} />
+      <Customers isOpen={isJexcelModalOpen} onClose={closeJexcelModal} onSelect={onSelectCustomer} searchQuery={searchQuery} />
 
       {/* 입금내역 모달 */}
       <Dialog open={depositOpen} onClose={() => setDepositOpen(false)} maxWidth="md">

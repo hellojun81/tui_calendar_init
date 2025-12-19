@@ -158,41 +158,9 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
               console.log(`pay_type:${pay_type},memo:${memo}`);
               handleSingleUpdate(tid, trserial, pay_type, memo);
             }
-
-            //     SetactiveRow(y1);
-            //     // 🚨 선택된 행의 tid, trserial, 현재 분류/메모 값을 상태에 저장
-            //     setUpdateFormData({
-            //       // 이 함수가 상위 컴포넌트에 정의되어 있어야 함
-            //       tid: selectedRow[8] || null, // 인덱스 9: TID
-            //       trserial: selectedRow[9] || null, // 인덱스 10: TRSerial
-            //       pay_type: selectedRow[6] || "", // 인덱스 7: 분류
-            //       memo: selectedRow[7] || "", // 인덱스 8: 메모
-            //     });
-            //     // console.log("선택된 거래:", tableData[y1]);
-            //   }
-
-            // if (tid && trserial) {
-            //   const pay_type = Number(columnIndex) === 6 ? value : rowData[6];
-            //   const memo = Number(columnIndex) === 7 ? value : rowData[7];
-            //   handleSingleUpdate(tid, trserial, pay_type, memo);
-            // }
           }
         };
-        // (jexcelInstance.current.options.onselection = (instance: any, x1: number, y1: number, x2: number, y2: number) => {
-        //   if (tableData[y1]) {
-        //     const selectedRow = tableData[y1];
-        //     SetactiveRow(y1);
-        //     // 🚨 선택된 행의 tid, trserial, 현재 분류/메모 값을 상태에 저장
-        //     setUpdateFormData({
-        //       // 이 함수가 상위 컴포넌트에 정의되어 있어야 함
-        //       tid: selectedRow[8] || null, // 인덱스 9: TID
-        //       trserial: selectedRow[9] || null, // 인덱스 10: TRSerial
-        //       pay_type: selectedRow[6] || "", // 인덱스 7: 분류
-        //       memo: selectedRow[7] || "", // 인덱스 8: 메모
-        //     });
-        //     // console.log("선택된 거래:", tableData[y1]);
-        //   }
-        // });
+
       }
     } else {
       console.error("tableRef.current가 null입니다.");
@@ -288,45 +256,7 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
       tradeType: Number.isNaN(num) ? 0 : num,
     }));
   };
-  // -------------------------
-  // const handleBulkUpdate = async () => {
-  //   if (!jexcelInstance.current) {
-  //     alert("테이블이 초기화되지 않았습니다.");
-  //     return;
-  //   }
-
-  //   const allTableData = jexcelInstance.current.getData();
-  //   const bulkUpdateData = allTableData.map((row: any[]) => ({
-  //     tid: row[8], // 인덱스 9 (TID)
-  //     trserial: row[9], // 인덱스 10 (TRSerial)
-  //     pay_type: row[6], // 인덱스 7 (분류)
-  //     memo: row[7], // 인덱스 8 (메모)
-  //   }));
-
-  //   if (bulkUpdateData.length === 0) {
-  //     alert("업데이트할 데이터가 없습니다.");
-  //     return;
-  //   }
-
-  //   try {
-  //     // 3. 백엔드의 새로운 배치 업데이트 엔드포인트로 전송
-  //     const res = await axios.post(`${apiUrl}/api/popbill/bank/bulkUpdate`, {
-  //       updates: bulkUpdateData,
-  //     });
-
-  //     alert(`업데이트 성공: ${res.data.updatedCount}건 처리됨`);
-
-  //     // 업데이트 후 테이블 데이터 새로고침
-  //     handleSearch();
-  //   } catch (error) {
-  //     console.error("일괄 업데이트 오류:", error);
-  //     alert("데이터 일괄 업데이트에 실패했습니다.");
-  //   }
-  // };
-
-  // -------------------------
-  // 4. 메모,적요 수정(선택된 단일건만)
-  // -------------------------
+  
   const handleUpdateMemoAndType = async () => {
     const { tid, trserial, pay_type, memo } = updateFormData;
     console.log({
