@@ -523,11 +523,28 @@ const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCo
 
   /* 제출 */
   const handleSubmit = async () => {
-    // ... (생략) ...
+    const payload = buildPayload();
+    const invoice = payload.taxinvoice;
+    const validationMessage = (() => {
+      if (onlyDigits(invoice.invoicerCorpNum).length !== 10) return "공급자 등록번호 10자리를 확인해주세요.";
+      if (onlyDigits(invoice.invoiceeCorpNum).length !== 10) return "공급받는자 등록번호 10자리를 입력해주세요.";
+      if (!invoice.invoiceeCorpName.trim()) return "공급받는자 상호를 입력해주세요.";
+      if (!/^\d{8}$/.test(invoice.writeDate)) return "작성일자를 확인해주세요.";
+      if (invoice.detailList.length === 0) return "품목을 1개 이상 입력해주세요.";
+      if (invoice.detailList.some((item) => !item.itemName.trim())) return "모든 품목의 품목명을 입력해주세요.";
+      if (invoice.detailList.some((item) => item.supplyCost <= 0)) return "모든 품목의 공급가액을 0원보다 크게 입력해주세요.";
+      if (invoice.supplyCostTotal <= 0 || invoice.totalAmount <= 0) return "합계금액을 확인해주세요.";
+      return "";
+    })();
+
+    if (validationMessage) {
+      setToast({ open: true, message: validationMessage, severity: "error" });
+      return;
+    }
+
     try {
       setLoading(true);
 
-      const payload = buildPayload();
       console.log("handleSubmit payload", payload);
       const submitUrl = `${apiUrl}/api/popbill/tax/registTaxIssue`;
 

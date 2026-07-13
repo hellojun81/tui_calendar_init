@@ -18,7 +18,7 @@ import {
 import RefreshIcon from "@mui/icons-material/Refresh";
 import dayjs from "dayjs";
 import axios from "axios";
-import { apiUrl } from "../../../tui_calendar_init/src/utils/util";
+import { apiUrl } from "../utils/util";
 
 /** 서버가 주는 응답 형태 */
 interface ApiItem {

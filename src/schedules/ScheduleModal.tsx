@@ -25,7 +25,7 @@ import JexcelModal from "./JexcelModal";
 import GetCsKind from "./get_csKind";
 import GetADmedia from "./get_ADmedia";
 import type { GetPlaceMoneyResult } from "../types/pricing";
-import { formatMoney, formatDate, extractPersonnelNumber, formatEstPriceToAmount } from "../../../tui_calendar_init/src/utils/util";
+import { formatMoney, formatDate, extractPersonnelNumber, formatEstPriceToAmount } from "../utils/util";
 import InvoiceIssueModal from "../components/InvoiceIssueModal";
 import KakaoSender from "../components/kakaoManager";
 import Customers from "./customers"

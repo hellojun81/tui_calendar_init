@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import dayjs, { Dayjs } from "dayjs";
-import { formatRentPlaceForKakao, apiUrl } from "../../../tui_calendar_init/src/utils/util";
+import { formatRentPlaceForKakao, apiUrl } from "../utils/util";
 import {
   Box,
   Container,
