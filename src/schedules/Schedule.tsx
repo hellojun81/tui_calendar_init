@@ -6,13 +6,14 @@ import axios from "axios";
 import dayjs from "dayjs";
 import CheckView from "./CheckVIew";
 import Sales from "./Sales";
-import { apiUrl, ISchedule, saveSchedule, closeModalUtil, openModalUtil, getSchedulesUtil } from "../utils/scheduleUtils";
+import { apiUrl, ISchedule, saveSchedule, closeModalUtil, openModalUtil, getSchedulesUtil, getKoreanHolidays } from "../utils/scheduleUtils";
 import TUICalendar from "@toast-ui/react-calendar";
 import "tui-calendar/dist/tui-calendar.css";
 
 const Schedule = () => {
   const calendarRef = useRef<any>(null);
   const [schedules, setSchedules] = useState<ISchedule[]>([]);
+  const [holidays, setHolidays] = useState<ISchedule[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [currentYear, setCurrentYear] = useState<number>(dayjs().year());
@@ -20,8 +21,8 @@ const Schedule = () => {
   const [currentSchedule, setCurrentSchedule] = useState<ISchedule | null>(null);
   const [newStart, setNewStart] = useState<Date | undefined>(undefined);
   const [newEnd, setNewEnd] = useState<Date | undefined>(undefined);
-  const [startTime, setStartTime] = useState<string>("00:00");
-  const [endTime, setEndTime] = useState<string>("00:00");
+  const [startTime, setStartTime] = useState<string>("09:00");
+  const [endTime, setEndTime] = useState<string>("18:00");
   const [newTitle, setNewTitle] = useState("");
   const [estPrice, setEstprice] = useState<number>(0);
   const [sort, setSort] = useState<string>("START");
@@ -54,6 +55,19 @@ const Schedule = () => {
     // 초기 로딩 시와 상태 변경 시 스케줄 로드
     handleRefreshSchedules();
   }, [handleRefreshSchedules]);
+
+  useEffect(() => {
+    const years = [currentYear];
+    if (currentMonth === 1) years.push(currentYear - 1);
+    if (currentMonth === 12) years.push(currentYear + 1);
+
+    getKoreanHolidays(years)
+      .then(setHolidays)
+      .catch((error) => {
+        console.error("공휴일 정보를 가져오지 못했습니다.", error);
+        setHolidays([]);
+      });
+  }, [currentYear, currentMonth]);
 
   // 🚨 2. closeModal 유틸리티에 새로고침 함수를 전달하도록 업데이트
   const closeModal = useCallback(() => {
@@ -145,6 +159,7 @@ const Schedule = () => {
 
   const onClickSchedule = useCallback(
     (e: any) => {
+      if (String(e.schedule.id).startsWith("holiday-")) return;
       fetchScheduleById(e.schedule.id);
     },
     [fetchScheduleById]
@@ -165,6 +180,7 @@ const Schedule = () => {
   const onBeforeUpdateSchedule = useCallback(
     async (e: any) => {
       const { schedule, changes } = e;
+      if (String(schedule.id).startsWith("holiday-") || schedule.isReadOnly) return;
       // 스케줄 업데이트 처리
       // console.log('onBeforeUpdateSchedule',schedule)
       calendarRef.current.calendarInst.updateSchedule(schedule.id, schedule.calendarId, changes);
@@ -274,7 +290,7 @@ const Schedule = () => {
         ref={calendarRef}
         height="1000px"
         view="month"
-        schedules={schedules}
+        schedules={[...holidays, ...schedules]}
         month={calendarOptions.month}
         onClickSchedule={onClickSchedule}
         onBeforeCreateSchedule={onBeforeCreateSchedule}

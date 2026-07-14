@@ -50,6 +50,53 @@ export interface ISchedule {
   messageLogCount?: number;
 }
 
+interface KoreanHolidayResponse {
+  date: string;
+  localName: string;
+  name: string;
+}
+
+const substituteHolidayDates: Record<string, string> = {
+  "01-01": "새해",
+  "03-01": "3·1절",
+  "05-05": "어린이날",
+  "06-06": "현충일",
+  "07-17": "제헌절",
+  "08-15": "광복절",
+  "10-03": "개천절",
+  "10-09": "한글날",
+  "12-25": "크리스마스",
+};
+
+const formatHolidayTitle = (holiday: KoreanHolidayResponse) => {
+  const expectedDate = Object.entries(substituteHolidayDates).find(([, name]) => name === holiday.localName)?.[0];
+  const actualDate = holiday.date.slice(5);
+  return expectedDate && expectedDate !== actualDate ? `대체공휴일 (${holiday.localName})` : holiday.localName;
+};
+
+export const getKoreanHolidays = async (years: number[]): Promise<ISchedule[]> => {
+  const uniqueYears = Array.from(new Set(years));
+  const responses = await Promise.all(
+    uniqueYears.map((year) => axios.get<KoreanHolidayResponse[]>(`${apiUrl}/api/schedules/holidays?year=${year}`))
+  );
+
+  return responses.flatMap(({ data }) =>
+    data.map((holiday) => ({
+      id: `holiday-${holiday.date}`,
+      calendarId: "holiday",
+      title: formatHolidayTitle(holiday),
+      start: holiday.date,
+      end: holiday.date,
+      category: "allday",
+      isReadOnly: true,
+      color: "#d32f2f",
+      bgColor: "transparent",
+      borderColor: "transparent",
+      customStyle: "font-weight: 900;",
+    }))
+  );
+};
+
 export interface ScheduleModalProps {
   isOpen: boolean;
   modalMode: "create" | "edit";
@@ -133,8 +180,8 @@ export const openModalUtil = (
     setCurrentSchedule(null);
     setNewStart(scheduleData ? new Date(dayjs(scheduleData.start).format("YYYY-MM-DD")) : undefined);
     setNewEnd(scheduleData ? new Date(dayjs(scheduleData.end).format("YYYY-MM-DD")) : undefined);
-    setStartTime("00:00");
-    setEndTime("00:00");
+    setStartTime("09:00");
+    setEndTime("18:00");
     setNewTitle("");
     setCustomerName("");
     setRentPlace("");

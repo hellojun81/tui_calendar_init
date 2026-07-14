@@ -36,6 +36,8 @@ interface SearchFieldsProps {
   handleSearch: () => void;
   onCsKindChange: (value: number | string) => void;
   onTradeTypeChange?: (value: number | string) => void;
+  accountOptions?: Array<{ label: string; value: string; accountIDs: string[] }>;
+  onAccountChange?: (value: string) => void;
 }
 
 // 🚨 interface와 실제 컴포넌트 props 타입을 일치시켰습니다.
@@ -46,6 +48,8 @@ const SearchFields: React.FC<SearchFieldsProps> = ({
   handleSearch,
   onCsKindChange,
   onTradeTypeChange, // BankTransactions 컴포넌트에서 전달받음
+  accountOptions = [],
+  onAccountChange,
 }) => {
   // 1. 현재 컴포넌트 유형에 맞는 옵션, 값, 핸들러, 라벨을 결정합니다.
   const isBank = prarentComponent === "bank";
@@ -65,6 +69,84 @@ const SearchFields: React.FC<SearchFieldsProps> = ({
   // 텍스트 검색 필드의 라벨 및 키
   const searchFieldLabel = isBank ? "적요" : "고객명";
   const searchFieldKey = isBank ? "description" : "customerName";
+
+  if (isBank) {
+    return (
+      <Box
+        className="search-fields-container"
+        sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "1fr",
+            sm: "repeat(2, minmax(0, 1fr))",
+            lg: "minmax(150px, 0.8fr) minmax(175px, 1fr) minmax(175px, 1fr) minmax(130px, 0.7fr) minmax(220px, 1.4fr) 72px",
+          },
+          gap: 1.5,
+          width: "100%",
+          alignItems: "stretch",
+        }}
+      >
+        <FormControl fullWidth>
+          <InputLabel>계좌</InputLabel>
+          <Select value={formData.accountID || ""} label="계좌" onChange={(e) => onAccountChange?.(String(e.target.value))}>
+            <MenuItem value="">전체 계좌</MenuItem>
+            {accountOptions.map((account) => (
+              <MenuItem key={account.value} value={account.value}>
+                {account.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <FormControl fullWidth>
+          <InputLabel>{selectLabel}</InputLabel>
+          <Select
+            value={formData[selectValueKey] || 0}
+            label={selectLabel}
+            onChange={(e) => changeHandler?.(e.target.value)}
+          >
+            {options.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <TextField
+          label="시작일"
+          name="startDate"
+          type="date"
+          value={formData.startDate}
+          onChange={handleChange}
+          InputLabelProps={{ shrink: true }}
+          fullWidth
+        />
+        <TextField
+          label="종료일"
+          name="endDate"
+          type="date"
+          value={formData.endDate}
+          onChange={handleChange}
+          InputLabelProps={{ shrink: true }}
+          fullWidth
+        />
+
+        <TextField
+          label={searchFieldLabel}
+          name={searchFieldKey}
+          type="text"
+          value={formData[searchFieldKey] || ""}
+          onChange={handleChange}
+          InputLabelProps={{ shrink: true }}
+          fullWidth
+        />
+        <Button variant="contained" color="primary" onClick={handleSearch} fullWidth sx={{ minHeight: 56 }}>
+          검색
+        </Button>
+      </Box>
+    );
+  }
 
   // *필수: CS컴포넌트에서 CS유형을 별도의 상태로 관리해야 하는 경우를 위해
   // onCsKindChange는 그대로 유지하지만, 내부 로직은 formData 기반으로 변경되었습니다.

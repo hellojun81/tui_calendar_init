@@ -14,7 +14,7 @@ import SearchFields from "./provider/SearchFields"; // 검색 컴포넌트 재�
 interface ITransaction {
   tid: string;
   trserial: number;
-  // accountID: string;
+  accountID: string;
   trdate: string; // YYYYMMDD
   trdt: string; // YYYYMMDDHHmmss
   balance: string;
@@ -44,6 +44,17 @@ const getCurrentDate = () => {
 };
 
 const apiUrl = process.env.NODE_ENV === "production" ? process.env.REACT_APP_API_URL_PRODUCTION : process.env.REACT_APP_API_URL_LOCAL;
+interface BankAccountOption {
+  label: string;
+  value: string;
+  accountIDs: string[];
+}
+
+interface TransactionSummary {
+  count: number;
+  totalIn: number;
+  totalOut: number;
+}
 
 const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustomerName = "", autoSearch = false }) => {
   // -------------------------
@@ -54,8 +65,16 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
 
   const [activeRow, SetactiveRow] = useState<number>(0);
   const [tableData, setTableData] = useState<string[][]>([]);
+  const [transactionSummary, setTransactionSummary] = useState<TransactionSummary | null>(null);
 
   const [description, setDescription] = useState("");
+  const [accountOptions, setAccountOptions] = useState<BankAccountOption[]>([]);
+  const getAccountLabel = useCallback(
+    (accountID: string) => {
+      return accountOptions.find((option) => option.accountIDs.includes(accountID))?.label || accountID;
+    },
+    [accountOptions]
+  );
   const { startDate, endDate } = getCurrentDate();
   const [formData, setFormData] = useState({
     startDate: startDate, // YYYYMMDD
@@ -63,6 +82,7 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
     description: "", // 계좌번호 검색 필터 (고객명 대신 사용)
     filterOption: "거래일",
     tradeType: 0, // 0: 전체, 1: 입금(I), 2: 출금(O)
+    accountID: "",
     // customerName: "",
   });
   const [updateFormData, setUpdateFormData] = React.useState<{
@@ -83,6 +103,19 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
       setFormData((prev) => ({ ...prev, description: defaultCustomerName }));
     }
   }, [defaultCustomerName]);
+
+  const loadAccountOptions = useCallback(async () => {
+    try {
+      const { data } = await axios.get<BankAccountOption[]>(`${apiUrl}/api/popbill/bank/account-options`);
+      setAccountOptions(data);
+    } catch (error) {
+      console.error("계좌 목록 조회 중 오류 발생:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAccountOptions();
+  }, [loadAccountOptions]);
 
   // 자동검색: 초기 세팅 끝난 뒤 단 1회
   const autoSearchedRef = useRef(false);
@@ -119,6 +152,7 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
           data: tableData.length ? tableData : [[" "]],
           columns: [
             { type: "numeric", title: "순번", width: 40 },
+            { type: "text", title: "계좌", width: 80, readOnly: true },
             { type: "date", title: "거래일시", width: 120 },
             { type: "numeric", title: "입금액", width: 100 },
             { type: "numeric", title: "출금액", width: 100 },
@@ -138,7 +172,7 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
             { type: "hidden", title: "TRSerial", width: 1 },
           ],
         });
-        const memoColumnIndex = 7;
+        const memoColumnIndex = 8;
         console.log(jexcelInstance.current);
       } else {
         // 데이터는 tableData가 변경될 때마다 업데이트합니다.
@@ -147,14 +181,14 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
           const columnIndex = x1;
           const rowIndex = y1;
 
-          // '분류' (index 6) 또는 '메모' (index 7)의 변경만 처리
-          if (Number(columnIndex) === 6 || Number(columnIndex) === 7) {
+          // '분류' (index 7) 또는 '메모' (index 8)의 변경만 처리
+          if (Number(columnIndex) === 7 || Number(columnIndex) === 8) {
             if (tableData[y1]) {
               const rowData = tableData[y1];
-              const tid = rowData[8]; // TID (index 8)
-              const trserial = rowData[9]; // TRSerial (index 9)
-              const memo = rowData[7];
-              const pay_type = rowData[6];
+              const tid = rowData[9]; // TID (index 9)
+              const trserial = rowData[10]; // TRSerial (index 10)
+              const memo = rowData[8];
+              const pay_type = rowData[7];
               console.log(`pay_type:${pay_type},memo:${memo}`);
               handleSingleUpdate(tid, trserial, pay_type, memo);
             }
@@ -182,11 +216,24 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
         ...(formData.description && {
           description: formData.description,
         }),
+        ...(formData.accountID && {
+          accountID: formData.accountID,
+        }),
       });
 
       // API 엔드포인트 수정: 은행 거래 내역 조회
       const res = await axios.get(`${apiUrl}/api/popbill/bank/get_DB_BankTransactions?${queryParams.toString()}`);
       const transactions: ITransaction[] = res.data.list || res.data;
+
+      const summary = transactions.reduce<TransactionSummary>(
+        (totals, transaction) => ({
+          count: totals.count + 1,
+          totalIn: totals.totalIn + (Number(String(transaction.accIn || 0).replace(/,/g, "")) || 0),
+          totalOut: totals.totalOut + (Number(String(transaction.accOut || 0).replace(/,/g, "")) || 0),
+        }),
+        { count: 0, totalIn: 0, totalOut: 0 }
+      );
+      setTransactionSummary(summary);
 
       if (transactions.length === 0) {
         setTableData([["조회된 거래 내역이 없습니다."]]);
@@ -197,12 +244,12 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
       setTableData(
         transactions.map((t: ITransaction, index: number) => [
           (index + 1).toString(), // 순번
+          t.accountID ? getAccountLabel(t.accountID) : "-", // 계좌 식별자
           dayjs(t.trdt).format("YYYY-MM-DD"), // 거래일시 포맷
           formatCurrencyWithoutDecimals(t.accIn), // 입금액
           formatCurrencyWithoutDecimals(t.accOut), // 출금액
           formatCurrencyWithoutDecimals(t.balance), // 잔액
           t.combined_remark, // 적요 (remark1 사용)
-          // t.accountID, // 계좌 ID
           t.pay_type || "", // 분류 (커스텀)
           t.memo || "", // 고객명 (커스텀)
           t.tid, // TID (숨김)
@@ -212,6 +259,7 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
     } catch (error) {
       // 🚨 오류 발생 시 사용자에게 피드백 제공 및 테이블 초기화
       console.error("거래 내역 조회 중 오류 발생:", error);
+      setTransactionSummary(null);
       setTableData([[`조회 오류: 알수없는 오류발생`]]);
     }
   };
@@ -225,10 +273,17 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
       console.log("handleCollectLatest", apiUrl);
       const res = await axios.get(`${apiUrl}/api/popbill/bank/latestTransactions`);
       console.log("handleCollectLatest", res);
-      const resultData = res.data;
+      const resultData = res.data as { updatedCount?: number; accounts?: Array<{ ok: boolean; accountName: string; accountNumber: string; message?: string }> };
 
-      if (resultData) {
-        alert(`최신 정보 수집 결과:\n${resultData}건 수집완료`);
+      if (resultData?.accounts) {
+        const resultLines = resultData.accounts.map((account) =>
+          account.ok
+            ? `${account.accountName}(${account.accountNumber}): 수집 완료`
+            : `${account.accountName}(${account.accountNumber}): ${account.message || "수집 실패"}`
+        );
+        alert(`최신 정보 수집 결과 (${resultData.updatedCount || 0}건 업데이트)\n${resultLines.join("\n")}`);
+        await loadAccountOptions();
+        handleSearch();
       } else {
         alert("최신 정보 수집 요청은 성공했으나, 결과 정보가 없습니다.");
       }
@@ -239,7 +294,7 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
 
   const handleSearch = useCallback(() => {
     handleFetchTransactions();
-  }, [formData]); // formData가 변경될 때마다 새로운 함수 인스턴스를 생성하지 않도록 useCallback 사용
+  }, [formData, accountOptions]); // 검색조건이나 계좌 목록이 변경되면 최신 값 사용
 
   // -------------------------
   // 4. 이벤트 핸들러
@@ -326,7 +381,7 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
         }}
       >
         {/* 검색 필드 */}
-        <Box sx={{ display: "flex", gap: "2x", marginBottom: "20px" }}>
+        <Box sx={{ marginBottom: "20px" }}>
           <SearchFields
             prarentComponent="bank" // prop 변경
             formData={formData}
@@ -334,6 +389,8 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
             handleSearch={handleSearch}
             // 기존 onCsKindChange를 onTradeTypeChange로 변경
             onCsKindChange={(v) => handleTradeTypeChange(typeof v === "string" ? parseInt(v, 10) : v)}
+            accountOptions={accountOptions}
+            onAccountChange={(accountID) => setFormData((prev) => ({ ...prev, accountID }))}
           />
         </Box>
 
@@ -358,6 +415,49 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
           }}
         ></Box>
         <div ref={tableRef} />
+
+        {transactionSummary && (
+          <Box
+            aria-label="검색 결과 합계"
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr 1fr", md: "repeat(4, 1fr)" },
+              border: "1px solid #d7dce3",
+              borderTop: 0,
+              backgroundColor: "#f7f9fc",
+              color: "#1f2937",
+            }}
+          >
+            {[
+              { label: "검색 건수", value: `${transactionSummary.count.toLocaleString("ko-KR")}건` },
+              { label: "입금 합계", value: `${formatCurrencyWithoutDecimals(transactionSummary.totalIn)}원`, color: "#1565c0" },
+              { label: "출금 합계", value: `${formatCurrencyWithoutDecimals(transactionSummary.totalOut)}원`, color: "#d32f2f" },
+              {
+                label: "순증감액",
+                value: `${formatCurrencyWithoutDecimals(transactionSummary.totalIn - transactionSummary.totalOut)}원`,
+                color: transactionSummary.totalIn - transactionSummary.totalOut >= 0 ? "#1565c0" : "#d32f2f",
+              },
+            ].map((item) => (
+              <Box
+                key={item.label}
+                sx={{
+                  px: 2,
+                  py: 1.5,
+                  textAlign: "right",
+                  borderRight: { md: "1px solid #d7dce3" },
+                  borderBottom: { xs: "1px solid #d7dce3", md: 0 },
+                }}
+              >
+                <Box component="span" sx={{ display: "block", mb: 0.25, color: "#667085", fontSize: 12 }}>
+                  {item.label}
+                </Box>
+                <Box component="strong" sx={{ color: item.color || "#1f2937", fontSize: 16, fontWeight: 800 }}>
+                  {item.value}
+                </Box>
+              </Box>
+            ))}
+          </Box>
+        )}
 
         {/* 거래 분류 및 메모 수정용 모달이 필요하다면 여기에 추가 */}
         {/* <TransactionModal ... /> */}

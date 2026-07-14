@@ -267,3 +267,7 @@ select {
   padding-bottom: 1px;
   /* 전체적으로 아래쪽 간격 추가 */
 }
+[data-calendar-id="holiday"] .tui-full-calendar-weekday-schedule-title {
+  color: #d32f2f !important;
+  font-weight: 900 !important;
+}
