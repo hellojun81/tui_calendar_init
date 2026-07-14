@@ -250,7 +250,6 @@ const PartyCard: React.FC<PartyCardProps> = React.memo(
     </Paper>
   )
 );
-// ... (PartyCard 컴포넌트는 동일하게 유지) ...
 
 /* ======= 메인 컴포넌트 ======= */
 const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCorpName, scheduleId }) => {
@@ -312,6 +311,9 @@ const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCo
       remark: "",
     }))
   );
+
+
+
 
   /* 한글 IME 조합 보호 */
   const [isComposing, setIsComposing] = useState(false);
@@ -522,6 +524,13 @@ const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCo
   };
 
   /* 제출 */
+
+ const handleTest = () => {
+  // console.log("공급받는자 이메일 local:", invoiceeEmailLocal);
+  // console.log("공급받는자 이메일 domain:", invoiceeEmailDomain);
+};
+
+
   const handleSubmit = async () => {
     const payload = buildPayload();
     const invoice = payload.taxinvoice;
@@ -920,6 +929,9 @@ const InvoiceIssueModal: React.FC<InvoiceIssueModalProps> = ({ defaultInvoiceeCo
                 초기화
               </Button>
               <Box flex={1} />
+                 {/* <Button variant="contained" onClick={handleTest} disabled={loading} sx={{ width: 150 }}>
+                {loading ? "테스트 중..." : "테스트"}
+              </Button> */}
               <Button variant="contained" onClick={handleSubmit} disabled={loading} sx={{ width: 150 }}>
                 {loading ? "발급 중..." : "발급하기"}
               </Button>

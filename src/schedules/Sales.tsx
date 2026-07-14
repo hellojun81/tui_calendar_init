@@ -13,6 +13,15 @@ interface CheckViewProps {
     currentYear: number;
 }
 
+interface SalesSummaryResponse {
+    TOTALSALES: number | string | null;
+    TOTALADCOST: number | string | null;
+    TOTALRENTCNT: number | string | null;
+    TOTALYEARSALES: number | string | null;
+}
+
+const formatMillionCut = (num: number) => Math.floor(num / 10_000);
+
 const TotalSales: React.FC<CheckViewProps> = ({
     currentMonth,
     currentYear
@@ -20,31 +29,35 @@ const TotalSales: React.FC<CheckViewProps> = ({
     const currentMonthFormatted = String(currentMonth).padStart(2, '0');
     const [sales, setSales] = useState<number>(0);
     const [ADsales, setADSales] = useState<number>(0);
-    const [RentCnt, setRentCnt] = useState<number>(0);
     const [ARPC, setARPC] = useState<number>(0); //객단가
-const formatMillionCut = (num: number) => {
-  return Math.floor(num / 10_000);
-};
+    const [yearSales, setYearSales] = useState<number>(0);
 
     useEffect(() => {
         const GetSales = async () => {
             try {
-                const res = await axios.get(`${apiUrl}/api/setup/sales?SearchMonth=${currentYear}-${currentMonthFormatted}`);
-                console.log('resdata',res)
-                setSales(res.data.TOTALSALES); // res.data의 타입을 지정
-                setADSales(formatMillionCut(res.data.TOTALADCOST)); // res.data의 타입을 지정
-                setRentCnt(formatMillionCut(res.data.TOTALRENTCNT)); // res.data의 타입을 지정
-                setARPC(res.data.TOTALSALES/res.data.TOTALRENTCNT)
+                const res = await axios.get<SalesSummaryResponse>(`${apiUrl}/api/setup/sales?SearchMonth=${currentYear}-${currentMonthFormatted}`);
+                const monthlySales = Number(res.data.TOTALSALES) || 0;
+                const adCost = Number(res.data.TOTALADCOST) || 0;
+                const rentCount = Number(res.data.TOTALRENTCNT) || 0;
+                const yearlySales = Number(res.data.TOTALYEARSALES) || 0;
+
+                setSales(monthlySales);
+                setADSales(formatMillionCut(adCost));
+                setARPC(rentCount > 0 ? monthlySales / rentCount : 0);
+                setYearSales(yearlySales);
             } catch { }
         }
         GetSales()
-    }, [currentMonth]); // 첫 렌더링 시에만 실행
+    }, [currentMonth, currentYear]);
 
     // 체크박스 렌더링
     return (
         <div>
             <div style={{padding:'10px',textAlign:'center'}}>
-                매출:{sales}만원 / 광고비{ADsales}만원 /객단가{Math.floor(ARPC)}만원
+                <div>매출:{sales}만원 / 광고비{ADsales}만원 /객단가{Math.floor(ARPC)}만원</div>
+                <div style={{ marginTop: '6px', fontWeight: 700 }}>
+                    년 예상 매출: {yearSales.toLocaleString('ko-KR')}만원
+                </div>
             </div>
         </div>
     );

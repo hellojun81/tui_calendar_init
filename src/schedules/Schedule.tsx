@@ -108,9 +108,10 @@ const Schedule = () => {
     );
     if (isSendingAlimtalk) {
       // 이전에 추가한 setIsSmsModalOpen 상태 업데이트
+      handleRefreshSchedules()
       setIsSmsModalOpen(true);
     }
-    getSchedulesUtil(currentYear, currentMonth, sort, setSchedules, formatMonth);
+    // getSchedulesUtil(currentYear, currentMonth, sort, setSchedules, formatMonth);
   };
 
   const openModal = useCallback((mode: "create" | "edit", scheduleData: ISchedule | null = null) => {
@@ -224,7 +225,7 @@ const Schedule = () => {
   const onDeleteSchedule = async (id: Number) => {
     console.log("onDeleteSchedule", id);
     const res = await axios.delete(`${apiUrl}/api/schedules/${id}`);
-    getSchedulesUtil(currentYear, currentMonth, sort, setSchedules, formatMonth);
+    // getSchedulesUtil(currentYear, currentMonth, sort, setSchedules, formatMonth);
     closeModal(); // 모달 닫기
   };
 

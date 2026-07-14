@@ -34,23 +34,48 @@ import Customers from "./customers"
 const API_URL = process.env.NODE_ENV === "production" ? process.env.REACT_APP_API_URL_PRODUCTION : process.env.REACT_APP_API_URL_LOCAL;
 
 interface TimePickerProps {
-  label: string;
+  label?: string;
   value: string;
   onChange: (value: string) => void;
   options: string[];
 }
-const TimePicker: React.FC<TimePickerProps> = ({ label, value, onChange, options }) => (
-  <FormControl fullWidth>
-    <InputLabel>{label}</InputLabel>
-    <Select value={value} onChange={(e) => onChange(e.target.value)}>
-      {options.map((option) => (
-        <MenuItem key={option} value={option}>
-          {option}
-        </MenuItem>
-      ))}
-    </Select>
-  </FormControl>
-);
+const TimePicker: React.FC<TimePickerProps> = ({ value, onChange }) => {
+  // value는 "HH:mm" 형식이라고 가정
+  const [hour, minute] = value.split(':');
+  const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
+  const minutes = ['00', '10', '20', '30', '40', '50'];
+
+  return (
+    <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+      {/* 시간 선택 */}
+      <FormControl size="small" sx={{ minWidth: '70px' }}>
+        <Select
+          value={hour}
+          onChange={(e) => onChange(`${e.target.value}:${minute}`)}
+          MenuProps={{ PaperProps: { style: { maxHeight: 250 } } }}
+        >
+          {hours.map((h) => (
+            <MenuItem key={h} value={h}>{h}시</MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+
+      <Typography sx={{ fontWeight: 'bold' }}>:</Typography>
+
+      {/* 분 선택 */}
+      <FormControl size="small" sx={{ minWidth: '70px' }}>
+        <Select
+          value={minute}
+          onChange={(e) => onChange(`${hour}:${e.target.value}`)}
+        >
+          {minutes.map((m) => (
+            <MenuItem key={m} value={m}>{m}분</MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    </Box>
+  );
+};
 
 const ScheduleModal: React.FC<ScheduleModalProps> = ({
   isOpen,
@@ -117,6 +142,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
 
   /* ── 유틸 ──────────────────────────────────────────────────────────────── */
   // const openSelector = () => setIsSelectorOpen(true);
+  // console.log('rentplace',rentPlace)
   const closeSelector = () => setIsSelectorOpen(false);
   const formatToKoreanTimeString = (date: Date): string => {
     if (!date) return "";
@@ -159,6 +185,28 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   const hourOptions = generateHourOptions();
 
   /* ── Effects (조건은 콜백 내부에서 가드) ───────────────────────────────── */
+useEffect(() => {
+  if (isOpen) {
+    console.log("[ScheduleModal OPEN 직전] rentPlace =", rentPlace);
+  }
+}, [isOpen]);
+
+useEffect(() => {
+  if (!isOpen) return;
+
+  if (!rentPlace) {
+    setSelectedFloors([]);       // 비어있으면 체크 해제(초기화)
+    return;
+  }
+
+  const parsed = rentPlace
+    .split(",")
+    .map((s) => s.match(/\d+/)?.[0])
+    .filter((v): v is string => Boolean(v));
+
+  setSelectedFloors(parsed);
+}, [isOpen, rentPlace]);
+
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -178,10 +226,13 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       .map((s) => s.match(/\d+/)?.[0]) // "1층" -> "1"
       .filter((v): v is string => Boolean(v));
     setSelectedFloors(parsed);
+
   }, [rentPlace]);
+
   useEffect(() => {
     setRentPlace(selectedFloors.join(",")); // "1층,2층"
   }, [selectedFloors, setRentPlace]);
+
   const handleOpenVatModal = () => {
     if (Number(vatSendCount) > 0) {
       alert(`해당 스케쥴에 이미 ${vatSendCount}건의 세금계산서 발행 이력이 있습니다.`);
@@ -494,28 +545,48 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
             </Button>
           </Box>
 
-          <Box sx={{ display: "flex", gap: 2 }}>
-            <TextField
-              label="시작일"
-              type="date"
-              value={newStart ? formatToKoreanTimeString(newStart) : ""}
-              onChange={(e) => setNewStart(new Date(e.target.value))}
-              fullWidth
-            />
-            <TimePicker label="시작 시간" value={startTime || "00:00"} onChange={setStartTime} options={generateHourOptions()} />
-          </Box>
 
-          <Box sx={{ display: "flex", gap: 2 }}>
-            <TextField
-              label="종료일"
-              type="date"
-              value={newEnd ? formatToKoreanTimeString(newEnd) : ""}
-              onChange={(e) => setNewEnd(new Date(e.target.value))}
-              fullWidth
-            />
-            <TimePicker label="종료 시간" value={endTime || "00:00"} onChange={setEndTime} options={generateHourOptions()} />
-          </Box>
+{/* 시작일 및 시작 시간 */}
+<Box sx={{ display: "flex", gap: 2, alignItems: "center", mt: 1 }}>
+  <Box sx={{ flex: 1.5 }}> {/* 날짜 입력창 비율 조절 */}
+    <TextField
+      label="시작일"
+      type="date"
+      value={newStart ? formatToKoreanTimeString(newStart) : ""}
+      onChange={(e) => setNewStart(new Date(e.target.value))}
+      fullWidth
+      InputLabelProps={{ shrink: true }}
+    />
+  </Box>
+  <Box sx={{ flex: 1 }}> {/* 시간 선택창이 찌그러지지 않게 여유 공간 할당 */}
+    <TimePicker
+      value={startTime || "00:00"}
+      onChange={setStartTime}
+      options={generateHourOptions()}
+    />
+  </Box>
+</Box>
 
+{/* 종료일 및 종료 시간 */}
+<Box sx={{ display: "flex", gap: 2, alignItems: "center", mt: 1 }}>
+  <Box sx={{ flex: 1.5 }}>
+    <TextField
+      label="종료일"
+      type="date"
+      value={newEnd ? formatToKoreanTimeString(newEnd) : ""}
+      onChange={(e) => setNewEnd(new Date(e.target.value))}
+      fullWidth
+      InputLabelProps={{ shrink: true }}
+    />
+  </Box>
+  <Box sx={{ flex: 1 }}>
+    <TimePicker
+      value={endTime || "00:00"}
+      onChange={setEndTime}
+      options={generateHourOptions()}
+    />
+  </Box>
+</Box>
           <Box sx={{ position: "relative", mt: 1 }}>
             {/* 라벨 (TextField의 떠있는 라벨처럼) */}
             <Typography

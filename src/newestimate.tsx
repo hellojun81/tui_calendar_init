@@ -107,12 +107,7 @@ const PriceCalculator: React.FC = () => {
   const calculatePrice = useCallback(() => {
     let finalPrice = 0;
 
-    // 필요하면 다시 켜세요: 50인 이상은 전체 대관만
-    // if (isOver50 && floor !== "all") {
-    //   message.warning("50인 이상은 전체 대관만 가능합니다.");
-    //   setPrice(0);
-    //   return;
-    // }
+
 
     if (!isEventType) {
       // ===== 사진 / 영상 =====
