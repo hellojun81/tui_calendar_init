@@ -25,8 +25,9 @@ import JexcelModal from "./JexcelModal";
 import GetCsKind from "./get_csKind";
 import GetADmedia from "./get_ADmedia";
 import type { GetPlaceMoneyResult } from "../types/pricing";
-import { formatMoney, formatDate, extractPersonnelNumber, formatEstPriceToAmount } from "../utils/util";
+import { formatDate, extractPersonnelNumber, formatEstPriceToAmount } from "../utils/util";
 import InvoiceIssueModal from "../components/InvoiceIssueModal";
+import EstimateDocumentModal from "../components/EstimateDocumentModal";
 import KakaoSender from "../components/kakaoManager";
 import Customers from "./customers"
 // import { formatEstPriceToAmount, extractPersonnelNumber } from "../utils/scheduleModalUtils";
@@ -132,6 +133,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   // const [smsOpen, setSmsOpen] = useState(false);
   const [csOpen, setCsOpen] = useState(false);
   const [vatOpen, setVatOpen] = useState(false);
+  const [estimateOpen, setEstimateOpen] = useState(false);
 
   const [selectedFloors, setSelectedFloors] = useState<string[]>([]);
   const floorOptions = [
@@ -312,104 +314,9 @@ useEffect(() => {
     return { place: place, placeOriginfee: placeOriginfee, overfee: overfee };
   };
 
-  function getHourDiff(start?: string, end?: string): number {
-    if (!start || !end) return 0; // 혹은 throw
-    const [sh, sm] = start.split(":").map(Number);
-    const [eh, em] = end.split(":").map(Number);
-    return (eh * 60 + em - (sh * 60 + sm)) / 60;
-  }
-
   const handleCheckboxChange = (value: string) => {
     setSelectedFloors((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
   };
-  const handleDownEstimate = () => {};
-  const handleDownloadEstimate = () => {
-    console.log(formatDate(newStart));
-    const userTime = getHourDiff(startTime, endTime);
-    const formattedFloors = selectedFloors.map((floor) => `${floor}층`);
-    const today = new Date();
-    downloadEstimate({
-      no: "2025-0012",
-      date: `${today}`,
-      customerName: customerName,
-      bankInfo: "기업은행 027-162297-04-021 (주)타울",
-      items: [
-        {
-          name: `스튜디오 렌탈_ ${gubun}`,
-          spec: `${formattedFloors}`,
-          qty: 1,
-          unit: estPrice,
-        },
-        {
-          name: `촬영일`,
-          spec: `${formatDate(newStart)}~${formatDate(newEnd)}`,
-          qty: 1,
-          unit: 0,
-        },
-
-        {
-          name: `사용시간 `,
-          spec: `${startTime}~${endTime}`,
-          qty: `${userTime}시간`,
-          // unit: estPrice,
-        },
-        {
-          name: `스튜디오 사용인원 `,
-          spec: `${userInt}`,
-          qty: 0,
-          // unit: estPrice,
-        },
-      ],
-    });
-  };
-
-  async function downloadEstimate(payload: unknown, tries = 2, timeoutMs = 15000): Promise<void> {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), timeoutMs);
-
-    try {
-      const r = await fetch(`${API_URL}/api/estimates/pdf`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-        signal: ctrl.signal,
-      });
-
-      // 1) HTTP 에러면 본문 읽고 에러 던지기
-      if (!r.ok) {
-        const msg = await r.text().catch(() => "");
-        throw new Error(`서버 오류(${r.status}) ${msg}`);
-      }
-
-      // 2) PDF 헤더 검증
-      const buf = await r.arrayBuffer();
-      const head = String.fromCharCode(...new Uint8Array(buf).slice(0, 4));
-      if (head !== "%PDF") {
-        throw new Error(`PDF 헤더 아님: ${head}`);
-      }
-
-      // 3) 다운로드
-      const url = URL.createObjectURL(new Blob([buf], { type: "application/pdf" }));
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `estimate_${Date.now()}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err: any) {
-      const isTransient = err?.name === "AbortError" || err?.message?.includes("NetworkError") || err?.message?.includes("Failed to fetch");
-
-      if (isTransient && tries > 0) {
-        await new Promise((r) => setTimeout(r, 800));
-        // 재귀 호출 시에도 같은 반환 타입 유지
-        return downloadEstimate(payload, tries - 1, timeoutMs);
-      }
-
-      alert(`PDF 다운로드 실패: ${err?.message || err}`);
-      throw err;
-    } finally {
-      clearTimeout(t);
-    }
-  }
 
   const openDepositModal = () => {
     if (!customerName) {
@@ -449,6 +356,10 @@ useEffect(() => {
   if (!isOpen) return null;
   const formattedAmount = formatEstPriceToAmount(estPrice);
   const formattedPersonnel = extractPersonnelNumber(userInt);
+  const estimateDocumentKey =
+    modalMode === "edit" && id
+      ? `schedule-${id}`
+      : `draft-${formatToKoreanTimeString(newStart || new Date())}-${customerName || "new"}`;
   /* ── 렌더 ─────────────────────────────────────────────────────────────── */
   return (
     <Dialog open={isOpen} onClose={closeModal} maxWidth="md" fullWidth sx={{ fontSize: "12px", maxWidth: "700px", margin: "0 auto" }}>
@@ -644,16 +555,9 @@ useEffect(() => {
               onChange={handlePriceChange}
               sx={{ flex: 5 }} // 70%
             />
-            {/* <Button
-              onClick={handleDownEstimate}
-              variant="contained"
-              sx={{ flex: 2 }} // 30%
-            >
-              견적
+            <Button onClick={() => setEstimateOpen(true)} variant="outlined" sx={{ flex: 3, whiteSpace: "nowrap" }}>
+              견적서 작성/출력
             </Button>
-            <Button onClick={handleDownloadEstimate} variant="outlined" sx={{ flex: 3 }}>
-              견적서 다운로드
-            </Button> */}
           </Box>
           <TextField label="비고" fullWidth value={etc} onChange={(e) => setEtc(e.target.value)} multiline />
         </Box>
@@ -676,6 +580,24 @@ useEffect(() => {
 
       {/* 고객 검색 모달 */}
       <Customers isOpen={isJexcelModalOpen} onClose={closeJexcelModal} onSelect={onSelectCustomer} searchQuery={searchQuery} />
+
+      <EstimateDocumentModal
+        open={estimateOpen}
+        onClose={() => setEstimateOpen(false)}
+        documentKey={estimateDocumentKey}
+        scheduleId={id}
+        customerName={customerName}
+        contactPerson={contactPerson}
+        contactTel={contactTel}
+        estimatePrice={estPrice}
+        shootingType={gubun}
+        rentPlace={rentPlace}
+        startDate={newStart}
+        endDate={newEnd}
+        startTime={startTime}
+        endTime={endTime}
+        personnel={userInt}
+      />
 
       {/* 입금내역 모달 */}
       <Dialog open={depositOpen} onClose={() => setDepositOpen(false)} maxWidth="md">

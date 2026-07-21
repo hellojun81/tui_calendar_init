@@ -8,6 +8,7 @@ import Estimate from "./estimate";
 import Bank from "./Bank";
 import OldEstimate from "./oldestimate";
 import NewEstimate from "./newestimate";
+import EstimateManagement from "./estimates/EstimateManagement";
 // import Setup from "./setup/setup_field";
 // import SetupBusinessInfo from "./setup/setup_bussiness_info";
 import LoginPage from "./login";
@@ -72,7 +73,17 @@ const App: React.FC = () => {
                 </PrivateRoute>
               }
             />
-             <Route
+            <Route
+              path="/estimates/manage"
+              element={
+                <PrivateRoute>
+                  <PageWithTitle title="[AUBE]견적서 관리">
+                    <EstimateManagement />
+                  </PageWithTitle>
+                </PrivateRoute>
+              }
+            />
+            <Route
               path="/newestimate"
               element={
                 <PrivateRoute>
