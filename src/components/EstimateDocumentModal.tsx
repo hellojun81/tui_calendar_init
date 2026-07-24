@@ -184,6 +184,42 @@ const escapeHtml = (value: unknown) =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 
+const exportEstimatePdf = async (pageElement: HTMLElement, estimateNo: string) => {
+  const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import("html2canvas"), import("jspdf")]);
+  await pageElement.ownerDocument.fonts?.ready;
+  pageElement.ownerDocument.body.classList.add("pdf-exporting");
+
+  try {
+    const canvas = await html2canvas(pageElement, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      logging: false,
+    });
+    const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const imageHeight = (canvas.height * pageWidth) / canvas.width;
+    const imageData = canvas.toDataURL("image/jpeg", 0.95);
+    let heightLeft = imageHeight;
+    let position = 0;
+
+    pdf.addImage(imageData, "JPEG", 0, position, pageWidth, imageHeight, undefined, "FAST");
+    heightLeft -= pageHeight;
+    while (heightLeft > 0) {
+      position = heightLeft - imageHeight;
+      pdf.addPage();
+      pdf.addImage(imageData, "JPEG", 0, position, pageWidth, imageHeight, undefined, "FAST");
+      heightLeft -= pageHeight;
+    }
+
+    const fileName = `${estimateNo || "estimate"}`.replace(/[\\/:*?"<>|]/g, "_");
+    pdf.save(`${fileName}.pdf`);
+  } finally {
+    pageElement.ownerDocument.body.classList.remove("pdf-exporting");
+  }
+};
+
 const EstimateDocumentModal: React.FC<EstimateDocumentModalProps> = (props) => {
   const { open, onClose, onSaved, documentKey, customerName } = props;
   const theme = useTheme();
@@ -208,6 +244,7 @@ const EstimateDocumentModal: React.FC<EstimateDocumentModalProps> = (props) => {
   const [estimate, setEstimate] = useState<EstimateDocument>(defaults);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [pdfSaving, setPdfSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -315,13 +352,7 @@ const EstimateDocumentModal: React.FC<EstimateDocumentModalProps> = (props) => {
     }
   };
 
-  const handlePrint = () => {
-    const printWindow = window.open("", "_blank", "width=1100,height=850");
-    if (!printWindow) {
-      setError("인쇄 창이 차단되었습니다. 브라우저의 팝업 허용 후 다시 시도해 주세요.");
-      return;
-    }
-
+  const buildPrintHtml = () => {
     const itemRows = estimate.items
       .map(
         (item, index) => `<tr>
@@ -336,13 +367,24 @@ const EstimateDocumentModal: React.FC<EstimateDocumentModalProps> = (props) => {
       )
       .join("");
 
-    printWindow.document.write(`<!doctype html><html lang="ko"><head><meta charset="utf-8" /><title>${escapeHtml(
+    return `<!doctype html><html lang="ko"><head><meta charset="utf-8" /><title>${escapeHtml(
       estimate.estimateNo
     )}</title><style>
       @page { size: A4; margin: 12mm; }
       * { box-sizing: border-box; }
       body { margin: 0; color: #111; background: #e9ecef; font-family: Arial, "Noto Sans KR", sans-serif; font-size: 10.5px; }
+      .preview-toolbar { position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 20px; color: #fff; background: #263238; box-shadow: 0 2px 10px rgba(0,0,0,.28); }
+      .preview-title { font-size: 14px; font-weight: 900; }
+      .preview-guide { margin-top: 3px; color: #cfd8dc; font-size: 11px; }
+      .preview-actions { display: flex; gap: 8px; flex-shrink: 0; }
+      .preview-button { min-width: 92px; padding: 9px 14px; border: 1px solid #90a4ae; border-radius: 6px; color: #fff; background: transparent; font-size: 12px; font-weight: 800; cursor: pointer; }
+      .preview-button:hover { background: rgba(255,255,255,.1); }
+      .preview-button.primary { border-color: #1976d2; background: #1976d2; }
+      .preview-button.primary:hover { background: #1565c0; }
+      .preview-button.close { color: #263238; border-color: #fff; background: #fff; }
+      .preview-button:disabled { opacity: .6; cursor: wait; }
       .page { width: calc(100% - 48px); max-width: 210mm; min-height: 297mm; margin: 24px auto; padding: 16mm 14mm 14mm; background: #fff; box-shadow: 0 5px 24px rgba(0,0,0,.18); }
+      .pdf-exporting .page { width: 210mm; max-width: 210mm; margin: 0; box-shadow: none; }
       .top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6mm; }
       .estimate-word { margin: 0; font-size: 34px; font-weight: 900; letter-spacing: -1px; line-height: 1; }
       .brand { color: #1565c0; text-align: right; font-size: 17px; font-weight: 900; line-height: 1.1; }
@@ -381,9 +423,19 @@ const EstimateDocumentModal: React.FC<EstimateDocumentModalProps> = (props) => {
       .bank { margin-top: 2mm; color: #222; font-weight: 800; }
       @media print {
         body { background: #fff; }
+        .preview-toolbar { display: none !important; }
         .page { width: auto; max-width: none; min-height: auto; margin: 0; padding: 0; box-shadow: none; }
       }
-    </style></head><body><main class="page">
+    </style></head><body>
+      <div class="preview-toolbar">
+        <div><div class="preview-title">견적서 미리보기</div><div class="preview-guide" id="pdf-guide">인쇄하거나 PDF 파일로 바로 저장할 수 있습니다.</div></div>
+        <div class="preview-actions">
+          <button class="preview-button" type="button" onclick="window.print()">인쇄하기</button>
+          <button class="preview-button primary" id="pdf-save-button" type="button">PDF 저장</button>
+          <button class="preview-button close" type="button" onclick="window.close()">닫기</button>
+        </div>
+      </div>
+      <main class="page">
       <header class="top"><h1 class="estimate-word">ESTIMATE</h1><div class="brand">TAUL STUDIO<small>SPACE · CREATIVE · RENTAL</small></div></header>
       <div class="estimate-no">No. ${escapeHtml(estimate.estimateNo)}</div>
       <table class="summary"><tbody>
@@ -411,9 +463,81 @@ const EstimateDocumentModal: React.FC<EstimateDocumentModalProps> = (props) => {
         <div class="supplier-details">등록번호 ${escapeHtml(estimate.supplier.businessNumber)}　 대표자 ${escapeHtml(estimate.supplier.representative)}　 업태 ${escapeHtml(estimate.supplier.businessType)}　 종목 ${escapeHtml(estimate.supplier.businessClass)}<br />${escapeHtml(estimate.supplier.address)}<br />T. ${escapeHtml(estimate.supplier.contact)}　 E. ${escapeHtml(estimate.supplier.email)}</div>
         <div class="bank">입금계좌: ${escapeHtml(estimate.bankInfo)}</div>
       </footer>
-      <script>window.onload = () => { window.focus(); window.print(); };</script>
-    </main></body></html>`);
+    </main></body></html>`;
+  };
+
+  const handlePrint = () => {
+    const printWindow = window.open("", "_blank", "width=1100,height=850");
+    if (!printWindow) {
+      setError("인쇄 창이 차단되었습니다. 브라우저의 팝업 허용 후 다시 시도해 주세요.");
+      return;
+    }
+
+    printWindow.document.write(buildPrintHtml());
     printWindow.document.close();
+
+    const pdfButton = printWindow.document.getElementById("pdf-save-button") as HTMLButtonElement | null;
+    const pdfGuide = printWindow.document.getElementById("pdf-guide");
+    const pageElement = printWindow.document.querySelector(".page") as HTMLElement | null;
+
+    pdfButton?.addEventListener("click", async () => {
+      if (!pageElement) return;
+      const originalLabel = pdfButton.textContent || "PDF 저장";
+      pdfButton.disabled = true;
+      pdfButton.textContent = "PDF 생성 중...";
+      if (pdfGuide) pdfGuide.textContent = "견적서 PDF 파일을 생성하고 있습니다.";
+
+      try {
+        await exportEstimatePdf(pageElement, estimate.estimateNo);
+        if (pdfGuide) pdfGuide.textContent = "PDF 파일 저장이 완료되었습니다.";
+      } catch (pdfError) {
+        console.error("PDF 파일 생성 실패:", pdfError);
+        if (pdfGuide) pdfGuide.textContent = "PDF 생성에 실패했습니다. 다시 시도해 주세요.";
+        printWindow.alert("PDF 파일 생성에 실패했습니다. 다시 시도해 주세요.");
+      } finally {
+        pdfButton.disabled = false;
+        pdfButton.textContent = originalLabel;
+      }
+    });
+  };
+
+  const handlePdfDownload = async () => {
+    setPdfSaving(true);
+    setError("");
+    setMessage("");
+    const renderFrame = document.createElement("iframe");
+    renderFrame.setAttribute("aria-hidden", "true");
+    Object.assign(renderFrame.style, {
+      position: "fixed",
+      left: "-10000px",
+      top: "0",
+      width: "210mm",
+      height: "297mm",
+      border: "0",
+      pointerEvents: "none",
+    });
+    document.body.appendChild(renderFrame);
+
+    try {
+      const frameDocument = renderFrame.contentDocument;
+      if (!frameDocument) throw new Error("PDF 렌더링 문서를 만들 수 없습니다.");
+      frameDocument.open();
+      frameDocument.write(buildPrintHtml());
+      frameDocument.close();
+      await frameDocument.fonts?.ready;
+      await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+
+      const pageElement = frameDocument.querySelector(".page") as HTMLElement | null;
+      if (!pageElement) throw new Error("견적서 출력 영역을 찾을 수 없습니다.");
+      await exportEstimatePdf(pageElement, estimate.estimateNo);
+      setMessage("PDF 파일 저장이 완료되었습니다.");
+    } catch (pdfError) {
+      console.error("PDF 파일 생성 실패:", pdfError);
+      setError("PDF 파일 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+    } finally {
+      renderFrame.remove();
+      setPdfSaving(false);
+    }
   };
 
   const partyFields: Array<{ key: keyof EstimateParty; label: string }> = [
@@ -475,7 +599,7 @@ const EstimateDocumentModal: React.FC<EstimateDocumentModalProps> = (props) => {
       >
         <Box>
           <Typography variant="h6" sx={{ fontWeight: 900 }}>견적서 작성 및 출력</Typography>
-          <Typography variant="caption" color="text.secondary">회사·고객 정보와 금액을 확인한 뒤 저장 또는 인쇄하세요.</Typography>
+          <Typography variant="caption" color="text.secondary">회사·고객 정보와 금액을 확인한 뒤 저장, 인쇄 또는 PDF로 내려받으세요.</Typography>
         </Box>
         <Box sx={{ textAlign: "right", ml: 2 }}>
           <Typography variant="caption" color="text.secondary">최종 견적금액</Typography>
@@ -677,8 +801,11 @@ const EstimateDocumentModal: React.FC<EstimateDocumentModalProps> = (props) => {
         <Button startIcon={<SaveIcon />} variant="outlined" onClick={handleSave} disabled={loading || saving}>
           {saving ? "저장 중..." : "견적서 저장"}
         </Button>
-        <Button startIcon={<PrintIcon />} variant="contained" onClick={handlePrint} disabled={loading}>
-          인쇄 / PDF 저장
+        <Button startIcon={<PrintIcon />} variant="outlined" onClick={handlePrint} disabled={loading || pdfSaving}>
+          인쇄 미리보기
+        </Button>
+        <Button variant="contained" onClick={handlePdfDownload} disabled={loading || pdfSaving}>
+          {pdfSaving ? "PDF 생성 중..." : "PDF 바로 저장"}
         </Button>
       </DialogActions>
     </Dialog>
