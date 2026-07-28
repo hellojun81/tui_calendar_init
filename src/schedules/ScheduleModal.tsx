@@ -600,12 +600,26 @@ useEffect(() => {
       />
 
       {/* 입금내역 모달 */}
-      <Dialog open={depositOpen} onClose={() => setDepositOpen(false)} maxWidth="md">
-        <DialogTitle>
+      <Dialog
+        open={depositOpen}
+        onClose={() => setDepositOpen(false)}
+        maxWidth="xl"
+        fullWidth
+        PaperProps={{
+          sx: {
+            width: "calc(100% - 24px)",
+            maxWidth: 1500,
+            maxHeight: "calc(100% - 24px)",
+            m: 1.5,
+            boxSizing: "border-box",
+          },
+        }}
+      >
+        <DialogTitle sx={{ pr: 3, fontSize: { xs: "1.1rem", sm: "1.35rem" }, fontWeight: 800 }}>
           입금내역 [ {formatDate(newStart) ? `${formatDate(newStart)}` : ""}]{customerName ? ` ${customerName} ` : ""}
           계약금:{estPrice ? ` ${estPrice} ` : ""}
         </DialogTitle>
-        <DialogContent dividers>
+        <DialogContent dividers sx={{ p: { xs: 1, sm: 2 }, overflowX: "hidden" }}>
           <Bank embedded defaultCustomerName={customerName} autoSearch />
         </DialogContent>
         <DialogActions>

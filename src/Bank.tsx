@@ -370,14 +370,18 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
   };
 
   return (
-    <div>
+    <Box sx={{ width: "100%", minWidth: 0, boxSizing: "border-box" }}>
       <Box
         sx={{
+          width: "auto",
           maxWidth: "1400px", // 테이블 크기에 맞게 조정
+          minWidth: 0,
           margin: "0 auto",
-          padding: "20px",
+          padding: embedded ? { xs: "10px", sm: "16px" } : "20px",
           border: "1px solid #ddd",
           borderRadius: "8px",
+          overflow: "hidden",
+          boxSizing: "border-box",
         }}
       >
         {/* 검색 필드 */}
@@ -414,7 +418,19 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
             marginBottom: "10px",
           }}
         ></Box>
-        <div ref={tableRef} />
+        <Box
+          className="bank-table-scroll"
+          sx={{
+            width: "100%",
+            maxWidth: "100%",
+            overflowX: "auto",
+            overflowY: "hidden",
+            pb: 0.5,
+            WebkitOverflowScrolling: "touch",
+          }}
+        >
+          <div ref={tableRef} />
+        </Box>
 
         {transactionSummary && (
           <Box
@@ -462,7 +478,7 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
         {/* 거래 분류 및 메모 수정용 모달이 필요하다면 여기에 추가 */}
         {/* <TransactionModal ... /> */}
       </Box>
-    </div>
+    </Box>
   );
 };
 

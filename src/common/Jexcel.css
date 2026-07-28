@@ -16,6 +16,11 @@
     overflow: visible !important; 
 }
 
+.bank-table-scroll .jexcel_container,
+.bank-table-scroll .jexcel_content {
+    min-width: 1140px;
+}
+
 .jss_worksheet {
     width: 100%;
     font-family: Arial, sans-serif;
