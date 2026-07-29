@@ -200,16 +200,18 @@ const exportEstimatePdf = async (pageElement: HTMLElement, estimateNo: string) =
     const pageWidth = 210;
     const pageHeight = 297;
     const imageHeight = (canvas.height * pageWidth) / canvas.width;
+    const pageRoundingTolerance = 0.5;
+    const renderedImageHeight = imageHeight <= pageHeight + pageRoundingTolerance ? pageHeight : imageHeight;
     const imageData = canvas.toDataURL("image/jpeg", 0.95);
-    let heightLeft = imageHeight;
+    let heightLeft = renderedImageHeight;
     let position = 0;
 
-    pdf.addImage(imageData, "JPEG", 0, position, pageWidth, imageHeight, undefined, "FAST");
+    pdf.addImage(imageData, "JPEG", 0, position, pageWidth, renderedImageHeight, undefined, "FAST");
     heightLeft -= pageHeight;
-    while (heightLeft > 0) {
-      position = heightLeft - imageHeight;
+    while (heightLeft > pageRoundingTolerance) {
+      position = heightLeft - renderedImageHeight;
       pdf.addPage();
-      pdf.addImage(imageData, "JPEG", 0, position, pageWidth, imageHeight, undefined, "FAST");
+      pdf.addImage(imageData, "JPEG", 0, position, pageWidth, renderedImageHeight, undefined, "FAST");
       heightLeft -= pageHeight;
     }
 
@@ -422,9 +424,10 @@ const EstimateDocumentModal: React.FC<EstimateDocumentModalProps> = (props) => {
       .supplier-details { color: #555; font-size: 8.5px; line-height: 1.65; }
       .bank { margin-top: 2mm; color: #222; font-weight: 800; }
       @media print {
+        html, body { width: 100%; height: auto; }
         body { background: #fff; }
         .preview-toolbar { display: none !important; }
-        .page { width: auto; max-width: none; min-height: auto; margin: 0; padding: 0; box-shadow: none; }
+        .page { width: auto; max-width: none; min-height: auto; margin: 0; padding: 0; box-shadow: none; break-after: avoid-page; page-break-after: avoid; }
       }
     </style></head><body>
       <div class="preview-toolbar">
@@ -436,7 +439,7 @@ const EstimateDocumentModal: React.FC<EstimateDocumentModalProps> = (props) => {
         </div>
       </div>
       <main class="page">
-      <header class="top"><h1 class="estimate-word">ESTIMATE</h1><div class="brand">TAUL STUDIO<small>SPACE · CREATIVE · RENTAL</small></div></header>
+      <header class="top"><h1 class="estimate-word">ESTIMATE</h1><div class="brand">aubestudio<small>SPACE · CREATIVE · RENTAL</small></div></header>
       <div class="estimate-no">No. ${escapeHtml(estimate.estimateNo)}</div>
       <table class="summary"><tbody>
         <tr><th>수신자</th><td>${escapeHtml(estimate.recipient.corpName)}${estimate.recipient.representative ? ` · ${escapeHtml(estimate.recipient.representative)}` : ""}</td></tr>
