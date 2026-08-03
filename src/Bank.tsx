@@ -56,6 +56,17 @@ interface TransactionSummary {
   totalOut: number;
 }
 
+interface BankCollectionResult {
+  updatedCount?: number;
+  accounts?: Array<{
+    ok: boolean;
+    accountName: string;
+    accountNumber: string;
+    message?: string;
+  }>;
+  message?: string;
+}
+
 const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustomerName = "", autoSearch = false }) => {
   // -------------------------
   // 1. 상태 및 Refs 정의
@@ -273,7 +284,7 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
       console.log("handleCollectLatest", apiUrl);
       const res = await axios.get(`${apiUrl}/api/popbill/bank/latestTransactions`);
       console.log("handleCollectLatest", res);
-      const resultData = res.data as { updatedCount?: number; accounts?: Array<{ ok: boolean; accountName: string; accountNumber: string; message?: string }> };
+      const resultData = res.data as BankCollectionResult;
 
       if (resultData?.accounts) {
         const resultLines = resultData.accounts.map((account) =>
@@ -287,8 +298,24 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
       } else {
         alert("최신 정보 수집 요청은 성공했으나, 결과 정보가 없습니다.");
       }
-    } catch (err) {
-      alert("최신 정보 수집 중 오류가 발생하였습니다.");
+    } catch (error) {
+      console.error("최신 정보 수집 중 오류 발생:", error);
+      const resultData = axios.isAxiosError<BankCollectionResult>(error) ? error.response?.data : undefined;
+
+      if (resultData?.accounts?.length) {
+        const resultLines = resultData.accounts.map(
+          (account) => `${account.accountName}(${account.accountNumber}): ${account.message || "수집 실패"}`
+        );
+        const needsSubscriptionRenewal = resultData.accounts.some((account) => account.message?.includes("정액제"));
+        alert(
+          `최신 정보 수집 실패\n${resultLines.join("\n")}${
+            needsSubscriptionRenewal ? "\n\n팝빌 계좌 정액제를 갱신한 후 다시 시도해 주세요." : ""
+          }`
+        );
+        return;
+      }
+
+      alert(resultData?.message || "최신 정보 수집 중 오류가 발생하였습니다.");
     }
   };
 
