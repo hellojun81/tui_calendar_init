@@ -20,6 +20,7 @@ interface SalesSummaryResponse {
     TOTALADCOST: number | string | null;
     TOTALRENTCNT: number | string | null;
     TOTALYEARSALES: number | string | null;
+    PREVIOUSYEARTOTALSALES: number | string | null;
     PREVIOUSYEARSALES: number | string | null;
     MONTHBOOKEDDAYCOUNT: number | string | null;
     MONTHAVAILABLESALESDAYS: number | string | null;
@@ -39,6 +40,7 @@ const TotalSales: React.FC<CheckViewProps> = ({
     const [ADsales, setADSales] = useState<number>(0);
     const [ARPC, setARPC] = useState<number>(0); //객단가
     const [yearSales, setYearSales] = useState<number>(0);
+    const [previousYearTotalSales, setPreviousYearTotalSales] = useState<number>(0);
     const [previousYearSales, setPreviousYearSales] = useState<number>(0);
     const [monthBookedDayCount, setMonthBookedDayCount] = useState<number>(0);
     const [monthAvailableSalesDays, setMonthAvailableSalesDays] = useState<number | null>(null);
@@ -53,6 +55,7 @@ const TotalSales: React.FC<CheckViewProps> = ({
                 const adCost = Number(res.data.TOTALADCOST) || 0;
                 const rentCount = Number(res.data.TOTALRENTCNT) || 0;
                 const yearlySales = Number(res.data.TOTALYEARSALES) || 0;
+                const previousYearlySales = Number(res.data.PREVIOUSYEARTOTALSALES) || 0;
                 const previousSales = Number(res.data.PREVIOUSYEARSALES) || 0;
                 const monthBookedDays = Number(res.data.MONTHBOOKEDDAYCOUNT) || 0;
                 const monthAvailableDays = Number(res.data.MONTHAVAILABLESALESDAYS);
@@ -63,6 +66,7 @@ const TotalSales: React.FC<CheckViewProps> = ({
                 setADSales(formatMillionCut(adCost));
                 setARPC(rentCount > 0 ? monthlySales / rentCount : 0);
                 setYearSales(yearlySales);
+                setPreviousYearTotalSales(previousYearlySales);
                 setPreviousYearSales(previousSales);
                 setMonthBookedDayCount(monthBookedDays);
                 setMonthAvailableSalesDays(Number.isFinite(monthAvailableDays) ? monthAvailableDays : null);
@@ -77,6 +81,12 @@ const TotalSales: React.FC<CheckViewProps> = ({
     const differenceRate = previousYearSales > 0 ? (difference / previousYearSales) * 100 : null;
     const comparisonColor = difference > 0 ? '#d32f2f' : difference < 0 ? '#1976d2' : '#616161';
     const comparisonSymbol = difference > 0 ? '▲' : difference < 0 ? '▼' : '―';
+    const yearGrowthRate = previousYearTotalSales > 0
+        ? ((yearSales - previousYearTotalSales) / previousYearTotalSales) * 100
+        : null;
+    const yearGrowthColor = yearGrowthRate === null
+        ? '#616161'
+        : yearGrowthRate > 0 ? '#d32f2f' : yearGrowthRate < 0 ? '#1976d2' : '#616161';
     const today = dayjs().startOf('day');
     const monthSalesWindowDays = (monthAvailableSalesDays || 0) + monthBookedDayCount;
     const monthBookingRate = monthAvailableSalesDays === null || monthSalesWindowDays === 0
@@ -102,7 +112,14 @@ const TotalSales: React.FC<CheckViewProps> = ({
             color: comparisonColor,
             strong: true,
         },
-        { label: '연 예상 매출', value: `${formatAmount(yearSales)}만원`, color: '#e65100', strong: true },
+        {
+            label: '연 예상 매출',
+            value: `${formatAmount(yearSales)}만원`,
+            detail: `전년 ${formatAmount(previousYearTotalSales)}만원 · 신장률 ${yearGrowthRate === null ? '―' : `${yearGrowthRate >= 0 ? '+' : ''}${yearGrowthRate.toFixed(1)}%`}`,
+            color: '#e65100',
+            detailColor: yearGrowthColor,
+            strong: true,
+        },
         { label: '광고비', value: `${formatAmount(ADsales)}만원`, color: '#6a1b9a' },
         { label: '객단가', value: `${formatAmount(ARPC)}만원`, color: '#00695c' },
         {
@@ -201,7 +218,7 @@ const TotalSales: React.FC<CheckViewProps> = ({
                                 <Typography
                                     sx={{
                                         mt: 0.15,
-                                        color: card.color,
+                                        color: card.detailColor || card.color,
                                         fontSize: '0.63rem',
                                         fontWeight: 700,
                                         lineHeight: 1.2,
