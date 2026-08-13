@@ -92,7 +92,7 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
     endDate: endDate, // YYYYMMDD
     description: "", // 계좌번호 검색 필터 (고객명 대신 사용)
     filterOption: "거래일",
-    tradeType: 0, // 0: 전체, 1: 입금(I), 2: 출금(O)
+    tradeType: 1, // 기본값: 입금(I), 0: 전체, 2: 출금(O)
     accountID: "",
     // customerName: "",
   });
@@ -167,17 +167,17 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
             { type: "date", title: "거래일시", width: 120 },
             { type: "numeric", title: "입금액", width: 100 },
             { type: "numeric", title: "출금액", width: 100 },
-            { type: "numeric", title: "잔액", width: 120 },
-            { type: "text", title: "적요", width: 120 },
             {
               type: "dropdown",
               title: "분류",
-              width: 80,
+              width: 100,
               source: ["계약금", "잔금", "추가금액", "보증금", "기타"],
 
               // jSuites dropdown 옵션 전달
               options: { closeButton: false } as any, // <- Done 버튼 숨김
             },
+            { type: "numeric", title: "잔액", width: 120 },
+            { type: "text", title: "적요", width: 120 },
             { type: "text", title: "메모", width: 180 }, // memo
             { type: "hidden", title: "TID", width: 1 },
             { type: "hidden", title: "TRSerial", width: 1 },
@@ -192,14 +192,14 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
           const columnIndex = x1;
           const rowIndex = y1;
 
-          // '분류' (index 7) 또는 '메모' (index 8)의 변경만 처리
-          if (Number(columnIndex) === 7 || Number(columnIndex) === 8) {
+          // '분류' (index 5) 또는 '메모' (index 8)의 변경만 처리
+          if (Number(columnIndex) === 5 || Number(columnIndex) === 8) {
             if (tableData[y1]) {
               const rowData = tableData[y1];
               const tid = rowData[9]; // TID (index 9)
               const trserial = rowData[10]; // TRSerial (index 10)
               const memo = rowData[8];
-              const pay_type = rowData[7];
+              const pay_type = rowData[5];
               console.log(`pay_type:${pay_type},memo:${memo}`);
               handleSingleUpdate(tid, trserial, pay_type, memo);
             }
@@ -259,9 +259,9 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
           dayjs(t.trdt).format("YYYY-MM-DD"), // 거래일시 포맷
           formatCurrencyWithoutDecimals(t.accIn), // 입금액
           formatCurrencyWithoutDecimals(t.accOut), // 출금액
+          t.pay_type || "", // 분류 (커스텀)
           formatCurrencyWithoutDecimals(t.balance), // 잔액
           t.combined_remark, // 적요 (remark1 사용)
-          t.pay_type || "", // 분류 (커스텀)
           t.memo || "", // 고객명 (커스텀)
           t.tid, // TID (숨김)
           t.trserial.toString(), // TRSerial (숨김)

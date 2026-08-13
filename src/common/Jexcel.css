@@ -95,6 +95,22 @@ border-right: 1px solid #333;
     overflow-y: auto; /* 내용이 많으면 스크롤 */
 }
 
+/* 표 하단 행에서는 목록을 위로 열어 가로 스크롤 영역에 잘리지 않게 한다. */
+.bank-table-scroll .jexcel tbody tr:nth-last-child(-n + 4)
+    .jdropdown-focus > .jdropdown-container {
+    top: auto !important;
+    bottom: calc(100% + 1px) !important;
+    margin-top: 0 !important;
+    margin-bottom: 1px;
+}
+
+/* 편집 중에는 목록이 스크롤 컨테이너 경계 밖에서도 보이게 한다. */
+.bank-table-scroll:has(.jdropdown-focus) {
+    position: relative;
+    z-index: 10001;
+    overflow: visible !important;
+}
+
 /* ========================================= */
 /* 3. 개별 항목 (Item) 스타일 개선 */
 /* ========================================= */
