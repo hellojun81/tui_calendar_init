@@ -40,6 +40,16 @@ interface TimePickerProps {
   onChange: (value: string) => void;
   options: string[];
 }
+
+interface CustomerHistorySummary {
+  total: number;
+  simpleInquiry: number;
+  rent: number;
+  visit: number;
+  tentative: number;
+  other: number;
+}
+
 const TimePicker: React.FC<TimePickerProps> = ({ value, onChange }) => {
   // value는 "HH:mm" 형식이라고 가정
   const [hour, minute] = value.split(':');
@@ -134,6 +144,8 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   const [csOpen, setCsOpen] = useState(false);
   const [vatOpen, setVatOpen] = useState(false);
   const [estimateOpen, setEstimateOpen] = useState(false);
+  const [customerHistory, setCustomerHistory] = useState<CustomerHistorySummary | null>(null);
+  const [customerHistoryLoading, setCustomerHistoryLoading] = useState(false);
 
   const [selectedFloors, setSelectedFloors] = useState<string[]>([]);
   const floorOptions = [
@@ -178,6 +190,43 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     },
     [setContactPerson, setCustomerEtc, setCustomerName, setContactTel]
   );
+
+  useEffect(() => {
+    if (!isOpen || !customerName) {
+      setCustomerHistory(null);
+      setCustomerHistoryLoading(false);
+      return;
+    }
+
+    let active = true;
+    setCustomerHistoryLoading(true);
+
+    axios
+      .get(`${API_URL}/api/schedules/customer-summary`, {
+        params: { customerName },
+      })
+      .then((res) => {
+        if (!active) return;
+        setCustomerHistory({
+          total: Number(res.data.total) || 0,
+          simpleInquiry: Number(res.data.simpleInquiry) || 0,
+          rent: Number(res.data.rent) || 0,
+          visit: Number(res.data.visit) || 0,
+          tentative: Number(res.data.tentative) || 0,
+          other: Number(res.data.other) || 0,
+        });
+      })
+      .catch(() => {
+        if (active) setCustomerHistory(null);
+      })
+      .finally(() => {
+        if (active) setCustomerHistoryLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [customerName, isOpen]);
 
   const generateHourOptions = () => {
     const hours: string[] = [];
@@ -435,6 +484,21 @@ useEffect(() => {
               <Box sx={{ flex: 1 }}>{`전화번호: ${contactTel || ""}`}</Box>
             </Box>
             <Box>{`비고: ${customerEtc || ""}`}</Box>
+            <Paper
+              variant="outlined"
+              sx={{ mt: 1, px: 1.25, py: 0.8, bgcolor: "#f7f9fc", borderColor: "#dce3ea" }}
+            >
+              <Typography sx={{ fontSize: "0.72rem", fontWeight: 800, color: "text.secondary" }}>
+                고객 이력
+              </Typography>
+              <Typography sx={{ mt: 0.2, fontSize: "0.78rem", fontWeight: 700, color: "#334155" }}>
+                {customerHistoryLoading
+                  ? "불러오는 중..."
+                  : customerHistory
+                    ? `대관 ${customerHistory.rent} / 가부킹 ${customerHistory.tentative} / 단순문의 ${customerHistory.simpleInquiry} / 답사 ${customerHistory.visit} / 기타 ${customerHistory.other}`
+                    : "이력 없음"}
+              </Typography>
+            </Paper>
           </Box>
 
           <Box

@@ -22,6 +22,11 @@ interface SalesSummaryResponse {
     TOTALYEARSALES: number | string | null;
     PREVIOUSYEARTOTALSALES: number | string | null;
     PREVIOUSYEARSALES: number | string | null;
+    PREVIOUSYEARMONTHSIMPLEINQUIRYCOUNT: number | string | null;
+    PREVIOUSYEARMONTHRENTCOUNT: number | string | null;
+    PREVIOUSYEARMONTHVISITCOUNT: number | string | null;
+    PREVIOUSYEARMONTHTENTATIVECOUNT: number | string | null;
+    PREVIOUSYEARMONTHOTHERCOUNT: number | string | null;
     MONTHBOOKEDDAYCOUNT: number | string | null;
     MONTHAVAILABLESALESDAYS: number | string | null;
     BOOKEDDAYCOUNT: number | string | null;
@@ -42,6 +47,13 @@ const TotalSales: React.FC<CheckViewProps> = ({
     const [yearSales, setYearSales] = useState<number>(0);
     const [previousYearTotalSales, setPreviousYearTotalSales] = useState<number>(0);
     const [previousYearSales, setPreviousYearSales] = useState<number>(0);
+    const [previousMonthCsCounts, setPreviousMonthCsCounts] = useState({
+        simpleInquiry: 0,
+        rent: 0,
+        visit: 0,
+        tentative: 0,
+        other: 0,
+    });
     const [monthBookedDayCount, setMonthBookedDayCount] = useState<number>(0);
     const [monthAvailableSalesDays, setMonthAvailableSalesDays] = useState<number | null>(null);
     const [bookedDayCount, setBookedDayCount] = useState<number>(0);
@@ -68,6 +80,13 @@ const TotalSales: React.FC<CheckViewProps> = ({
                 setYearSales(yearlySales);
                 setPreviousYearTotalSales(previousYearlySales);
                 setPreviousYearSales(previousSales);
+                setPreviousMonthCsCounts({
+                    simpleInquiry: Number(res.data.PREVIOUSYEARMONTHSIMPLEINQUIRYCOUNT) || 0,
+                    rent: Number(res.data.PREVIOUSYEARMONTHRENTCOUNT) || 0,
+                    visit: Number(res.data.PREVIOUSYEARMONTHVISITCOUNT) || 0,
+                    tentative: Number(res.data.PREVIOUSYEARMONTHTENTATIVECOUNT) || 0,
+                    other: Number(res.data.PREVIOUSYEARMONTHOTHERCOUNT) || 0,
+                });
                 setMonthBookedDayCount(monthBookedDays);
                 setMonthAvailableSalesDays(Number.isFinite(monthAvailableDays) ? monthAvailableDays : null);
                 setBookedDayCount(bookedDays);
@@ -104,7 +123,12 @@ const TotalSales: React.FC<CheckViewProps> = ({
             highlight: true,
             tint: '#f2f7fc',
         },
-        { label: `${currentYear - 1}년 동월 매출`, value: `${formatAmount(previousYearSales)}만원`, color: '#455a64' },
+        {
+            label: `${currentYear - 1}년 동월 매출`,
+            value: `${formatAmount(previousYearSales)}만원`,
+            detail: `단순문의 ${previousMonthCsCounts.simpleInquiry} · 대관 ${previousMonthCsCounts.rent}\n답사 ${previousMonthCsCounts.visit} · 가부킹 ${previousMonthCsCounts.tentative} · 기타 ${previousMonthCsCounts.other}`,
+            color: '#455a64',
+        },
         {
             label: '전년 대비',
             value: `${comparisonSymbol} ${formatAmount(Math.abs(difference))}만원`,
@@ -222,7 +246,7 @@ const TotalSales: React.FC<CheckViewProps> = ({
                                         fontSize: '0.63rem',
                                         fontWeight: 700,
                                         lineHeight: 1.2,
-                                        whiteSpace: 'nowrap',
+                                        whiteSpace: 'pre-line',
                                     }}
                                 >
                                     {card.detail}
