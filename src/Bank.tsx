@@ -399,6 +399,7 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
   return (
     <Box sx={{ width: "100%", minWidth: 0, boxSizing: "border-box" }}>
       <Box
+        className={`bank-panel${embedded ? " bank-panel-embedded" : ""}`}
         sx={{
           width: "auto",
           maxWidth: "1400px", // 테이블 크기에 맞게 조정

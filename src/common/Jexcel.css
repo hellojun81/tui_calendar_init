@@ -113,8 +113,12 @@ border-right: 1px solid #333;
     background-color: #fff !important;
 }
 
-/* 표 하단 행에서는 목록을 위로 열어 가로 스크롤 영역에 잘리지 않게 한다. */
-.bank-table-scroll .jexcel tbody tr:nth-last-child(-n + 4)
+/*
+ * 표 하단 행에서는 목록을 위로 연다.
+ * 단, 검색 결과가 4건 이하일 때 첫 행까지 하단 행으로 인식하면
+ * 목록이 모달 제목 뒤로 잘리므로 5번째 행 이후에만 적용한다.
+ */
+.bank-table-scroll .jexcel tbody tr:nth-child(n + 5):nth-last-child(-n + 4)
     .jdropdown-focus.jdropdown-default > .jdropdown-container {
     top: auto !important;
     bottom: calc(100% + 1px) !important;
@@ -127,6 +131,19 @@ border-right: 1px solid #333;
     position: relative;
     z-index: 10001;
     overflow: visible !important;
+}
+
+/* 분류 목록이 은행내역 패널의 둥근 테두리에 잘리지 않도록 한다. */
+.bank-panel:has(.jdropdown-focus) {
+    overflow: visible !important;
+}
+
+/*
+ * 입금내역 모달 안에서는 검색영역 때문에 셀 위쪽 공간이 짧다.
+ * 목록 자체를 스크롤하게 해 모달 제목/하단 버튼에 가려지지 않게 한다.
+ */
+.bank-panel-embedded .jdropdown-container .jdropdown-content {
+    max-height: 156px;
 }
 
 /* ========================================= */
