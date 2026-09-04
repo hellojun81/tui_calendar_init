@@ -14,7 +14,7 @@ import {
 const TRADE_TYPE_OPTIONS = [
   { value: 0, label: "전체" },
   { value: 1, label: "입금" },
-  { value: 2, label: "출금" },
+  { value: 2, label: "지출" },
 ];
 
 // CS 유형 옵션 (GetCsKind를 대체하여 직접 정의하거나, 별도 상수 파일에서 가져와야 함)
@@ -34,7 +34,7 @@ interface SearchFieldsProps {
   formData: any;
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSearch: () => void;
-  onCsKindChange: (value: number | string) => void;
+  onCsKindChange?: (value: number | string) => void;
   onTradeTypeChange?: (value: number | string) => void;
   accountOptions?: Array<{ label: string; value: string; accountIDs: string[] }>;
   onAccountChange?: (value: string) => void;

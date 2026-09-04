@@ -77,27 +77,45 @@ border-right: 1px solid #333;
     display: none !important; /* 모바일 UI를 강제로 억제 */
 }
 .jdropdown-container {
-    /* 🚨 9999와 같은 매우 높은 값으로 설정하여 다른 모든 요소 위에 표시 */
     z-index: 10000 !important; 
-    
-    /* 기존 스타일 유지 및 개선 */
-    min-width: 150px !important; 
-    border-radius: 6px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); 
-    border: 1px solid #ccc;
+    min-width: 172px !important;
+    max-width: calc(100vw - 24px);
+    border-radius: 10px;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.2);
+    border: 1px solid #cbd5e1;
     background-color: #fff;
+    overflow: hidden;
 }
 
 /* 드롭다운 내용 영역 (스크롤 컨테이너) */
 .jdropdown-container .jdropdown-content {
-    padding: 4px 0; /* 내부 패딩 조정 */
-    max-height: 200px; /* 최대 높이 설정 (보기 좋은 크기) */
-    overflow-y: auto; /* 내용이 많으면 스크롤 */
+    padding: 6px;
+    max-height: 264px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #94a3b8 transparent;
+}
+
+/* 좁은 화면에서는 화면 하단에 떠 있는 선택 패널로 자연스럽게 표시한다. */
+.jdropdown-picker .jdropdown-container {
+    left: 12px !important;
+    right: 12px !important;
+    bottom: 12px !important;
+    width: calc(100% - 24px) !important;
+    max-width: none;
+    border-radius: 14px !important;
+}
+
+.jdropdown-picker .jdropdown-content {
+    height: auto !important;
+    max-height: min(360px, 55vh);
+    border-top: 0 !important;
+    background-color: #fff !important;
 }
 
 /* 표 하단 행에서는 목록을 위로 열어 가로 스크롤 영역에 잘리지 않게 한다. */
 .bank-table-scroll .jexcel tbody tr:nth-last-child(-n + 4)
-    .jdropdown-focus > .jdropdown-container {
+    .jdropdown-focus.jdropdown-default > .jdropdown-container {
     top: auto !important;
     bottom: calc(100% + 1px) !important;
     margin-top: 0 !important;
@@ -117,9 +135,12 @@ border-right: 1px solid #333;
 
 /* 개별 항목 */
 .jdropdown-item {
+    min-height: 38px;
     padding: 8px 12px;
+    margin: 2px 0;
+    border-radius: 7px;
     cursor: pointer;
-    transition: background-color 0.15s ease; /* 호버 시 부드러운 전환 */
+    transition: background-color 0.15s ease, color 0.15s ease;
     font-size: 14px;
     color: #333;
 }
@@ -127,14 +148,20 @@ border-right: 1px solid #333;
 /* 항목 호버 시 (마우스 오버) */
 .jdropdown-item:hover {
     background-color: #1f93ff;
+    color: #fff !important;
 }
 
 /* 선택된 항목 (Selected) */
-
+.jdropdown-item.jdropdown-selected {
+    background-color: #eaf4ff !important;
+    color: #0b63b6 !important;
+    font-weight: 700;
+}
 
 /* 선택된 항목의 호버 스타일 (더 진하게) */
 .jdropdown-item.jdropdown-selected:hover {
     background-color: #0056b3!important;
+    color: #fff !important;
 }
 
 /* 항목 내부의 설명 텍스트 */
@@ -158,4 +185,22 @@ border-right: 1px solid #333;
     color: #3f3f3f !important;
     display: flex;
     align-items: center;
+}
+
+/* 분류 셀은 드롭다운임을 쉽게 알아볼 수 있도록 여백과 선택 피드백을 준다. */
+.bank-table-scroll .jexcel tbody td:nth-child(7) {
+    padding: 0 12px !important;
+    background-color: #fbfdff;
+    font-weight: 600;
+    color: #334155;
+}
+
+.bank-table-scroll .jexcel tbody td:nth-child(7):hover {
+    background-color: #eef6ff;
+}
+
+.bank-table-scroll .jexcel tbody td:nth-child(7).highlight,
+.bank-table-scroll .jexcel tbody td:nth-child(7).jexcel_selected {
+    background-color: #e3f2fd !important;
+    box-shadow: inset 0 0 0 2px #2684ff;
 }

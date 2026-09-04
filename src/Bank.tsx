@@ -38,7 +38,7 @@ interface BankProps {
 const getCurrentDate = () => {
   const today = dayjs();
   return {
-    startDate: today.subtract(90, "day").format("YYYY-MM-DD"),
+    startDate: today.subtract(1, "year").format("YYYY-MM-DD"),
     endDate: today.format("YYYY-MM-DD"),
   };
 };
@@ -170,11 +170,11 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
             {
               type: "dropdown",
               title: "분류",
-              width: 100,
-              source: ["계약금", "잔금", "추가금액", "보증금", "기타"],
+              width: 120,
+              source: ["계약금", "중도금", "잔금", "추가금액", "보증금", "기타"],
 
               // jSuites dropdown 옵션 전달
-              options: { closeButton: false } as any, // <- Done 버튼 숨김
+              options: { closeButton: false } as any,
             },
             { type: "numeric", title: "잔액", width: 120 },
             { type: "text", title: "적요", width: 120 },
@@ -418,8 +418,7 @@ const BankTransactions: React.FC<BankProps> = ({ embedded = false, defaultCustom
             formData={formData}
             handleChange={handleChange}
             handleSearch={handleSearch}
-            // 기존 onCsKindChange를 onTradeTypeChange로 변경
-            onCsKindChange={(v) => handleTradeTypeChange(typeof v === "string" ? parseInt(v, 10) : v)}
+            onTradeTypeChange={handleTradeTypeChange}
             accountOptions={accountOptions}
             onAccountChange={(accountID) => setFormData((prev) => ({ ...prev, accountID }))}
           />
