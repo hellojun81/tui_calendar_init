@@ -55,7 +55,7 @@ interface KakaoMessageSenderProps {
 }
 
 // 템플릿 로딩 API URL (ScheduleModal의 API_URL과 동일한 기준으로 가정)
-const TEMPLATE_API_URL = process.env.REACT_APP_API_URL_LOCAL + "/api/popbill/kakao/Templatelist";
+const TEMPLATE_API_URL = apiUrl + "/api/popbill/kakao/Templatelist";
 
 const KakaoMessageSender: React.FC<KakaoMessageSenderProps> = ({
   sendApiUrl,
